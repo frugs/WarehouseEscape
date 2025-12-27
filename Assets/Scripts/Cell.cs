@@ -32,7 +32,7 @@ public class Cell {
     /// <summary>Fills Hole → Floor when crate lands here</summary>
     public void FillHole() {
         if(terrain == TerrainType.Hole) {
-            terrain = TerrainType.Floor;
+            terrain = TerrainType.FilledHole;
         }
     }
     
@@ -45,9 +45,11 @@ public class Cell {
 
 /// <summary>Pure terrain types - no visual dependencies</summary>
 [System.Serializable]
-public enum TerrainType {
+public enum TerrainType
+{
     Floor,  // Always passable
-    Hole    // Impassable until filled by crate
+    Hole,    // Impassable until filled by crate
+    FilledHole,
 }
 
 /// <summary>Pure occupant types - no Unity GameObjects</summary>

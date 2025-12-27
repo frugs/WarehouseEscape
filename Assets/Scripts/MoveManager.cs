@@ -35,7 +35,7 @@ public class MoveManager {
         
         // 3. Crate movement + hole filling
         Cell targetCell = grid[move.crateTo.x, move.crateTo.y];
-        targetCell.FillHole();  // Hole → Floor
+        targetCell.FillHole();
         
         grid[move.crateFrom.x, move.crateFrom.y].occupant = Occupant.Empty;
         targetCell.occupant = Occupant.Crate;
