@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using System.Linq;
 using UnityEngine;
 
 public class BoardBuilder3D : MonoBehaviour
@@ -18,13 +17,10 @@ public class BoardBuilder3D : MonoBehaviour
         this.gridHeight = gridHeight;
         SetupHierarchy();
 
-        CreateFloor(grid, gridWidth, gridHeight);           // Y=0
-        CreateWalls(grid, gridWidth, gridHeight);           // Y=1+
-        CreateHoles(grid, gridWidth, gridHeight);           // Y=-0.5
-        PlaceInteractiveObjects(grid, gridWidth);           // Y=0.5
-
-        // Store references back to GridManager cells
-        StoreWorldObjectReferences(grid);
+        CreateFloor(grid, gridWidth, gridHeight);           // Y = 0
+        CreateWalls(grid, gridWidth, gridHeight);           // Y = 1+
+        CreateHoles(grid, gridWidth, gridHeight);           // Y = -0.5
+        PlaceInteractiveObjects(grid, gridWidth);           // Y = 0.5
     }
 
     public void MoveObject(GameObject obj, int fromGridX, int fromGridY, int toGridX, int toGridY)
@@ -46,7 +42,9 @@ public class BoardBuilder3D : MonoBehaviour
         {
             for (int y = 0; y < gridHeight; y++)
             {
-                if (grid[x, y].terrain == TerrainType.Floor)
+                // Floor and filled holes should both render as floor
+                if (grid[x, y].terrain == TerrainType.Floor ||
+                    grid[x, y].terrain == TerrainType.FilledHole)
                 {
                     floorPositions.Add(new Vector2Int(x, y));
                 }
@@ -73,6 +71,7 @@ public class BoardBuilder3D : MonoBehaviour
                     FloodFillWalls(x, y, grid, visited, wallCluster);
                     var wallMesh = GenerateQuadMesh(wallCluster, 1f, wallMaterial);
                     wallMesh.transform.parent = wallsParent;
+                    wallMesh.name = "WallsCluster";
                 }
             }
         }
@@ -91,6 +90,7 @@ public class BoardBuilder3D : MonoBehaviour
                     FloodFillHoles(x, y, grid, visited, holeCluster);
                     var holeMesh = GenerateQuadMesh(holeCluster, -0.5f, holeMaterial);
                     holeMesh.transform.parent = holesParent;
+                    holeMesh.name = "HolesCluster";
                 }
             }
         }
@@ -103,17 +103,38 @@ public class BoardBuilder3D : MonoBehaviour
             for (int y = 0; y < gridHeight; y++)
             {
                 var cell = grid[x, y];
-                if (cell.tile?.CompareTag("Player") == true)
+
+                // Player
+                if (cell.occupant == Occupant.Player)
                 {
-                    cell.worldObject = Instantiate(playerPrefab, GridToWorld(x, y, 0.5f), Quaternion.identity, levelParent);
+                    Instantiate(
+                        playerPrefab,
+                        GridToWorld(x, y, 0.5f),
+                        Quaternion.identity,
+                        levelParent
+                    );
                 }
-                else if (cell.tile?.CompareTag("Crate") == true)
+
+                // Crate
+                if (cell.occupant == Occupant.Crate)
                 {
-                    cell.worldObject = Instantiate(cratePrefab, GridToWorld(x, y, 0.5f), Quaternion.identity, levelParent);
+                    Instantiate(
+                        cratePrefab,
+                        GridToWorld(x, y, 0.5f),
+                        Quaternion.identity,
+                        levelParent
+                    );
                 }
-                else if (cell.isTarget && cell.tile == null)
+
+                // Target marker (visual only)
+                if (cell.isTarget)
                 {
-                    cell.worldObject = Instantiate(targetPrefab, GridToWorld(x, y, 0.1f), Quaternion.identity, levelParent);
+                    Instantiate(
+                        targetPrefab,
+                        GridToWorld(x, y, 0.1f),
+                        Quaternion.identity,
+                        levelParent
+                    );
                 }
             }
         }
@@ -123,6 +144,7 @@ public class BoardBuilder3D : MonoBehaviour
 
     private Vector3 GridToWorld(int gridX, int gridY, float yHeight)
     {
+        // Same mapping as before: center tiles and flip Y visually
         return new Vector3(gridX + 0.5f, yHeight, gridHeight - gridY - 1.5f);
     }
 
@@ -138,15 +160,27 @@ public class BoardBuilder3D : MonoBehaviour
             int vertIndex = vertices.Count;
 
             // Quad on XZ plane
-            vertices.AddRange(new[] {
+            vertices.AddRange(new[]
+            {
                 center + new Vector3(-0.5f, 0, -0.5f),
                 center + new Vector3( 0.5f, 0, -0.5f),
                 center + new Vector3( 0.5f, 0,  0.5f),
                 center + new Vector3(-0.5f, 0,  0.5f)
             });
 
-            triangles.AddRange(new[] { vertIndex, vertIndex + 2, vertIndex + 1, vertIndex, vertIndex + 3, vertIndex + 2 });
-            uvs.AddRange(new[] { Vector2.zero, Vector2.right, new Vector2(1, 1), Vector2.up });
+            triangles.AddRange(new[]
+            {
+                vertIndex, vertIndex + 2, vertIndex + 1,
+                vertIndex, vertIndex + 3, vertIndex + 2
+            });
+
+            uvs.AddRange(new[]
+            {
+                Vector2.zero,
+                Vector2.right,
+                new Vector2(1, 1),
+                Vector2.up
+            });
         }
 
         var mesh = new Mesh
@@ -177,11 +211,21 @@ public class BoardBuilder3D : MonoBehaviour
             var pos = stack.Pop();
             cluster.Add(pos);
 
-            foreach (var dir in new[] { new Vector2Int(0, 1), new Vector2Int(0, -1), new Vector2Int(1, 0), new Vector2Int(-1, 0) })
+            foreach (var dir in new[]
             {
-                int nx = pos.x + dir.x, ny = pos.y + dir.y;
-                if (nx >= 0 && nx < grid.GetLength(0) && ny >= 0 && ny < gridHeight &&
-                   grid[nx, ny].tile?.CompareTag("Wall") == true && !visited[nx, ny])
+                new Vector2Int(0, 1),
+                new Vector2Int(0, -1),
+                new Vector2Int(1, 0),
+                new Vector2Int(-1, 0)
+            })
+            {
+                int nx = pos.x + dir.x;
+                int ny = pos.y + dir.y;
+
+                if (nx >= 0 && nx < grid.GetLength(0) &&
+                    ny >= 0 && ny < gridHeight &&
+                    !visited[nx, ny] &&
+                    grid[nx, ny].terrain == TerrainType.Wall)
                 {
                     visited[nx, ny] = true;
                     stack.Push(new Vector2Int(nx, ny));
@@ -192,22 +236,45 @@ public class BoardBuilder3D : MonoBehaviour
 
     private void FloodFillHoles(int x, int y, Cell[,] grid, bool[,] visited, List<Vector2Int> cluster)
     {
-        // Same algorithm as walls, just check grid[x,y].isHole
-        // Implementation identical to FloodFillWalls
+        var stack = new Stack<Vector2Int>();
+        stack.Push(new Vector2Int(x, y));
+        visited[x, y] = true;
+
+        while (stack.Count > 0)
+        {
+            var pos = stack.Pop();
+            cluster.Add(pos);
+
+            foreach (var dir in new[]
+            {
+                new Vector2Int(0, 1),
+                new Vector2Int(0, -1),
+                new Vector2Int(1, 0),
+                new Vector2Int(-1, 0)
+            })
+            {
+                int nx = pos.x + dir.x;
+                int ny = pos.y + dir.y;
+
+                if (nx >= 0 && nx < grid.GetLength(0) &&
+                    ny >= 0 && ny < gridHeight &&
+                    !visited[nx, ny] &&
+                    grid[nx, ny].terrain == TerrainType.Hole)
+                {
+                    visited[nx, ny] = true;
+                    stack.Push(new Vector2Int(nx, ny));
+                }
+            }
+        }
     }
 
     private void SetupHierarchy()
     {
         ClearPreviousLevel();
-        levelParent = (new GameObject("Level")).transform;
+        levelParent = (new GameObject("Level3D")).transform;
         wallsParent = new GameObject("Walls").transform;
         wallsParent.parent = levelParent;
         holesParent = new GameObject("Holes").transform;
         holesParent.parent = levelParent;
-    }
-
-    private void StoreWorldObjectReferences(Cell[,] grid)
-    {
-        // GridManager reads these back via cell.worldObject
     }
 }
