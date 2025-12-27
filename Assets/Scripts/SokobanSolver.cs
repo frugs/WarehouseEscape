@@ -152,16 +152,15 @@ public class SokobanSolver
 
         while (parentMap.ContainsKey(current))
         {
-            var node = parentMap[currentHash];
-
-            // If ParentHash is null, we are at the start node
+            var node = parentMap[current];
             if (node.ParentHash == null) break;
 
             path.Add(node.Move);
-            currentHash = node.ParentHash;
+            current = node.ParentHash;
         }
 
         path.Reverse();
         return path;
     }
+
 }
