@@ -1,0 +1,114 @@
+# Top-most EditorConfig file
+root = true
+
+# Generic formatting rules for all files
+[*]
+charset = utf-8
+indent_style = space
+indent_size = 2
+max_line_length = 100
+insert_final_newline = true
+trim_trailing_whitespace = true
+
+# C# Specific rules
+[*.cs]
+# Indentation for C#
+indent_size = 2
+tab_width = 2
+
+#### Formatting Rules ####
+
+# Brace Style: K&R (Opening brace on same line)
+csharp_new_line_before_open_brace = none
+csharp_new_line_before_catch = false
+csharp_new_line_before_else = false
+csharp_new_line_before_finally = false
+csharp_new_line_before_members_in_object_initializers = true
+csharp_new_line_before_members_in_anonymous_types = true
+
+# Whitespace options
+csharp_space_after_cast = false
+csharp_space_after_colon_in_inheritance_clause = true
+csharp_space_after_comma = true
+csharp_space_after_dot = false
+csharp_space_after_keywords_in_control_flow_statements = true
+csharp_space_before_colon_in_inheritance_clause = true
+csharp_space_before_comma = false
+csharp_space_before_dot = false
+csharp_space_before_open_square_brackets = false
+csharp_space_before_semicolon_in_for_statement = false
+csharp_space_between_method_call_parameter_list_parentheses = false
+csharp_space_between_method_declaration_parameter_list_parentheses = false
+csharp_space_between_parentheses = false
+csharp_space_around_binary_operators = before_and_after
+dotnet_style_blank_lines_between_class_members = true
+
+#### Naming Conventions ####
+
+# Style Definitions
+dotnet_naming_style.pascal_case_style.capitalization = pascal_case
+dotnet_naming_style.camel_case_style.capitalization = camel_case
+dotnet_naming_style.upper_snake_case_style.capitalization = all_upper
+dotnet_naming_style.upper_snake_case_style.word_separator = _
+dotnet_naming_style.lowercase_style.capitalization = all_lower
+dotnet_naming_style.lowercase_style.word_separator = _
+
+# Rule: PascalCase for Classes, Interfaces, Enums
+dotnet_naming_rule.types_must_be_pascal_case.severity = suggestion
+dotnet_naming_rule.types_must_be_pascal_case.symbols = types
+dotnet_naming_rule.types_must_be_pascal_case.style = pascal_case_style
+dotnet_naming_symbols.types.applicable_kinds = class, interface, struct, enum, delegate
+
+# Rule: PascalCase for Methods and Properties (Matching Example Code)
+dotnet_naming_rule.members_must_be_pascal_case.severity = suggestion
+dotnet_naming_rule.members_must_be_pascal_case.symbols = members
+dotnet_naming_rule.members_must_be_pascal_case.style = pascal_case_style
+dotnet_naming_symbols.members.applicable_kinds = method, property, event
+
+# Rule: camelCase for Locals and Parameters
+dotnet_naming_rule.locals_must_be_camel_case.severity = suggestion
+dotnet_naming_rule.locals_must_be_camel_case.symbols = locals
+dotnet_naming_rule.locals_must_be_camel_case.style = camel_case_style
+dotnet_naming_symbols.locals.applicable_kinds = local, parameter
+
+# Rule: UPPER_SNAKE_CASE for Constants
+dotnet_naming_rule.constants_must_be_upper_snake_case.severity = false:silent
+dotnet_naming_rule.constants_must_be_upper_snake_case.symbols = constants
+dotnet_naming_rule.constants_must_be_upper_snake_case.style = upper_snake_case_style
+dotnet_naming_symbols.constants.applicable_kinds = field, local
+dotnet_naming_symbols.constants.modifiers = const
+dotnet_naming_symbols.constants.applicable_accessibilities = *
+
+# Rule: lowercase for Namespaces
+dotnet_naming_rule.namespaces_must_be_lowercase.severity = suggestion
+dotnet_naming_rule.namespaces_must_be_lowercase.symbols = namespaces
+dotnet_naming_rule.namespaces_must_be_lowercase.style = lowercase_style
+dotnet_naming_symbols.namespaces.applicable_kinds = namespace
+
+#### Language Features & Idioms ####
+
+# Expression-bodied members
+csharp_style_expression_bodied_methods = false:silent
+csharp_style_expression_bodied_constructors = false:silent
+csharp_style_expression_bodied_operators = false:silent
+csharp_style_expression_bodied_properties = true:suggestion
+csharp_style_expression_bodied_indexers = true:suggestion
+csharp_style_expression_bodied_accessors = true:suggestion
+
+# Pattern Matching
+csharp_style_pattern_matching_over_is_with_cast_check = true:suggestion
+csharp_style_pattern_matching_over_as_with_null_check = true:suggestion
+
+# Null Checking (Coalescing and Conditional)
+dotnet_style_coalesce_expression = true:suggestion
+dotnet_style_null_propagation = true:suggestion
+csharp_style_throw_expression = true:suggestion
+
+# Var usage (LINQ example implies var usage)
+csharp_style_var_for_built_in_types = false:silent
+csharp_style_var_when_type_is_apparent = true:suggestion
+csharp_style_var_elsewhere = false:silent
+
+#### Documentation ####
+# (Note: Alignment in doc comments is not strictly enforceable via editorconfig properties,
+# but formatting rules above help maintain structure.)
