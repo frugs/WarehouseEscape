@@ -229,7 +229,7 @@ public class GridManager : MonoBehaviour
     public Vector3 GridToWorld(int x, int y)
     {
         // Tiles are 1x1, centered at 0.5
-        return new Vector3(x + 0.5f, 0f, y + 0.5f);
+        return new Vector3(x + 0.5f, 0.5f, y + 0.5f);
     }
 
     /// <summary>
