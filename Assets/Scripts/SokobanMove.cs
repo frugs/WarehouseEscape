@@ -50,11 +50,3 @@ public enum MoveType
     PlayerMove,  // Player steps to empty tile
     CratePush    // Player pushes crate to empty tile/hole
 }
-
-public static class Vector2IntExtensions
-{
-    public static Vector2Int ToVector2Int(this Vector2 v)
-    {
-        return new Vector2Int(Mathf.RoundToInt(v.x), Mathf.RoundToInt(v.y));
-    }
-}

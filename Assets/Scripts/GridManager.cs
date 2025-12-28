@@ -144,7 +144,7 @@ public class GridManager : MonoBehaviour
     }
 
     // ================= ANIMATED MOVEMENT =================
-    public IEnumerator MoveEntity(Vector2Int from, Vector2Int to)
+    public IEnumerator AnimateMoveEntity(Vector2Int from, Vector2Int to)
     {
         if (!IsValidPos(from) || !IsValidPos(to)) yield break;
 
@@ -154,20 +154,18 @@ public class GridManager : MonoBehaviour
 
         if (fromCell.occupant == Occupant.Empty) yield break;
 
-        Occupant movingOccupant = fromCell.occupant; // ✅ FIXED: Capture occupant type
+        Occupant movingOccupant = fromCell.occupant;
 
-        // 1. Clear source
         fromCell.occupant = Occupant.Empty;
         visualGrid[from.x, from.y] = null;
 
-        // 2. SPECIAL CASE: Crate into Hole
+        // SPECIAL CASE: Crate into Hole
         if (movingOccupant == Occupant.Crate && toCell.terrain == TerrainType.Hole)
         {
-            yield return StartCoroutine(HandleCrateFallingIntoHole(obj, to, toCell));
+            yield return HandleCrateFallingIntoHole(obj, to, toCell);
             yield break;
         }
 
-        // 3. NORMAL ANIMATED MOVE (Player OR Crate)
         Vector3 startPos = obj.transform.position;
         Vector3 endPos = GridToWorld(to.x, to.y);
 
@@ -182,9 +180,13 @@ public class GridManager : MonoBehaviour
 
         obj.transform.position = endPos;
 
-        // 4. ✅ FIXED: Restore occupant to destination
         toCell.occupant = movingOccupant; // Player or Crate
         visualGrid[to.x, to.y] = obj;
+    }
+
+    public void MoveEntity(Vector2Int from, Vector2Int to)
+    {
+        // Implement instantaneous move for undo/redo
     }
 
     private IEnumerator AnimateCrateFall(GameObject crateObj, Vector2Int pos)
@@ -217,8 +219,8 @@ public class GridManager : MonoBehaviour
 
     private IEnumerator HandleCrateFallingIntoHole(GameObject crateObj, Vector2Int pos, Cell holeCell)
     {
-        yield return StartCoroutine(AnimateCrateFall(crateObj, pos));
-        yield return StartCoroutine(FillHoleAfterAnimation(pos, holeCell, crateObj));
+        yield return AnimateCrateFall(crateObj, pos);
+        yield return FillHoleAfterAnimation(pos, holeCell, crateObj);
     }
 
     // ================= COORDINATE MAPPING =================
@@ -307,7 +309,7 @@ public class GridManager : MonoBehaviour
             Cell nextCell = playerMovementPath[0];
             Cell currentCell = GetCellAtWorldPos(playerController.transform.position);
 
-            StartCoroutine(MoveEntity(new Vector2Int(currentCell.x, currentCell.y),
+            StartCoroutine(AnimateMoveEntity(new Vector2Int(currentCell.x, currentCell.y),
                 new Vector2Int(nextCell.x, nextCell.y)));
             playerMovementPath.RemoveAt(0);
             currentDelay = 0f;
