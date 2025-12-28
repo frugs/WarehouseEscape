@@ -259,7 +259,8 @@ public class GridManager : MonoBehaviour {
     pos.x >= 0 && pos.x < gridWidth && pos.y >= 0 && pos.y < gridHeight;
 
   private void HandleMouseInput() {
-    if (Camera.main != null && Input.GetMouseButtonDown(0) && playerController != null && !playerController.IsBusy) {
+    if (Camera.main != null && Input.GetMouseButtonDown(0) && playerController != null &&
+        !playerController.IsBusy) {
       Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
       if (Physics.Raycast(ray, out RaycastHit hit)) {
         Cell clickedCell = GetCellAtWorldPos(hit.point);
@@ -361,5 +362,14 @@ public class GridManager : MonoBehaviour {
         menuManager.WinGame();
       }
     }
+  }
+
+  [UsedImplicitly]
+  public void ResetLevel() => LoadLevel(levelNumber);
+
+  [UsedImplicitly]
+  public void NextLevel() {
+    levelNumber++;
+    LoadLevel(levelNumber);
   }
 }
