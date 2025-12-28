@@ -16,17 +16,13 @@ public class UndoRedoManager : MonoBehaviour
         gridManager = FindObjectOfType<GridManager>();
     }
 
-    public void AddAction(
-        GameObject player, Vector3 playerOriginalPosition, Vector3 playerTargetPosition,
-        GameObject crate = null, Vector3? crateOriginalPosition = null, Vector3? crateTargetPosition = null
-        )
+    public void AddAction(GameObject player, Vector3 playerOriginalPosition, Vector3 playerTargetPosition, GameObject crate = null, Vector3? crateOriginalPosition = null, Vector3? crateTargetPosition = null)
     {
-        MoveAction moveAction = new MoveAction(
-            player, playerOriginalPosition, playerTargetPosition,
-            crate, crateOriginalPosition, crateTargetPosition
-            );
+        MoveAction moveAction = new MoveAction(player, playerOriginalPosition, playerTargetPosition, crate, crateOriginalPosition, crateTargetPosition);
         undoStack.Push(moveAction);
-        redoStack.Clear(); // Clear redo stack when a new move action is added
+
+        // Clear redo stack when a new move action is added
+        redoStack.Clear();
     }
 
     public void UndoMove()
@@ -38,7 +34,9 @@ public class UndoRedoManager : MonoBehaviour
             redoStack.Push(moveAction);
         }
         else
+        {
             Debug.Log("No Undo Action Available");
+        }
     }
 
     public void RedoMove()
@@ -50,61 +48,77 @@ public class UndoRedoManager : MonoBehaviour
             undoStack.Push(moveAction);
         }
         else
+        {
             Debug.Log("No Redo Action Available");
+        }
     }
 }
 
+// Inner class or separate file for MoveAction
 public class MoveAction
 {
-    //Player Action
-    private GameObject _player;
-    private Vector3 _playerOriginalPosition;
-    private Vector3 _playerTargetPosition;
+    public GameObject player;
+    public Vector3 playerOriginalPosition;
+    public Vector3 playerTargetPosition;
+    public GameObject crate;
+    public Vector3? crateOriginalPosition;
+    public Vector3? crateTargetPosition;
 
-    //Crate Action
-    private GameObject _crate = null;
-    private Vector3? _crateOriginalPosition;
-    private Vector3? _crateTargetPosition;
-
-    public MoveAction(GameObject player, Vector3 playerOriginalPosition, Vector3 playerTargetPosition, 
-        GameObject crate = null, Vector3? crateOriginalPosition = null, Vector3? crateTargetPosition = null)
+    public MoveAction(GameObject player, Vector3 playerOriginalPosition, Vector3 playerTargetPosition, GameObject crate, Vector3? crateOriginalPosition, Vector3? crateTargetPosition)
     {
-        _player = player;
-        _playerOriginalPosition = playerOriginalPosition;
-        _playerTargetPosition = playerTargetPosition;
-
-        _crate = crate;
-        _crateOriginalPosition = crateOriginalPosition;
-        _crateTargetPosition = crateTargetPosition;
+        this.player = player;
+        this.playerOriginalPosition = playerOriginalPosition;
+        this.playerTargetPosition = playerTargetPosition;
+        this.crate = crate;
+        this.crateOriginalPosition = crateOriginalPosition;
+        this.crateTargetPosition = crateTargetPosition;
     }
+
+    // ================= UNDO LOGIC =================
 
     public void Undo(GridManager gridManager)
     {
-        // Revert the move by setting the game object's position back to the original position
-
-        var cell = gridManager.GetCellAtPosition(_playerTargetPosition);
-
-        gridManager.MoveCelltoPosition(cell.tile, _playerOriginalPosition);
-
-        if (_crate != null && _crateOriginalPosition.HasValue)
+        // 1. Undo Crate Move (if any)
+        if (crate != null && crateTargetPosition.HasValue && crateOriginalPosition.HasValue)
         {
-            var cellCrate = gridManager.GetCellAtPosition(_crateTargetPosition.Value);
-
-            gridManager.MoveCelltoPosition(cellCrate.tile, _crateOriginalPosition.Value);
+            // Reverse: Move from Target -> Original
+            MoveEntityByWorldPos(gridManager, crateTargetPosition.Value, crateOriginalPosition.Value);
         }
+
+        // 2. Undo Player Move
+        // Reverse: Move from Target -> Original
+        MoveEntityByWorldPos(gridManager, playerTargetPosition, playerOriginalPosition);
     }
+
+    // ================= REDO LOGIC =================
 
     public void Redo(GridManager gridManager)
     {
-        // Reapply the move by setting the game object's position to the target position
-        if (_crate != null && _crateTargetPosition.HasValue)
+        // 1. Redo Player Move
+        // Forward: Move from Original -> Target
+        MoveEntityByWorldPos(gridManager, playerOriginalPosition, playerTargetPosition);
+
+        // 2. Redo Crate Move (if any)
+        if (crate != null && crateTargetPosition.HasValue && crateOriginalPosition.HasValue)
         {
-            var cellCrate = gridManager.GetCellAtPosition(_crateOriginalPosition.Value);
-
-            gridManager.MoveCelltoPosition(cellCrate.tile, _crateTargetPosition.Value);
+            // Forward: Move from Original -> Target
+            MoveEntityByWorldPos(gridManager, crateOriginalPosition.Value, crateTargetPosition.Value);
         }
-        var cell = gridManager.GetCellAtPosition(_playerOriginalPosition);
+    }
 
-        gridManager.MoveCelltoPosition(cell.tile, _playerTargetPosition);       
+    // Helper to bridge World Positions -> GridManager.MoveEntity
+    private void MoveEntityByWorldPos(GridManager gridManager, Vector3 fromPos, Vector3 toPos)
+    {
+        Cell fromCell = gridManager.GetCellAtWorldPos(fromPos);
+        Cell toCell = gridManager.GetCellAtWorldPos(toPos);
+
+        if (fromCell != null && toCell != null)
+        {
+            gridManager.MoveEntity(new Vector2Int(fromCell.x, fromCell.y), new Vector2Int(toCell.x, toCell.y));
+        }
+        else
+        {
+            Debug.LogError($"Undo/Redo Error: Could not resolve cells for positions {fromPos} -> {toPos}");
+        }
     }
 }

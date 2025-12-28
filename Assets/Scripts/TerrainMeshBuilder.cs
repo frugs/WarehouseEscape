@@ -1,7 +1,7 @@
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
-using System.Collections;
 
 public class TerrainMeshBuilder : MonoBehaviour
 {
@@ -93,8 +93,8 @@ public class TerrainMeshBuilder : MonoBehaviour
 
     private Vector3 GridToWorld(int gridX, int gridY, float yHeight)
     {
-        // Same mapping as before: center tiles and flip Y visually
-        return new Vector3(gridX + 0.5f, yHeight, gridHeight - gridY - 1.5f);
+        // Simple mapping: Grid Y = World Z
+        return new Vector3(gridX + 0.5f, yHeight, gridY + 0.5f);
     }
 
     private GameObject GenerateQuadMesh(List<Vector2Int> positions, float yHeight, Material mat = null)

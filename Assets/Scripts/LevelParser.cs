@@ -1,7 +1,7 @@
 using System.IO;
 using UnityEngine;
 
-public class LevelParser : MonoBehaviour
+public class LevelParser
 {
     public static LevelData ParseLevelFile(string filePath)
     {
