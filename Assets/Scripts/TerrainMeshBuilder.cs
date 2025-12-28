@@ -45,7 +45,7 @@ public class TerrainMeshBuilder : MonoBehaviour
         }
         if (floorPositions.Count > 0)
         {
-            var floorMesh = GenerateQuadMesh(floorPositions, 0f);
+            var floorMesh = GenerateQuadMesh(floorPositions, -0.5f);
             floorMesh.transform.parent = levelParent;
             floorMesh.name = "Floor";
         }
@@ -81,7 +81,7 @@ public class TerrainMeshBuilder : MonoBehaviour
                 {
                     var holeCluster = new List<Vector2Int>();
                     FloodFillHoles(x, y, grid, visited, holeCluster);
-                    var holeMesh = GenerateQuadMesh(holeCluster, -0.5f, holeMaterial);
+                    var holeMesh = GenerateQuadMesh(holeCluster, -1.5f, holeMaterial);
                     holeMesh.transform.parent = holesParent;
                     holeMesh.name = "HolesCluster";
                 }
