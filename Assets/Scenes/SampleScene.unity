@@ -995,7 +995,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: c76202bea8df2a2479e5a277f7375bff, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: 
+  m_EditorClassIdentifier: Assembly-CSharp::GridManager
   levelNumber: 1
   levelsDirectoryName: Levels
   terrainBuilder: {fileID: 0}
@@ -1005,6 +1005,8 @@ MonoBehaviour:
   playerTile: {fileID: 721129335946948922, guid: 081bf8a76a88e34408793b404f24af5d, type: 3}
   crateTile: {fileID: 4699907650127345005, guid: 4fc469b1f980a6b429697cc87278a555, type: 3}
   targetTile: {fileID: 5504698377664096694, guid: f5ee4a16c1e9af04ca27e6740c476264, type: 3}
+  moveAnimationDuration: 0.2
+  fallAnimationDuration: 0.15
 --- !u!4 &1936126207
 Transform:
   m_ObjectHideFlags: 0
@@ -1075,7 +1077,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c73203c3ad52f85429503d246e51b186, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerController
-  isMoving: 0
 --- !u!1 &2132566438
 GameObject:
   m_ObjectHideFlags: 0

@@ -23,7 +23,7 @@ public class GridManager : MonoBehaviour {
   [Header("Animation Timing")] [SerializeField]
   private float moveAnimationDuration = 0.2f; // Snappy movement
 
-  [SerializeField] private float fallAnimationDuration = 0.4f;
+  [SerializeField] private float fallAnimationDuration = 0.15f;
 
   // ================= STATE =================
   public Cell[,] grid;
@@ -222,7 +222,7 @@ public class GridManager : MonoBehaviour {
 
     // 2. Sink down
     Vector3 startPos = obj.transform.position;
-    Vector3 endPos = startPos + Vector3.down * 0.4f; // Sink depth
+    Vector3 endPos = startPos + Vector3.down * 1.0f; // Sink depth
     float elapsed = 0f;
 
     while (elapsed < fallAnimationDuration) {
