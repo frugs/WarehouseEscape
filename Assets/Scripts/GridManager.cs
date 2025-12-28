@@ -22,7 +22,7 @@ public class GridManager : MonoBehaviour {
   [SerializeField] private GameObject TargetTile = null;
 
   [Header("Animation Timing")] [SerializeField]
-  private readonly float MoveAnimationDuration = 0.2f; // Snappy movement
+  private readonly float MoveAnimationDuration = 0.12f; // Snappy movement
 
   [SerializeField] private readonly float FallAnimationDuration = 0.15f;
 
@@ -153,7 +153,9 @@ public class GridManager : MonoBehaviour {
   /// Updates BOTH the Logic Data (Cells) and the Visual Array (GameObject references).
   /// Returns the GameObjects that need to be animated so the caller doesn't need to look them up.
   /// </summary>
-  public void RegisterMoveUpdates(SokobanMove move, out GameObject playerObj,
+  public void RegisterMoveUpdates(
+    SokobanMove move,
+    out GameObject playerObj,
     out GameObject crateObj) {
     playerObj = null;
     crateObj = null;
@@ -161,6 +163,7 @@ public class GridManager : MonoBehaviour {
     // 1. Capture Objects (before we clear the grid cells)
     if (IsValidPos(move.playerFrom))
       playerObj = visualGrid[move.playerFrom.x, move.playerFrom.y];
+
 
     if (move.type == MoveType.CratePush && IsValidPos(move.crateFrom))
       crateObj = visualGrid[move.crateFrom.x, move.crateFrom.y];

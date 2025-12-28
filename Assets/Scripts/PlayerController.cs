@@ -10,6 +10,8 @@ public class PlayerController : MonoBehaviour {
   public bool IsBusy { get; private set; } // Processing a move/animation
   public bool IsAutoMoving { get; set; } // Following a mouse path
 
+  private Vector2Int? moveBuffer; // Nullable to track if we have a buffered move
+
   [UsedImplicitly]
   private void Awake() {
     gridManager = FindAnyObjectByType<GridManager>();
@@ -18,7 +20,7 @@ public class PlayerController : MonoBehaviour {
   [UsedImplicitly]
   private void Update() {
     // Block input if busy (animating) or if auto-moving (let the path logic drive)
-    if (IsBusy || IsAutoMoving) return;
+    if (IsAutoMoving) return;
 
     // Input Handling
     int x = 0;
@@ -30,8 +32,30 @@ public class PlayerController : MonoBehaviour {
       y = (int)Mathf.Sign(Input.GetAxisRaw("Vertical"));
     }
 
-    if (x != 0 || y != 0) {
-      StartCoroutine(AttemptMove(new Vector2Int(x, y)));
+    Vector2Int input = new Vector2Int(x, y);
+
+    // Buffer Logic: If busy, store valid input (overwriting previous)
+    if (IsBusy) {
+      if (input != Vector2Int.zero) {
+        moveBuffer = input;
+      }
+
+      return; // Stop here, we can't move yet
+    }
+
+    // Execution Logic: If not busy, check buffer first, then current input
+    Vector2Int moveDir = Vector2Int.zero;
+
+    if (moveBuffer.HasValue) {
+      moveDir = moveBuffer.Value;
+      moveBuffer = null; // Consume the buffer
+    } else if (input != Vector2Int.zero) {
+      moveDir = input;
+    }
+
+    // Execute Move
+    if (moveDir != Vector2Int.zero) {
+      StartCoroutine(AttemptMove(moveDir));
     }
   }
 
@@ -80,8 +104,7 @@ public class PlayerController : MonoBehaviour {
     // --- 2. ATOMIC UPDATE ---
     // This updates the Grid Logic AND the Visual Array pointers instantly.
     // It returns the GameObjects we need to animate.
-    GameObject playerObj, crateObj;
-    gridManager.RegisterMoveUpdates(move, out playerObj, out crateObj);
+    gridManager.RegisterMoveUpdates(move, out GameObject playerObj, out GameObject crateObj);
 
     // --- 3. CONCURRENT ANIMATION ---
     List<Coroutine> activeAnimations = new List<Coroutine>();
