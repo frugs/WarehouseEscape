@@ -11,7 +11,7 @@ public class TerrainMeshBuilder : MonoBehaviour
 
     [Header("Settings")]
     [SerializeField] private float wallHeight = 1.0f;
-    [SerializeField] private float holeDepth = 0.5f;
+    [SerializeField] private float holeDepth = 1.0f;
 
     private Transform levelParent, wallsParent, holesParent;
     private int gridHeight;

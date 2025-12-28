@@ -1049,7 +1049,7 @@ MonoBehaviour:
   wallMaterial: {fileID: 10302, guid: 0000000000000000f000000000000000, type: 0}
   holeMaterial: {fileID: 10302, guid: 0000000000000000f000000000000000, type: 0}
   wallHeight: 1
-  holeDepth: 0.5
+  holeDepth: 1
 --- !u!114 &1936126210
 MonoBehaviour:
   m_ObjectHideFlags: 0
