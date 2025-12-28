@@ -116,14 +116,15 @@ public class PlayerController : MonoBehaviour {
 
     // Queue Crate Animation
     if (move.type == MoveType.CratePush && crateObj != null) {
-      // Check if we pushed into a hole (Note: Grid logic is already updated to FilledHole!)
-      bool isHole = gridManager.GetCell(move.crateTo.x, move.crateTo.y).terrain ==
-                    TerrainType.FilledHole;
+      Cell finalCell = gridManager.GetCell(move.crateTo.x, move.crateTo.y);
 
-      if (isHole)
-        activeAnimations.Add(StartCoroutine(gridManager.AnimateCrateFall(crateObj, move.crateTo)));
-      else
-        activeAnimations.Add(StartCoroutine(gridManager.AnimateTransform(crateObj, move.crateTo)));
+      // Only play fall animation if the crate "disappeared" (became the floor).
+      // If occupant is Crate, it means it's sitting on TOP of a filled hole/floor.
+      bool fellInHole = finalCell.terrain == TerrainType.FilledHole &&
+                        finalCell.occupant == Occupant.Empty;
+      activeAnimations.Add(fellInHole
+        ? StartCoroutine(gridManager.AnimateCrateFall(crateObj, move.crateTo))
+        : StartCoroutine(gridManager.AnimateTransform(crateObj, move.crateTo)));
     }
 
     // Wait for ALL animations to finish

@@ -140,14 +140,37 @@ public class GridManager : MonoBehaviour {
 
   private void SetupCamera() {
     if (cameraTransform == null) return;
-    // Simple centering logic
-    cameraTransform.position = new Vector3(gridWidth / 2.0f,
-      Mathf.Max(gridWidth, gridHeight) * 0.8f + 5f,
-      gridHeight / 2.0f - 2f);
+
+    Camera cam = cameraTransform.GetComponent<Camera>();
+
+    // 1. Center the camera on the grid
+    // Logic: Grid is 0-indexed, so center is width/2.
+    // We set Y to 15 to ensure we are above any walls/objects.
+    Vector3 centerPos = new Vector3(gridWidth / 2.0f, 15f, gridHeight / 2.0f);
+    cameraTransform.position = centerPos + Vector3.back * 5.0f;
     cameraTransform.LookAt(new Vector3(gridWidth / 2.0f, 0, gridHeight / 2.0f));
+
+    // 3. Set Orthographic Size
+    if (cam != null) {
+      cam.orthographic = true; // Ensure mode is correct
+
+      float padding = 2f; // Extra border space so tiles aren't touching screen edges
+
+      // Calculate size needed for height
+      float sizeForHeight = (gridHeight + padding) * 0.5f;
+
+      // Calculate size needed for width (accounting for aspect ratio)
+      // Ortho Size = Vertical Extents.
+      // If width is the constraining factor, we convert target width to vertical extents.
+      float currentAspect = cam.aspect;
+      float sizeForWidth = ((gridWidth + padding) * 0.5f) / currentAspect;
+
+      // Pick the larger required size
+      cam.orthographicSize = Mathf.Max(sizeForHeight, sizeForWidth);
+    }
   }
 
-  // ================= CORE UPDATE LOGIC =================
+// ================= CORE UPDATE LOGIC =================
 
   /// <summary>
   /// Updates BOTH the Logic Data (Cells) and the Visual Array (GameObject references).
@@ -177,6 +200,7 @@ public class GridManager : MonoBehaviour {
 
     if (move.type == MoveType.CratePush) {
       Cell target = grid[move.crateTo.x, move.crateTo.y];
+
       if (target.terrain == TerrainType.Hole) {
         target.FillHole();
         target.occupant = Occupant.Empty; // Crate becomes part of floor logic
@@ -200,7 +224,7 @@ public class GridManager : MonoBehaviour {
     }
   }
 
-  // ================= PURE ANIMATION =================
+// ================= PURE ANIMATION =================
 
   public IEnumerator AnimateTransform(GameObject obj, Vector2Int targetGridPos) {
     if (obj == null) yield break;
@@ -245,7 +269,7 @@ public class GridManager : MonoBehaviour {
     obj.name = $"FilledHole_{targetGridPos.x}_{targetGridPos.y}";
   }
 
-  // ================= UTILS & INPUT =================
+// ================= UTILS & INPUT =================
   public Vector3 GridToWorld(int x, int y) => new Vector3(x + 0.5f, 0.5f, y + 0.5f);
 
   public Cell GetCellAtWorldPos(Vector3 worldPos) {
