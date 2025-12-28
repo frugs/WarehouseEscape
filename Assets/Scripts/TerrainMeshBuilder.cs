@@ -1,20 +1,18 @@
 using System.Collections.Generic;
-using System.Linq;
+
 using UnityEngine;
 
 public class TerrainMeshBuilder : MonoBehaviour {
-  [Header("Materials")] [SerializeField] private Material floorMaterial;
-  [SerializeField] private Material wallMaterial;
-  [SerializeField] private Material holeMaterial;
+  [Header("Materials")] [SerializeField] private readonly Material FloorMaterial = null;
+  [SerializeField] private readonly Material WallMaterial = null;
+  [SerializeField] private readonly Material HoleMaterial = null;
 
-  [Header("Settings")] [SerializeField] private float wallHeight = 1.0f;
-  [SerializeField] private float holeDepth = 1.0f;
+  [Header("Settings")] [SerializeField] private readonly float WallHeight = 1.0f;
+  [SerializeField] private readonly float HoleDepth = 1.0f;
 
-  private Transform levelParent, wallsParent, holesParent;
-  private int gridHeight;
+  private Transform LevelParent, WallsParent, HolesParent;
 
   public void BuildTerrain(Cell[,] grid, int gridWidth, int gridHeight) {
-    this.gridHeight = gridHeight;
     SetupHierarchy();
 
     CreateFloor(grid, gridWidth, gridHeight);
@@ -23,7 +21,7 @@ public class TerrainMeshBuilder : MonoBehaviour {
   }
 
   public void ClearPreviousLevel() {
-    if (levelParent) DestroyImmediate(levelParent.gameObject);
+    if (LevelParent) DestroyImmediate(LevelParent.gameObject);
   }
 
   // ========== CORE MESH GENERATION ==========
@@ -41,8 +39,8 @@ public class TerrainMeshBuilder : MonoBehaviour {
 
     if (floorPositions.Count > 0) {
       // Floor at Y=0
-      GameObject go = GenerateMesh("Floor", floorPositions, 0f, floorMaterial);
-      go.transform.parent = levelParent;
+      GameObject go = GenerateMesh("Floor", floorPositions, 0f, FloorMaterial);
+      go.transform.parent = LevelParent;
     }
   }
 
@@ -58,7 +56,7 @@ public class TerrainMeshBuilder : MonoBehaviour {
         Vector3 basePos = GridToWorld(x, y, 0);
 
         // 1. TOP FACE (Y = wallHeight)
-        AddHorizontalQuad(basePos + Vector3.up * wallHeight, vertices, triangles, uvs);
+        AddHorizontalQuad(basePos + Vector3.up * WallHeight, vertices, triangles, uvs);
 
         // 2. SIDE FACES (Check 4 neighbors)
         // North (Z+1)
@@ -76,7 +74,7 @@ public class TerrainMeshBuilder : MonoBehaviour {
       }
     }
 
-    CreateGameObjectFromMeshData("Walls", vertices, triangles, uvs, wallMaterial, wallsParent);
+    CreateGameObjectFromMeshData("Walls", vertices, triangles, uvs, WallMaterial, WallsParent);
   }
 
   private void CreateHoles(Cell[,] grid, int gridWidth, int gridHeight) {
@@ -91,7 +89,7 @@ public class TerrainMeshBuilder : MonoBehaviour {
         Vector3 center = GridToWorld(x, y, 0);
 
         // 1. BOTTOM FACE (Y = -holeDepth)
-        AddHorizontalQuad(center + Vector3.down * holeDepth, vertices, triangles, uvs);
+        AddHorizontalQuad(center + Vector3.down * HoleDepth, vertices, triangles, uvs);
 
         // 2. INNER WALLS (Check 4 neighbors)
         CheckAndAddHoleSide(x, y, 0, 1, Vector3.forward, grid, gridWidth, gridHeight, vertices,
@@ -105,7 +103,7 @@ public class TerrainMeshBuilder : MonoBehaviour {
       }
     }
 
-    CreateGameObjectFromMeshData("Holes", vertices, triangles, uvs, holeMaterial, holesParent);
+    CreateGameObjectFromMeshData("Holes", vertices, triangles, uvs, HoleMaterial, HolesParent);
   }
 
   // ========== FACE GENERATION HELPERS ==========
@@ -119,8 +117,8 @@ public class TerrainMeshBuilder : MonoBehaviour {
     bool isEdge = (nx < 0 || nx >= width || ny < 0 || ny >= height);
     if (isEdge || grid[nx, ny].terrain != TerrainType.Wall) {
       Vector3 center = GridToWorld(x, y, 0);
-      Vector3 faceCenter = center + (dirNormal * 0.5f) + (Vector3.up * (wallHeight / 2));
-      AddVerticalQuad(faceCenter, dirNormal, wallHeight, verts, tris, uvs);
+      Vector3 faceCenter = center + (dirNormal * 0.5f) + (Vector3.up * (WallHeight / 2));
+      AddVerticalQuad(faceCenter, dirNormal, WallHeight, verts, tris, uvs);
     }
   }
 
@@ -133,9 +131,9 @@ public class TerrainMeshBuilder : MonoBehaviour {
     bool isEdge = (nx < 0 || nx >= width || ny < 0 || ny >= height);
     if (isEdge || grid[nx, ny].terrain != TerrainType.Hole) {
       Vector3 center = GridToWorld(x, y, 0);
-      Vector3 faceCenter = center + (dirNormal * 0.5f) + (Vector3.down * (holeDepth / 2));
+      Vector3 faceCenter = center + (dirNormal * 0.5f) + (Vector3.down * (HoleDepth / 2));
       // Invert normal because we are looking INTO the hole
-      AddVerticalQuad(faceCenter, -dirNormal, holeDepth, verts, tris, uvs);
+      AddVerticalQuad(faceCenter, -dirNormal, HoleDepth, verts, tris, uvs);
     }
   }
 
@@ -215,7 +213,7 @@ public class TerrainMeshBuilder : MonoBehaviour {
     return new Vector3(x + 0.5f, yPos, y + 0.5f);
   }
 
-  private GameObject GenerateMesh(string name, List<Vector2Int> positions, float yHeight,
+  private GameObject GenerateMesh(string meshName, List<Vector2Int> positions, float yHeight,
     Material mat) {
     List<Vector3> verts = new List<Vector3>();
     List<int> tris = new List<int>();
@@ -225,14 +223,14 @@ public class TerrainMeshBuilder : MonoBehaviour {
       AddHorizontalQuad(GridToWorld(pos.x, pos.y, yHeight), verts, tris, uvs);
     }
 
-    return CreateGameObjectFromMeshData(name, verts, tris, uvs, mat, null);
+    return CreateGameObjectFromMeshData(meshName, verts, tris, uvs, mat, null);
   }
 
-  private GameObject CreateGameObjectFromMeshData(string name, List<Vector3> verts, List<int> tris,
+  private GameObject CreateGameObjectFromMeshData(string meshName, List<Vector3> verts, List<int> tris,
     List<Vector2> uvs, Material mat, Transform parent) {
     if (verts.Count == 0) return null;
 
-    GameObject go = new GameObject(name);
+    GameObject go = new GameObject(meshName);
     if (parent) go.transform.parent = parent;
 
     Mesh mesh = new Mesh();
@@ -242,7 +240,7 @@ public class TerrainMeshBuilder : MonoBehaviour {
     mesh.RecalculateNormals();
 
     go.AddComponent<MeshFilter>().mesh = mesh;
-    go.AddComponent<MeshRenderer>().material = mat ?? floorMaterial;
+    go.AddComponent<MeshRenderer>().material = mat ?? FloorMaterial;
     go.AddComponent<MeshCollider>();
 
     return go;
@@ -250,12 +248,12 @@ public class TerrainMeshBuilder : MonoBehaviour {
 
   private void SetupHierarchy() {
     ClearPreviousLevel();
-    levelParent = new GameObject("LevelTerrain").transform;
+    LevelParent = new GameObject("LevelTerrain").transform;
 
-    wallsParent = new GameObject("Walls").transform;
-    wallsParent.parent = levelParent;
+    WallsParent = new GameObject("Walls").transform;
+    WallsParent.parent = LevelParent;
 
-    holesParent = new GameObject("Holes").transform;
-    holesParent.parent = levelParent;
+    HolesParent = new GameObject("Holes").transform;
+    HolesParent.parent = LevelParent;
   }
 }

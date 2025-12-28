@@ -1,13 +1,14 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
+using JetBrains.Annotations;
 using UnityEngine;
 
 public class GridManager : MonoBehaviour {
   [Header("Level Settings")] [SerializeField]
   private int levelNumber = 1;
 
-  [SerializeField] private string levelsDirectoryName = "Levels";
+  [SerializeField] private readonly string LevelsDirectoryName = "Levels";
 
   [Header("References")] [SerializeField]
   private TerrainMeshBuilder terrainBuilder;
@@ -16,14 +17,14 @@ public class GridManager : MonoBehaviour {
   [SerializeField] private PlayerController playerController;
   [SerializeField] private Transform cameraTransform;
 
-  [Header("Prefabs")] [SerializeField] private GameObject playerTile;
-  [SerializeField] private GameObject crateTile;
-  [SerializeField] private GameObject targetTile;
+  [Header("Prefabs")] [SerializeField] private readonly GameObject PlayerTile = null;
+  [SerializeField] private readonly GameObject CrateTile = null;
+  [SerializeField] private readonly GameObject TargetTile = null;
 
   [Header("Animation Timing")] [SerializeField]
-  private float moveAnimationDuration = 0.2f; // Snappy movement
+  private readonly float MoveAnimationDuration = 0.2f; // Snappy movement
 
-  [SerializeField] private float fallAnimationDuration = 0.15f;
+  [SerializeField] private readonly float FallAnimationDuration = 0.15f;
 
   // ================= STATE =================
   public Cell[,] grid;
@@ -33,24 +34,27 @@ public class GridManager : MonoBehaviour {
   private int crateCount;
 
   // Movement State
-  private bool isMovingPlayer = false; // For mouse pathfinding
+  private bool isMovingPlayer; // For mouse pathfinding
   private List<Cell> playerMovementPath;
-  private float moveDelay = 0.25f;
-  private float currentDelay = 0f;
-  private bool isPaused = false;
+  private readonly float moveDelay = 0.25f;
+  private float currentDelay;
+  private bool isPaused;
 
-  private string LevelsDirectory => Path.Combine(Application.dataPath, levelsDirectoryName);
+  private string LevelsDirectory => Path.Combine(Application.dataPath, LevelsDirectoryName);
 
+  [UsedImplicitly]
   private void Awake() {
     if (terrainBuilder == null) terrainBuilder = GetComponent<TerrainMeshBuilder>();
     if (menuManager == null) menuManager = GetComponent<MenuManager>();
     if (cameraTransform == null && Camera.main != null) cameraTransform = Camera.main.transform;
   }
 
+  [UsedImplicitly]
   private void Start() {
     LoadLevel(levelNumber);
   }
 
+  [UsedImplicitly]
   private void Update() {
     if (isPaused) return;
     HandleMouseInput();
@@ -80,7 +84,7 @@ public class GridManager : MonoBehaviour {
     SpawnDynamicObjects();
     SetupCamera();
 
-    if (menuManager != null) menuManager.resumeGame();
+    if (menuManager != null) menuManager.ResumeGame();
     isPaused = false;
   }
 
@@ -91,7 +95,7 @@ public class GridManager : MonoBehaviour {
           Destroy(obj);
     }
 
-    foreach (var t in GameObject.FindObjectsOfType<GameObject>()) {
+    foreach (var t in GameObject.FindObjectsByType<GameObject>(FindObjectsSortMode.None)) {
       // Cleanup any stray objects including completed crates
       if (t.name.StartsWith("Target_") || t.name.StartsWith("Crate_") ||
           t.name.StartsWith("FilledHoleCrate_") || t.name == "Player")
@@ -100,7 +104,7 @@ public class GridManager : MonoBehaviour {
 
     visualGrid = null;
     // Re-assign controller if it was destroyed
-    if (playerController == null) playerController = FindObjectOfType<PlayerController>();
+    if (playerController == null) playerController = FindAnyObjectByType<PlayerController>();
   }
 
   private void SpawnDynamicObjects() {
@@ -110,12 +114,12 @@ public class GridManager : MonoBehaviour {
         Vector3 pos = GridToWorld(x, y);
 
         if (cell.isTarget) {
-          GameObject t = Instantiate(targetTile, pos, Quaternion.identity);
+          GameObject t = Instantiate(TargetTile, pos, Quaternion.identity);
           t.name = $"Target_{x}_{y}";
         }
 
         if (cell.occupant == Occupant.Player) {
-          GameObject p = Instantiate(playerTile, pos, Quaternion.identity);
+          GameObject p = Instantiate(PlayerTile, pos, Quaternion.identity);
           p.name = "Player";
           if (playerController != null) {
             // Reposition existing controller or attach new logic
@@ -126,7 +130,7 @@ public class GridManager : MonoBehaviour {
           playerController = p.GetComponent<PlayerController>();
           visualGrid[x, y] = p;
         } else if (cell.occupant == Occupant.Crate) {
-          GameObject c = Instantiate(crateTile, pos, Quaternion.identity);
+          GameObject c = Instantiate(CrateTile, pos, Quaternion.identity);
           c.name = $"Crate_{x}_{y}";
           visualGrid[x, y] = c;
         }
@@ -202,9 +206,9 @@ public class GridManager : MonoBehaviour {
     Vector3 endPos = GridToWorld(targetGridPos.x, targetGridPos.y);
     float elapsed = 0f;
 
-    while (elapsed < moveAnimationDuration) {
+    while (elapsed < MoveAnimationDuration) {
       elapsed += Time.deltaTime;
-      float t = elapsed / moveAnimationDuration;
+      float t = elapsed / MoveAnimationDuration;
       // Quadratic ease-out for smoother feel
       t = t * (2 - t);
       obj.transform.position = Vector3.Lerp(startPos, endPos, t);
@@ -225,9 +229,9 @@ public class GridManager : MonoBehaviour {
     Vector3 endPos = startPos + Vector3.down * 1.0f; // Sink depth
     float elapsed = 0f;
 
-    while (elapsed < fallAnimationDuration) {
+    while (elapsed < FallAnimationDuration) {
       elapsed += Time.deltaTime;
-      float t = elapsed / fallAnimationDuration;
+      float t = elapsed / FallAnimationDuration;
       obj.transform.position = Vector3.Lerp(startPos, endPos, t);
       yield return null;
     }
@@ -255,7 +259,7 @@ public class GridManager : MonoBehaviour {
     pos.x >= 0 && pos.x < gridWidth && pos.y >= 0 && pos.y < gridHeight;
 
   private void HandleMouseInput() {
-    if (Input.GetMouseButtonDown(0) && playerController != null && !playerController.IsBusy) {
+    if (Camera.main != null && Input.GetMouseButtonDown(0) && playerController != null && !playerController.IsBusy) {
       Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
       if (Physics.Raycast(ray, out RaycastHit hit)) {
         Cell clickedCell = GetCellAtWorldPos(hit.point);
@@ -354,7 +358,7 @@ public class GridManager : MonoBehaviour {
       Debug.Log("Level Complete!");
       isPaused = true;
       if (menuManager) {
-        menuManager.winGame();
+        menuManager.WinGame();
       }
     }
   }

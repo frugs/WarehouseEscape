@@ -1,7 +1,6 @@
 using System;
 using UnityEngine;
 
-[System.Serializable]
 public class MoveManager {
   /// <summary>Applies ANY Sokoban move to grid state (PlayerController + Solver shared!)</summary>
   public static SokobanState ApplyMove(SokobanState state, SokobanMove move) {

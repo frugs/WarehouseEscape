@@ -1,17 +1,15 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 public class MenuManager : MonoBehaviour {
-  [SerializeField] private GameObject winMenu;
+  [SerializeField] private readonly GameObject WinMenu = null;
 
-  public void winGame() {
-    winMenu.SetActive(true);
+  public void WinGame() {
+    WinMenu.SetActive(true);
     Time.timeScale = 0f;
   }
 
-  public void resumeGame() {
-    winMenu.SetActive(false);
+  public void ResumeGame() {
+    WinMenu.SetActive(false);
     Time.timeScale = 1f;
   }
 }

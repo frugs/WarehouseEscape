@@ -1,11 +1,10 @@
 using System;
-using UnityEngine;
 
 /// <summary>
 /// Pure Sokoban cell logic - NO Unity GameObject dependencies.
 /// Represents one grid position with terrain + occupant state.
 /// </summary>
-[System.Serializable]
+[Serializable]
 public class Cell {
   public TerrainType terrain = TerrainType.Floor;
   public Occupant occupant = Occupant.Empty;
@@ -58,7 +57,7 @@ public class Cell {
 }
 
 /// <summary>Pure terrain types - no visual dependencies</summary>
-[System.Serializable]
+[Serializable]
 public enum TerrainType {
   Floor, // Always passable
   Wall,
@@ -67,7 +66,7 @@ public enum TerrainType {
 }
 
 /// <summary>Pure occupant types - no Unity GameObjects</summary>
-[System.Serializable]
+[Serializable]
 public enum Occupant {
   Empty, // No object
   Player, // Player position

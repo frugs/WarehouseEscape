@@ -5,7 +5,7 @@ using UnityEngine;
 /// Immutable snapshot of complete Sokoban game state.
 /// Used by Solver, Undo/Redo, Network sync, Level serialization.
 /// </summary>
-[System.Serializable]
+[Serializable]
 public class SokobanState {
   public Cell[,] grid;
   public Vector2Int playerPos;

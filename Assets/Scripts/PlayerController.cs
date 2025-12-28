@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using JetBrains.Annotations;
 using UnityEngine;
 
 public class PlayerController : MonoBehaviour {
@@ -9,11 +10,13 @@ public class PlayerController : MonoBehaviour {
   public bool IsBusy { get; private set; } // Processing a move/animation
   public bool IsAutoMoving { get; set; } // Following a mouse path
 
-  void Awake() {
-    gridManager = FindObjectOfType<GridManager>();
+  [UsedImplicitly]
+  private void Awake() {
+    gridManager = FindAnyObjectByType<GridManager>();
   }
 
-  void Update() {
+  [UsedImplicitly]
+  private void Update() {
     // Block input if busy (animating) or if auto-moving (let the path logic drive)
     if (IsBusy || IsAutoMoving) return;
 

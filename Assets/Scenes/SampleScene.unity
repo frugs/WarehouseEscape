@@ -1034,7 +1034,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0878943929255f84fb8dd328956ecdce, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  winMenu: {fileID: 413234682}
+  WinMenu: {fileID: 413234682}
 --- !u!114 &1936126209
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1064,7 +1064,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0878943929255f84fb8dd328956ecdce, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MenuManager
-  winMenu: {fileID: 0}
+  WinMenu: {fileID: 0}
 --- !u!114 &1936126211
 MonoBehaviour:
   m_ObjectHideFlags: 0

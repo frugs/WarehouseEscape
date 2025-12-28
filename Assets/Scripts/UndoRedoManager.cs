@@ -1,6 +1,5 @@
-using System;
-using System.Collections;
 using System.Collections.Generic;
+using JetBrains.Annotations;
 using UnityEngine;
 
 public class UndoRedoManager : MonoBehaviour {
@@ -8,10 +7,11 @@ public class UndoRedoManager : MonoBehaviour {
   private Stack<MoveAction> redoStack;
   public GridManager gridManager;
 
+  [UsedImplicitly]
   public void Awake() {
     undoStack = new Stack<MoveAction>();
     redoStack = new Stack<MoveAction>();
-    gridManager = FindObjectOfType<GridManager>();
+    gridManager = FindAnyObjectByType<GridManager>();
   }
 
   public void AddAction(GameObject player, Vector3 playerOriginalPosition,

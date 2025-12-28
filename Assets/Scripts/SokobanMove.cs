@@ -5,7 +5,7 @@ using UnityEngine;
 /// Single atomic Sokoban action (Player move or Crate push).
 /// Pure data - used by PlayerController, Solver, Undo/Redo.
 /// </summary>
-[System.Serializable]
+[Serializable]
 public class SokobanMove {
   public Vector2Int playerFrom;
   public Vector2Int playerTo;
