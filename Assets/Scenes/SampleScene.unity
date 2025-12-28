@@ -997,16 +997,13 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GridManager
   levelNumber: 1
-  levelsDirectoryName: Levels
   terrainBuilder: {fileID: 0}
   menuManager: {fileID: 0}
   playerController: {fileID: 0}
   cameraTransform: {fileID: 0}
-  playerTile: {fileID: 721129335946948922, guid: 081bf8a76a88e34408793b404f24af5d, type: 3}
-  crateTile: {fileID: 4699907650127345005, guid: 4fc469b1f980a6b429697cc87278a555, type: 3}
-  targetTile: {fileID: 5504698377664096694, guid: f5ee4a16c1e9af04ca27e6740c476264, type: 3}
-  moveAnimationDuration: 0.2
-  fallAnimationDuration: 0.15
+  PlayerTile: {fileID: 721129335946948922, guid: 081bf8a76a88e34408793b404f24af5d, type: 3}
+  CrateTile: {fileID: 4699907650127345005, guid: 4fc469b1f980a6b429697cc87278a555, type: 3}
+  TargetTile: {fileID: 5504698377664096694, guid: f5ee4a16c1e9af04ca27e6740c476264, type: 3}
 --- !u!4 &1936126207
 Transform:
   m_ObjectHideFlags: 0
@@ -1047,11 +1044,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 522d3eceaa00cfa4b8f634e54c82b7c0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TerrainMeshBuilder
-  floorMaterial: {fileID: 10302, guid: 0000000000000000f000000000000000, type: 0}
-  wallMaterial: {fileID: 10302, guid: 0000000000000000f000000000000000, type: 0}
-  holeMaterial: {fileID: 10302, guid: 0000000000000000f000000000000000, type: 0}
-  wallHeight: 1
-  holeDepth: 1
+  FloorMaterial: {fileID: 10302, guid: 0000000000000000f000000000000000, type: 0}
+  WallMaterial: {fileID: 10302, guid: 0000000000000000f000000000000000, type: 0}
+  HoleMaterial: {fileID: 10302, guid: 0000000000000000f000000000000000, type: 0}
 --- !u!114 &1936126210
 MonoBehaviour:
   m_ObjectHideFlags: 0

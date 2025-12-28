@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using UnityEngine;
 
 public class TerrainMeshBuilder : MonoBehaviour {
-  [Header("Materials")] [SerializeField] private readonly Material FloorMaterial = null;
-  [SerializeField] private readonly Material WallMaterial = null;
-  [SerializeField] private readonly Material HoleMaterial = null;
+  [Header("Materials")] [SerializeField] private Material FloorMaterial = null;
+  [SerializeField] private Material WallMaterial = null;
+  [SerializeField] private Material HoleMaterial = null;
 
   [Header("Settings")] [SerializeField] private readonly float WallHeight = 1.0f;
   [SerializeField] private readonly float HoleDepth = 1.0f;

@@ -17,9 +17,9 @@ public class GridManager : MonoBehaviour {
   [SerializeField] private PlayerController playerController;
   [SerializeField] private Transform cameraTransform;
 
-  [Header("Prefabs")] [SerializeField] private readonly GameObject PlayerTile = null;
-  [SerializeField] private readonly GameObject CrateTile = null;
-  [SerializeField] private readonly GameObject TargetTile = null;
+  [Header("Prefabs")] [SerializeField] private GameObject PlayerTile = null;
+  [SerializeField] private GameObject CrateTile = null;
+  [SerializeField] private GameObject TargetTile = null;
 
   [Header("Animation Timing")] [SerializeField]
   private readonly float MoveAnimationDuration = 0.2f; // Snappy movement

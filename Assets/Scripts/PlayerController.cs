@@ -26,11 +26,8 @@ public class PlayerController : MonoBehaviour {
 
     if (Input.GetButtonDown("Horizontal")) {
       x = (int)Mathf.Sign(Input.GetAxisRaw("Horizontal"));
-      Debug.Log("get busy " + IsBusy);
-      Debug.Log("handle move");
     } else if (Input.GetButtonDown("Vertical")) {
       y = (int)Mathf.Sign(Input.GetAxisRaw("Vertical"));
-      Debug.Log("handle move");
     }
 
     if (x != 0 || y != 0) {
@@ -44,9 +41,7 @@ public class PlayerController : MonoBehaviour {
   }
 
   private IEnumerator AttemptMove(Vector2Int direction) {
-    Debug.Log("attempt move");
     IsBusy = true; // Lock input immediately
-    Debug.Log("set busy " + IsBusy);
 
     Vector2Int currentPos = GetPlayerGridPos();
     Vector2Int targetPos = currentPos + direction;
@@ -55,7 +50,6 @@ public class PlayerController : MonoBehaviour {
     // --- 1. VALIDATION ---
     // If invalid, unlock and exit
     if (targetCell == null || !targetCell.PlayerCanWalk) {
-      Debug.Log("unlock input");
       IsBusy = false;
       yield break;
     }
@@ -79,7 +73,6 @@ public class PlayerController : MonoBehaviour {
 
     // If move isn't valid (e.g. pushing crate into wall), exit
     if (move == null) {
-      Debug.Log("unlock input");
       IsBusy = false;
       yield break;
     }
@@ -117,7 +110,6 @@ public class PlayerController : MonoBehaviour {
 
     // --- 4. FINALIZE ---
     gridManager.CheckWinCondition();
-    Debug.Log("unlock input");
     IsBusy = false; // Unlock input
   }
 

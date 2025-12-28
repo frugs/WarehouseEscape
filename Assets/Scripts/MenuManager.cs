@@ -1,7 +1,7 @@
 using UnityEngine;
 
 public class MenuManager : MonoBehaviour {
-  [SerializeField] private readonly GameObject WinMenu = null;
+  [SerializeField] private GameObject WinMenu = null;
 
   public void WinGame() {
     WinMenu.SetActive(true);
