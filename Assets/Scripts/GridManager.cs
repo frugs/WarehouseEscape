@@ -22,7 +22,7 @@ public class GridManager : MonoBehaviour {
   [SerializeField] private GameObject TargetTile = null;
 
   [Header("Animation Timing")] [SerializeField]
-  private readonly float MoveAnimationDuration = 0.12f; // Snappy movement
+  private readonly float MoveAnimationDuration = 0.2f; // Snappy movement
 
   [SerializeField] private readonly float FallAnimationDuration = 0.15f;
 
@@ -32,13 +32,6 @@ public class GridManager : MonoBehaviour {
   private int gridWidth;
   private int gridHeight;
   private int crateCount;
-
-  // Movement State
-  private bool isMovingPlayer; // For mouse pathfinding
-  private List<Cell> playerMovementPath;
-  private readonly float moveDelay = 0.25f;
-  private float currentDelay;
-  private bool isPaused;
 
   private string LevelsDirectory => Path.Combine(Application.dataPath, LevelsDirectoryName);
 
@@ -54,12 +47,7 @@ public class GridManager : MonoBehaviour {
     LoadLevel(levelNumber);
   }
 
-  [UsedImplicitly]
-  private void Update() {
-    if (isPaused) return;
-    HandleMouseInput();
-    if (isMovingPlayer) ProcessPlayerPath();
-  }
+  // Update loop removed: GridManager no longer handles input or movement updates.
 
   // ================= LEVEL LOADING =================
   public void LoadLevel(int level) {
@@ -85,7 +73,6 @@ public class GridManager : MonoBehaviour {
     SetupCamera();
 
     if (menuManager != null) menuManager.ResumeGame();
-    isPaused = false;
   }
 
   private void CleanupLevel() {
@@ -121,11 +108,6 @@ public class GridManager : MonoBehaviour {
         if (cell.occupant == Occupant.Player) {
           GameObject p = Instantiate(PlayerTile, pos, Quaternion.identity);
           p.name = "Player";
-          if (playerController != null) {
-            // Reposition existing controller or attach new logic
-            // Ideally we assume the controller script is on the prefab
-          }
-
           // Update our reference if the prefab has the script
           playerController = p.GetComponent<PlayerController>();
           visualGrid[x, y] = p;
@@ -144,41 +126,33 @@ public class GridManager : MonoBehaviour {
     Camera cam = cameraTransform.GetComponent<Camera>();
 
     // 1. Center the camera on the grid
-    // Logic: Grid is 0-indexed, so center is width/2.
-    // We set Y to 15 to ensure we are above any walls/objects.
     Vector3 centerPos = new Vector3(gridWidth / 2.0f, 15f, gridHeight / 2.0f);
-    cameraTransform.position = centerPos + Vector3.back * 5.0f;
-    cameraTransform.LookAt(new Vector3(gridWidth / 2.0f, 0, gridHeight / 2.0f));
+    cameraTransform.position = centerPos;
 
-    // 3. Set Orthographic Size
+    // 2. Set Rotation (Top-Down)
+    cameraTransform.rotation = Quaternion.Euler(90f, 0f, 0f);
+
+    // 3. Set Orthographic Size based on Grid Size & Aspect Ratio
     if (cam != null) {
-      cam.orthographic = true; // Ensure mode is correct
+      cam.orthographic = true;
 
-      float padding = 2f; // Extra border space so tiles aren't touching screen edges
-
-      // Calculate size needed for height
+      float padding = 2f;
       float sizeForHeight = (gridHeight + padding) * 0.5f;
 
-      // Calculate size needed for width (accounting for aspect ratio)
-      // Ortho Size = Vertical Extents.
-      // If width is the constraining factor, we convert target width to vertical extents.
       float currentAspect = cam.aspect;
       float sizeForWidth = ((gridWidth + padding) * 0.5f) / currentAspect;
 
-      // Pick the larger required size
       cam.orthographicSize = Mathf.Max(sizeForHeight, sizeForWidth);
     }
   }
 
-// ================= CORE UPDATE LOGIC =================
+  // ================= CORE UPDATE LOGIC =================
 
   /// <summary>
   /// Updates BOTH the Logic Data (Cells) and the Visual Array (GameObject references).
   /// Returns the GameObjects that need to be animated so the caller doesn't need to look them up.
   /// </summary>
-  public void RegisterMoveUpdates(
-    SokobanMove move,
-    out GameObject playerObj,
+  public void RegisterMoveUpdates(SokobanMove move, out GameObject playerObj,
     out GameObject crateObj) {
     playerObj = null;
     crateObj = null;
@@ -186,7 +160,6 @@ public class GridManager : MonoBehaviour {
     // 1. Capture Objects (before we clear the grid cells)
     if (IsValidPos(move.playerFrom))
       playerObj = visualGrid[move.playerFrom.x, move.playerFrom.y];
-
 
     if (move.type == MoveType.CratePush && IsValidPos(move.crateFrom))
       crateObj = visualGrid[move.crateFrom.x, move.crateFrom.y];
@@ -200,7 +173,6 @@ public class GridManager : MonoBehaviour {
 
     if (move.type == MoveType.CratePush) {
       Cell target = grid[move.crateTo.x, move.crateTo.y];
-
       if (target.terrain == TerrainType.Hole) {
         target.FillHole();
         target.occupant = Occupant.Empty; // Crate becomes part of floor logic
@@ -224,7 +196,7 @@ public class GridManager : MonoBehaviour {
     }
   }
 
-// ================= PURE ANIMATION =================
+  // ================= PURE ANIMATION =================
 
   public IEnumerator AnimateTransform(GameObject obj, Vector2Int targetGridPos) {
     if (obj == null) yield break;
@@ -269,7 +241,56 @@ public class GridManager : MonoBehaviour {
     obj.name = $"FilledHole_{targetGridPos.x}_{targetGridPos.y}";
   }
 
-// ================= UTILS & INPUT =================
+  // ================= UTILS & PATHFINDING SERVICE =================
+
+  /// <summary>
+  /// Calculates a path between two grid coordinates using BFS.
+  /// Returns a list of Cell coordinates to visit (excluding the start).
+  /// </summary>
+  public List<Vector2Int> GetPath(Vector2Int startPos, Vector2Int targetPos) {
+    Cell start = GetCell(startPos.x, startPos.y);
+    Cell target = GetCell(targetPos.x, targetPos.y);
+
+    if (start == null || target == null || !target.IsPathableForPlayer) return null;
+
+    // BFS Pathfinding
+    Queue<Cell> queue = new Queue<Cell>();
+    Dictionary<Cell, Cell> cameFrom = new Dictionary<Cell, Cell>();
+
+    queue.Enqueue(start);
+    cameFrom[start] = null;
+
+    bool found = false;
+
+    while (queue.Count > 0) {
+      Cell current = queue.Dequeue();
+      if (current == target) {
+        found = true;
+        break;
+      }
+
+      foreach (var neighbor in GetNeighbors(current)) {
+        if (!cameFrom.ContainsKey(neighbor) && neighbor.IsPathableForPlayer) {
+          cameFrom[neighbor] = current;
+          queue.Enqueue(neighbor);
+        }
+      }
+    }
+
+    if (!found) return null;
+
+    // Reconstruct
+    List<Vector2Int> path = new List<Vector2Int>();
+    Cell curr = target;
+    while (curr != start) {
+      path.Add(new Vector2Int(curr.x, curr.y));
+      curr = cameFrom[curr];
+    }
+
+    path.Reverse();
+    return path;
+  }
+
   public Vector3 GridToWorld(int x, int y) => new Vector3(x + 0.5f, 0.5f, y + 0.5f);
 
   public Cell GetCellAtWorldPos(Vector3 worldPos) {
@@ -284,79 +305,6 @@ public class GridManager : MonoBehaviour {
 
   public bool IsValidPos(Vector2Int pos) =>
     pos.x >= 0 && pos.x < gridWidth && pos.y >= 0 && pos.y < gridHeight;
-
-  private void HandleMouseInput() {
-    if (Camera.main != null && Input.GetMouseButtonDown(0) && playerController != null &&
-        !playerController.IsBusy) {
-      Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-      if (Physics.Raycast(ray, out RaycastHit hit)) {
-        Cell clickedCell = GetCellAtWorldPos(hit.point);
-        Cell startCell = GetCellAtWorldPos(playerController.transform.position);
-        FindPathAndMove(startCell, clickedCell);
-      }
-    }
-  }
-
-  private void FindPathAndMove(Cell start, Cell target) {
-    if (start == null || target == null || !target.IsPathableForPlayer) return;
-
-    // BFS Pathfinding
-    Queue<Cell> queue = new Queue<Cell>();
-    Dictionary<Cell, Cell> cameFrom = new Dictionary<Cell, Cell>();
-    queue.Enqueue(start);
-    cameFrom[start] = null;
-
-    while (queue.Count > 0) {
-      Cell current = queue.Dequeue();
-      if (current == target) {
-        ReconstructPath(cameFrom, start, target);
-        return;
-      }
-
-      foreach (var neighbor in GetNeighbors(current)) {
-        if (!cameFrom.ContainsKey(neighbor) && neighbor.IsPathableForPlayer) {
-          cameFrom[neighbor] = current;
-          queue.Enqueue(neighbor);
-        }
-      }
-    }
-  }
-
-  private void ReconstructPath(Dictionary<Cell, Cell> cameFrom, Cell start, Cell current) {
-    playerMovementPath = new List<Cell>();
-    while (current != start) {
-      playerMovementPath.Add(current);
-      current = cameFrom[current];
-    }
-
-    playerMovementPath.Reverse();
-    isMovingPlayer = true;
-    playerController.IsAutoMoving = true; // Tell controller to ignore inputs
-  }
-
-  private void ProcessPlayerPath() {
-    if (playerMovementPath == null || playerMovementPath.Count == 0) {
-      isMovingPlayer = false;
-      if (playerController) playerController.IsAutoMoving = false;
-      return;
-    }
-
-    // Simple throttle for path movement
-    currentDelay += Time.deltaTime;
-    if (currentDelay >= moveDelay) {
-      Cell nextCell = playerMovementPath[0];
-      Cell currentCell = GetCellAtWorldPos(playerController.transform.position);
-
-      // Calculate direction for the controller to execute
-      Vector2Int dir = new Vector2Int(nextCell.x - currentCell.x, nextCell.y - currentCell.y);
-
-      // Delegate actual logic/animation to the controller so it's consistent
-      playerController.ExecuteMove(dir);
-
-      playerMovementPath.RemoveAt(0);
-      currentDelay = 0f;
-    }
-  }
 
   private List<Cell> GetNeighbors(Cell cell) {
     List<Cell> list = new List<Cell>();
@@ -384,7 +332,6 @@ public class GridManager : MonoBehaviour {
 
     if (cratesOnTargets >= crateCount) {
       Debug.Log("Level Complete!");
-      isPaused = true;
       if (menuManager) {
         menuManager.WinGame();
       }
