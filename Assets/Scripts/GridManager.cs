@@ -14,7 +14,6 @@ public class GridManager : MonoBehaviour {
   private TerrainMeshBuilder terrainBuilder;
 
   [SerializeField] private MenuManager menuManager;
-  [SerializeField] private PlayerController playerController;
   [SerializeField] private Transform cameraTransform;
 
   [Header("Prefabs")] [SerializeField] private GameObject PlayerTile = null;
@@ -90,8 +89,6 @@ public class GridManager : MonoBehaviour {
     }
 
     visualGrid = null;
-    // Re-assign controller if it was destroyed
-    if (playerController == null) playerController = FindAnyObjectByType<PlayerController>();
   }
 
   private void SpawnDynamicObjects() {
@@ -108,8 +105,6 @@ public class GridManager : MonoBehaviour {
         if (cell.occupant == Occupant.Player) {
           GameObject p = Instantiate(PlayerTile, pos, Quaternion.identity);
           p.name = "Player";
-          // Update our reference if the prefab has the script
-          playerController = p.GetComponent<PlayerController>();
           visualGrid[x, y] = p;
         } else if (cell.occupant == Occupant.Crate) {
           GameObject c = Instantiate(CrateTile, pos, Quaternion.identity);
@@ -123,17 +118,18 @@ public class GridManager : MonoBehaviour {
   private void SetupCamera() {
     if (cameraTransform == null) return;
 
+    // Position camera to look at centre of grid
+    cameraTransform.position = new Vector3(
+      gridWidth / 2.0f,
+      Mathf.Tan(Mathf.Deg2Rad * 80f) * gridHeight / 2.0f,
+      0.0f);
+    cameraTransform.rotation = Quaternion.Euler(80f, 0f, 0f);
+
     Camera cam = cameraTransform.GetComponent<Camera>();
 
-    // 1. Center the camera on the grid
-    Vector3 centerPos = new Vector3(gridWidth / 2.0f, 15f, gridHeight / 2.0f);
-    cameraTransform.position = centerPos;
-
-    // 2. Set Rotation (Top-Down)
-    cameraTransform.rotation = Quaternion.Euler(90f, 0f, 0f);
-
-    // 3. Set Orthographic Size based on Grid Size & Aspect Ratio
-    if (cam != null) {
+    // Set Orthographic Size based on Grid Size & Aspect Ratio
+    if (cam != null)
+    {
       cam.orthographic = true;
 
       float padding = 2f;
