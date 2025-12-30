@@ -1,66 +1,40 @@
 using System;
-using UnityEngine;
+using System.Linq;
 
 public class MoveManager {
   /// <summary>Applies ANY Sokoban move to grid state (PlayerController + Solver shared!)</summary>
   public static SokobanState ApplyMove(SokobanState state, SokobanMove move) {
-    Cell[,] newGrid = CloneGrid(state.grid);
-
     switch (move.type) {
       case MoveType.PlayerMove:
-        ApplyPlayerMove(newGrid, state.playerPos, move.playerTo);
-        break;
+        return ApplyPlayerMove(state, move);
       case MoveType.CratePush:
-        ApplyCratePush(newGrid, state.playerPos, move);
-        break;
+        return ApplyCratePush(state, move);
       default:
         throw new ArgumentException($"Unknown move type: {move.type}");
     }
-
-    return new SokobanState(newGrid, move.playerTo);
   }
 
-  private static void ApplyPlayerMove(Cell[,] grid, Vector2Int fromPos, Vector2Int toPos) {
-    grid[fromPos.x, fromPos.y].occupant = Occupant.Empty;
-    grid[toPos.x, toPos.y].occupant = Occupant.Player;
+  private static SokobanState ApplyPlayerMove(SokobanState state, SokobanMove move) {
+    return new SokobanState(
+              state.TerrainGrid,
+              move.playerTo,
+              state.CratePositions,
+              state.FilledHoles);
   }
 
-  private static void ApplyCratePush(Cell[,] grid, Vector2Int playerPos, SokobanMove move) {
-    // Clear old positions
-    // We must clear the crate's old position BEFORE placing the player there,
-    // otherwise we would overwrite the player with 'Empty' because playerTo == crateFrom.
-    grid[playerPos.x, playerPos.y].occupant = Occupant.Empty;
-    grid[move.crateFrom.x, move.crateFrom.y].occupant = Occupant.Empty;
+  private static SokobanState ApplyCratePush(SokobanState state, SokobanMove move) {
+    var crates = state.CratePositions.ToList();
+    var filledHoles = state.FilledHoles.ToList();
 
-    // Move Player (Player enters the tile the crate just left)
-    grid[move.playerTo.x, move.playerTo.y].occupant = Occupant.Player;
+    crates.Remove(move.crateFrom);
 
-    // Move Crate + Handle Hole Logic
-    Cell targetCell = grid[move.crateTo.x, move.crateTo.y];
-
-    if (targetCell.terrain == TerrainType.Hole) {
-      // Crate falls in: Hole becomes FilledHole, Crate disappears (Empty)
-      targetCell.FillHole();
-      targetCell.occupant = Occupant.Empty;
+    var terrain = state.TerrainGrid[move.crateTo.x, move.crateTo.y];
+    if (terrain.IsHole() && !state.IsFilledHoleAt(move.crateTo.x, move.crateTo.y)) {
+      filledHoles.Add(move.crateTo);
     } else {
-      // Crate moves to floor
-      targetCell.occupant = Occupant.Crate;
-    }
-  }
-
-  // ========== UTILITIES ==========
-
-  private static Cell[,] CloneGrid(Cell[,] original) {
-    int width = original.GetLength(0);
-    int height = original.GetLength(1);
-    Cell[,] clone = new Cell[width, height];
-
-    for (int x = 0; x < width; x++) {
-      for (int y = 0; y < height; y++) {
-        clone[x, y] = original[x, y].DeepClone();
-      }
+      crates.Add(move.crateTo);
     }
 
-    return clone;
+    return new SokobanState(state.TerrainGrid, move.playerTo, crates, filledHoles);
   }
 }

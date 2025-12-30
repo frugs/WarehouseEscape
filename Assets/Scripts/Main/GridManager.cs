@@ -29,12 +29,14 @@ public class GridManager : MonoBehaviour {
   [SerializeField] private readonly float FallAnimationDuration = 0.15f;
 
   // ================= STATE =================
-  public SokobanState currentState;
-  private GameObject[,] visualGrid; // Visual representation only
-  private int gridWidth;
-  private int gridHeight;
+  private SokobanState CurrentState;
+  private GameObject[,] VisualGrid; // Visual representation only
+  private int GridWidth;
+  private int GridHeight;
 
   private string LevelsDirectory => Path.Combine(Application.dataPath, LevelsDirectoryName);
+
+  public SokobanState GridState => CurrentState;
 
   [UsedImplicitly]
   private void Awake() {
@@ -62,12 +64,14 @@ public class GridManager : MonoBehaviour {
     if (data == null) return;
 
     CleanupLevel();
-    this.currentState = new SokobanState(data.grid, data.playerPos);
-    this.gridWidth = data.width;
-    this.gridHeight = data.height;
-    this.visualGrid = new GameObject[gridWidth, gridHeight];
+    this.CurrentState = new SokobanState(data.grid, data.playerPos, data.crates.ToArray());
+    this.GridWidth = data.width;
+    this.GridHeight = data.height;
+    this.VisualGrid = new GameObject[GridWidth, GridHeight];
 
-    if (terrainBuilder != null) { terrainBuilder.BuildTerrain(data.grid, gridWidth, gridHeight); }
+    if (terrainBuilder != null) {
+      terrainBuilder.BuildTerrain(data.grid, GridWidth, GridHeight);
+    }
     SpawnDynamicObjects();
     SetupCamera();
 
@@ -75,8 +79,8 @@ public class GridManager : MonoBehaviour {
   }
 
   private void CleanupLevel() {
-    if (visualGrid != null) {
-      foreach (var obj in visualGrid)
+    if (VisualGrid != null) {
+      foreach (var obj in VisualGrid)
         if (obj != null)
           Destroy(obj);
     }
@@ -88,28 +92,28 @@ public class GridManager : MonoBehaviour {
         Destroy(t);
     }
 
-    visualGrid = null;
+    VisualGrid = null;
   }
 
   private void SpawnDynamicObjects() {
-    for (int x = 0; x < gridWidth; x++) {
-      for (int y = 0; y < gridHeight; y++) {
-        Cell cell = currentState.grid[x, y];
+    for (int x = 0; x < GridWidth; x++) {
+      for (int y = 0; y < GridHeight; y++) {
+        var terrain = CurrentState.TerrainGrid[x, y];
         Vector3 pos = GridToWorld(x, y);
 
-        if (cell.isTarget) {
+        if (terrain.IsTarget()) {
           GameObject t = Instantiate(TargetTile, pos, Quaternion.identity);
           t.name = $"Target_{x}_{y}";
         }
 
-        if (cell.occupant == Occupant.Player) {
+        if (CurrentState.IsPlayerAt(x, y)) {
           GameObject p = Instantiate(PlayerTile, pos, Quaternion.identity);
           p.name = "Player";
-          visualGrid[x, y] = p;
-        } else if (cell.occupant == Occupant.Crate) {
+          VisualGrid[x, y] = p;
+        } else if (CurrentState.IsCrateAt(x, y)) {
           GameObject c = Instantiate(CrateTile, pos, Quaternion.identity);
           c.name = $"Crate_{x}_{y}";
-          visualGrid[x, y] = c;
+          VisualGrid[x, y] = c;
         }
       }
     }
@@ -121,8 +125,8 @@ public class GridManager : MonoBehaviour {
 
     // Position camera to look at centre of grid
     cameraTransform.position = new Vector3(
-      gridWidth / 2.0f,
-      Mathf.Tan(Mathf.Deg2Rad * cameraAngle) * gridHeight / 2.0f,
+      GridWidth / 2.0f,
+      Mathf.Tan(Mathf.Deg2Rad * cameraAngle) * GridHeight / 2.0f,
       0.0f);
     cameraTransform.rotation = Quaternion.Euler(cameraAngle, 0f, 0f);
 
@@ -133,10 +137,10 @@ public class GridManager : MonoBehaviour {
       cam.orthographic = true;
 
       float padding = 2f;
-      float sizeForHeight = (gridHeight + padding) * 0.5f;
+      float sizeForHeight = (GridHeight + padding) * 0.5f;
 
       float currentAspect = cam.aspect;
-      float sizeForWidth = ((gridWidth + padding) * 0.5f) / currentAspect;
+      float sizeForWidth = ((GridWidth + padding) * 0.5f) / currentAspect;
 
       cam.orthographicSize = Mathf.Max(sizeForHeight, sizeForWidth);
     }
@@ -155,26 +159,26 @@ public class GridManager : MonoBehaviour {
 
     // 1. Capture Objects (before we clear the grid cells)
     if (IsValidPos(move.playerFrom))
-      playerObj = visualGrid[move.playerFrom.x, move.playerFrom.y];
+      playerObj = VisualGrid[move.playerFrom.x, move.playerFrom.y];
 
     if (move.type == MoveType.CratePush && IsValidPos(move.crateFrom))
-      crateObj = visualGrid[move.crateFrom.x, move.crateFrom.y];
+      crateObj = VisualGrid[move.crateFrom.x, move.crateFrom.y];
 
     // 2. Update Data Model (The Truth)
-    currentState = MoveManager.ApplyMove(currentState, move);
+    CurrentState = MoveManager.ApplyMove(CurrentState, move );
 
     // 3. Update Visual Grid Pointers (The References)
-    visualGrid[move.playerFrom.x, move.playerFrom.y] = null;
+    VisualGrid[move.playerFrom.x, move.playerFrom.y] = null;
     if (move.type == MoveType.CratePush)
-      visualGrid[move.crateFrom.x, move.crateFrom.y] = null;
+      VisualGrid[move.crateFrom.x, move.crateFrom.y] = null;
 
     if (playerObj != null)
-      visualGrid[move.playerTo.x, move.playerTo.y] = playerObj;
+      VisualGrid[move.playerTo.x, move.playerTo.y] = playerObj;
 
     if (crateObj != null) {
       // We keep tracking the visual object even if it "falls in a hole"
       // so we don't lose the reference until we destroy/change it.
-      visualGrid[move.crateTo.x, move.crateTo.y] = crateObj;
+      VisualGrid[move.crateTo.x, move.crateTo.y] = crateObj;
     }
   }
 
@@ -229,30 +233,32 @@ public class GridManager : MonoBehaviour {
   /// Calculates a path between two grid coordinates using BFS.
   /// Returns a list of Cell coordinates to visit (excluding the start).
   /// </summary>
-  public List<Vector2Int> GetPath(Vector2Int startPos, Vector2Int targetPos) {
-    Cell start = GetCell(startPos.x, startPos.y);
-    Cell target = GetCell(targetPos.x, targetPos.y);
-
-    if (start == null || target == null || !target.IsPathableForPlayer) return null;
+  public List<Vector2Int> GetPath(Vector2Int start, Vector2Int target) {
+    if (!IsValidPos(start) ||
+        !IsValidPos(target) ||
+        !CurrentState.CanPlayerWalk(target.x, target.y)) {
+      return null;
+    }
 
     // BFS Pathfinding
-    Queue<Cell> queue = new Queue<Cell>();
-    Dictionary<Cell, Cell> cameFrom = new Dictionary<Cell, Cell>();
+    Queue<Vector2Int> queue = new Queue<Vector2Int>();
+    Dictionary<Vector2Int, Vector2Int> cameFrom = new Dictionary<Vector2Int, Vector2Int>();
 
     queue.Enqueue(start);
-    cameFrom[start] = null;
+    cameFrom[start] = start;
 
     bool found = false;
 
     while (queue.Count > 0) {
-      Cell current = queue.Dequeue();
+      var current = queue.Dequeue();
       if (current == target) {
         found = true;
         break;
       }
 
       foreach (var neighbor in GetNeighbors(current)) {
-        if (!cameFrom.ContainsKey(neighbor) && neighbor.IsPathableForPlayer) {
+        if (!cameFrom.ContainsKey(neighbor) &&
+            CurrentState.CanPlayerWalk(neighbor.x, neighbor.y)) {
           cameFrom[neighbor] = current;
           queue.Enqueue(neighbor);
         }
@@ -263,7 +269,7 @@ public class GridManager : MonoBehaviour {
 
     // Reconstruct
     List<Vector2Int> path = new List<Vector2Int>();
-    Cell curr = target;
+    var curr = target;
     while (curr != start) {
       path.Add(new Vector2Int(curr.x, curr.y));
       curr = cameFrom[curr];
@@ -275,25 +281,21 @@ public class GridManager : MonoBehaviour {
 
   public Vector3 GridToWorld(int x, int y) => new Vector3(x + 0.5f, 0.5f, y + 0.5f);
 
-  public Cell GetCellAtWorldPos(Vector3 worldPos) {
+  public Vector2Int WorldToGrid(Vector3 worldPos) {
     int x = Mathf.FloorToInt(worldPos.x);
     int y = Mathf.FloorToInt(worldPos.z);
-    return GetCell(x, y);
-  }
-
-  public Cell GetCell(int x, int y) {
-    return IsValidPos(new Vector2Int(x, y)) ? currentState.grid[x, y] : null;
+    return new Vector2Int(x, y);
   }
 
   public bool IsValidPos(Vector2Int pos) =>
-    pos.x >= 0 && pos.x < gridWidth && pos.y >= 0 && pos.y < gridHeight;
+    pos.x >= 0 && pos.x < GridWidth && pos.y >= 0 && pos.y < GridHeight;
 
-  private List<Cell> GetNeighbors(Cell cell) {
-    List<Cell> list = new List<Cell>();
+  private List<Vector2Int> GetNeighbors(Vector2Int cell) {
+    List<Vector2Int> list = new List<Vector2Int>();
     int[] dx = { 0, 0, 1, -1 };
     int[] dy = { 1, -1, 0, 0 };
     for (int i = 0; i < 4; i++) {
-      Cell n = GetCell(cell.x + dx[i], cell.y + dy[i]);
+      var n = new Vector2Int(cell.x + dx[i], cell.y + dy[i]);
       if (n != null) {
         list.Add(n);
       }
@@ -303,7 +305,7 @@ public class GridManager : MonoBehaviour {
   }
 
   public void CheckWinCondition() {
-    if (currentState.IsWin) {
+    if (CurrentState.IsWin()) {
       Debug.Log("Level Complete!");
       if (menuManager) {
         menuManager.WinGame();

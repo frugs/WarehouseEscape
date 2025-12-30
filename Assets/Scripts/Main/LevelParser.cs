@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
 
@@ -8,9 +9,19 @@ public class LevelParser {
       return null;
     }
 
-    string[] lines = File.ReadAllLines(filePath);
-    if (lines.Length < 2) return null;
+    string[] lines = System.IO.File.ReadAllLines(filePath);
+    return ParseLevelLines(lines);
+  }
 
+  public static LevelData ParseLevelFromText(string levelText) {
+    // Split by newlines (handling varied line endings)
+    string[] lines = levelText.Split(
+      new[] { "\r\n", "\r", "\n" },
+      System.StringSplitOptions.None);
+    return ParseLevelLines(lines);
+  }
+
+  private static LevelData ParseLevelLines(string[] lines) {
     // Parse dimensions
     string[] sizeValues = lines[0].Split(' ');
     if (sizeValues.Length != 2 ||
@@ -28,11 +39,12 @@ public class LevelParser {
     var levelData = new LevelData {
       width = width,
       height = height,
-      grid = new Cell[width, height],
+      grid = new TerrainType[width, height],
       playerDetected = false,
       targetCount = 0,
       crateCount = 0,
-      playerPos = new Vector2Int(-1, -1)
+      playerPos = new Vector2Int(-1, -1),
+      crates = new List<Vector2Int>(),
     };
 
     for (int y = 0; y < height; y++) {
@@ -44,7 +56,7 @@ public class LevelParser {
 
       for (int x = 0; x < width; x++) {
         char symbol = line[x][0];
-        levelData.grid[x, y] = ParseCell(symbol, x, y, levelData);
+        levelData.grid[x, y] = ParseTerrain(symbol, x, y, levelData);
       }
     }
 
@@ -52,76 +64,71 @@ public class LevelParser {
     return levelData;
   }
 
-  private static Cell ParseCell(char symbol, int x, int y, LevelData data) {
-    var cell = new Cell { x = x, y = y };
+  private static TerrainType ParseTerrain(char symbol, int x, int y, LevelData data) {
+    TerrainType terrain;
 
     switch (symbol) {
       case 'E':
-        cell.terrain = TerrainType.Floor;
-        cell.occupant = Occupant.Empty;
+      case '.':
+        terrain = TerrainType.Floor;
         break;
 
       case 'X':
-        cell.terrain = TerrainType.Wall;
-        cell.occupant = Occupant.Empty;
+        terrain = TerrainType.Wall;
         break;
 
       case 'H':
-        cell.terrain = TerrainType.Hole;
-        cell.occupant = Occupant.Empty;
+        terrain = TerrainType.Hole;
         break;
 
       case 'T':
-        cell.terrain = TerrainType.Floor;
-        cell.isTarget = true;
-        cell.occupant = Occupant.Empty;
+        terrain = TerrainType.Target;
         data.targetCount++;
         break;
 
       case 'P':
-        cell.terrain = TerrainType.Floor;
-        cell.occupant = Occupant.Player;
-        if (data.playerDetected) Debug.LogError("More than one player detected");
+        terrain = TerrainType.Floor;
+        if (data.playerDetected) {
+          Debug.LogError("More than one player detected");
+        }
         data.playerDetected = true;
         data.playerPos = new Vector2Int(x, y);
         break;
 
       case 'B':
-        cell.terrain = TerrainType.Floor;
-        cell.occupant = Occupant.Crate;
+        terrain = TerrainType.Floor;
+        data.crates.Add(new Vector2Int(x, y));
         data.crateCount++;
         break;
 
       case 'p': // player on target
-        cell.terrain = TerrainType.Floor;
-        cell.isTarget = true;
-        cell.occupant = Occupant.Player;
+        terrain = TerrainType.Target;
         data.targetCount++;
-        if (data.playerDetected) Debug.LogError("More than one player detected");
+        if (data.playerDetected) {
+          Debug.LogError("More than one player detected");
+        }
         data.playerDetected = true;
         data.playerPos = new Vector2Int(x, y);
         break;
 
       case 'b': // crate on target
-        cell.terrain = TerrainType.Floor;
-        cell.isTarget = true;
-        cell.occupant = Occupant.Crate;
+        terrain = TerrainType.Target;
+        data.crates.Add(new Vector2Int(x, y));
         data.targetCount++;
         data.crateCount++;
         break;
 
       default:
         Debug.LogWarning($"Unknown symbol '{symbol}' at {x},{y}");
-        cell.terrain = TerrainType.Floor;
-        cell.occupant = Occupant.Empty;
+        terrain = TerrainType.Floor;
         break;
     }
 
-    return cell;
+    return terrain;
   }
 
   private static void ValidateLevelData(LevelData data) {
-    if (!data.playerDetected || data.targetCount < data.crateCount ||
+    if (!data.playerDetected || data.crateCount < data.targetCount ||
         data.targetCount <= 0 || data.crateCount <= 0) {
       Debug.LogError("Level validation failed - check ImportantInfo.txt");
     }
@@ -130,11 +137,13 @@ public class LevelParser {
 
 [System.Serializable]
 public class LevelData {
-  public Cell[,] grid;
+  public TerrainType[,] grid;
   public int width, height;
 
   public bool playerDetected;
   public Vector2Int playerPos;
+
+  public List<Vector2Int> crates;
 
   public int targetCount, crateCount;
 }

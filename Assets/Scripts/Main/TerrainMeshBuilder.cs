@@ -12,7 +12,7 @@ public class TerrainMeshBuilder : MonoBehaviour {
 
   private Transform LevelParent, WallsParent, HolesParent;
 
-  public void BuildTerrain(Cell[,] grid, int gridWidth, int gridHeight) {
+  public void BuildTerrain(TerrainType[,] grid, int gridWidth, int gridHeight) {
     SetupHierarchy();
 
     CreateFloor(grid, gridWidth, gridHeight);
@@ -26,12 +26,11 @@ public class TerrainMeshBuilder : MonoBehaviour {
 
   // ========== CORE MESH GENERATION ==========
 
-  private void CreateFloor(Cell[,] grid, int gridWidth, int gridHeight) {
+  private void CreateFloor(TerrainType[,] grid, int gridWidth, int gridHeight) {
     var floorPositions = new List<Vector2Int>();
     for (int x = 0; x < gridWidth; x++) {
       for (int y = 0; y < gridHeight; y++) {
-        if (grid[x, y].terrain == TerrainType.Floor ||
-            grid[x, y].terrain == TerrainType.FilledHole) {
+        if (grid[x, y] == TerrainType.Floor) {
           floorPositions.Add(new Vector2Int(x, y));
         }
       }
@@ -44,14 +43,14 @@ public class TerrainMeshBuilder : MonoBehaviour {
     }
   }
 
-  private void CreateWalls(Cell[,] grid, int gridWidth, int gridHeight) {
+  private void CreateWalls(TerrainType[,] grid, int gridWidth, int gridHeight) {
     List<Vector3> vertices = new List<Vector3>();
     List<int> triangles = new List<int>();
     List<Vector2> uvs = new List<Vector2>();
 
     for (int x = 0; x < gridWidth; x++) {
       for (int y = 0; y < gridHeight; y++) {
-        if (grid[x, y].terrain != TerrainType.Wall) continue;
+        if (grid[x, y] != TerrainType.Wall) continue;
 
         Vector3 basePos = GridToWorld(x, y, 0);
 
@@ -77,14 +76,14 @@ public class TerrainMeshBuilder : MonoBehaviour {
     CreateGameObjectFromMeshData("Walls", vertices, triangles, uvs, WallMaterial, WallsParent);
   }
 
-  private void CreateHoles(Cell[,] grid, int gridWidth, int gridHeight) {
+  private void CreateHoles(TerrainType[,] grid, int gridWidth, int gridHeight) {
     List<Vector3> vertices = new List<Vector3>();
     List<int> triangles = new List<int>();
     List<Vector2> uvs = new List<Vector2>();
 
     for (int x = 0; x < gridWidth; x++) {
       for (int y = 0; y < gridHeight; y++) {
-        if (grid[x, y].terrain != TerrainType.Hole) continue;
+        if (!grid[x, y].IsHole()) continue;
 
         Vector3 center = GridToWorld(x, y, 0);
 
@@ -108,28 +107,28 @@ public class TerrainMeshBuilder : MonoBehaviour {
 
   // ========== FACE GENERATION HELPERS ==========
 
-  private void CheckAndAddWallSide(int x, int y, int dx, int dy, Vector3 dirNormal, Cell[,] grid,
+  private void CheckAndAddWallSide(int x, int y, int dx, int dy, Vector3 dirNormal, TerrainType[,] grid,
     int width, int height, List<Vector3> verts, List<int> tris, List<Vector2> uvs) {
     int nx = x + dx;
     int ny = y + dy;
 
     // If neighbor is out of bounds OR not a wall, we need a face here
     bool isEdge = (nx < 0 || nx >= width || ny < 0 || ny >= height);
-    if (isEdge || grid[nx, ny].terrain != TerrainType.Wall) {
+    if (isEdge || grid[nx, ny] != TerrainType.Wall) {
       Vector3 center = GridToWorld(x, y, 0);
       Vector3 faceCenter = center + (dirNormal * 0.5f) + (Vector3.up * (WallHeight / 2));
       AddVerticalQuad(faceCenter, dirNormal, WallHeight, verts, tris, uvs);
     }
   }
 
-  private void CheckAndAddHoleSide(int x, int y, int dx, int dy, Vector3 dirNormal, Cell[,] grid,
+  private void CheckAndAddHoleSide(int x, int y, int dx, int dy, Vector3 dirNormal, TerrainType[,] grid,
     int width, int height, List<Vector3> verts, List<int> tris, List<Vector2> uvs) {
     int nx = x + dx;
     int ny = y + dy;
 
     // For holes, if neighbor is NOT a hole, we see the side
-    bool isEdge = (nx < 0 || nx >= width || ny < 0 || ny >= height);
-    if (isEdge || grid[nx, ny].terrain != TerrainType.Hole) {
+    bool isEdge = nx < 0 || nx >= width || ny < 0 || ny >= height;
+    if (isEdge || grid[nx, ny] != TerrainType.Hole) {
       Vector3 center = GridToWorld(x, y, 0);
       Vector3 faceCenter = center + (dirNormal * 0.5f) + (Vector3.down * (HoleDepth / 2));
       // Invert normal because we are looking INTO the hole

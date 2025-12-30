@@ -3,33 +3,32 @@ using UnityEngine;
 
 public class SokobanSolver {
   private struct PathNode {
-    public string ParentHash;
-    public SokobanMove Move;
+    public SokobanState? ParentState;
+    public SokobanMove? Move;
   }
 
   /// <summary>Check if current board state is solvable</summary>
-  public bool IsSolvable(Cell[,] grid, Vector2Int playerPos) {
-    var visited = new HashSet<string>();
+  public bool IsSolvable(SokobanState initialState) {
+    var visited = new HashSet<SokobanState>();
     var queue = new Queue<SokobanState>();
 
-    var initialState = new SokobanState(grid, playerPos);
     queue.Enqueue(initialState);
-    visited.Add(initialState.StateHash());
+    visited.Add(initialState);
 
     while (queue.Count > 0) {
       var state = queue.Dequeue();
 
-      if (state.IsWin) {
+      if (state.IsWin()) {
         // Computed from grid!
         return true;
       }
 
       // Generate valid moves → new states
-      foreach (var move in GenerateValidMoves(state.grid, state.playerPos)) {
+      foreach (var move in GenerateValidMoves(state)) {
         var newState = MoveManager.ApplyMove(state, move);
 
-        if (!visited.Contains(newState.StateHash())) {
-          visited.Add(newState.StateHash());
+        if (!visited.Contains(newState)) {
+          visited.Add(newState);
           queue.Enqueue(newState);
         }
       }
@@ -39,10 +38,11 @@ public class SokobanSolver {
   }
 
   /// <summary>Generate all legal moves from current state</summary>
-  private List<SokobanMove> GenerateValidMoves(Cell[,] grid, Vector2Int playerPos) {
+  private List<SokobanMove> GenerateValidMoves(SokobanState state) {
+    var playerPos = state.PlayerPos;
     var moves = new List<SokobanMove>();
-    int width = grid.GetLength(0);
-    int height = grid.GetLength(1);
+    int width = state.TerrainGrid.GetLength(0);
+    int height = state.TerrainGrid.GetLength(1);
 
     // 4 directions
     foreach (Vector2Int direction in new[] {
@@ -52,21 +52,21 @@ public class SokobanSolver {
       Vector2Int targetPos = playerPos + direction;
 
       if (!IsInBounds(targetPos, width, height)) continue;
-      Cell targetCell = grid[targetPos.x, targetPos.y];
-
-      if (!targetCell.PlayerCanWalk) continue;
 
       // Player move to empty cell
-      if (targetCell.occupant == Occupant.Empty) {
+      if (state.CanPlayerWalk(targetPos.x, targetPos.y)) {
         moves.Add(SokobanMove.PlayerMove(playerPos, targetPos));
       }
       // Crate push
-      else if (targetCell.occupant == Occupant.Crate) {
+      else if (state.IsCrateAt(targetPos.x, targetPos.y)) {
         Vector2Int crateTargetPos = targetPos + direction;
-        if (IsValidCratePush(grid, crateTargetPos, width, height)) {
+        if (IsValidCratePush(state, crateTargetPos, width, height)
+            && !IsDeadlock(state, crateTargetPos, width, height)) {
           moves.Add(SokobanMove.CratePush(
-            playerPos, targetPos,
-            targetPos, crateTargetPos
+            playerPos,
+            targetPos,
+            targetPos,
+            crateTargetPos
           ));
         }
       }
@@ -75,9 +75,37 @@ public class SokobanSolver {
     return moves;
   }
 
-  private bool IsValidCratePush(Cell[,] grid, Vector2Int crateTargetPos, int width, int height) {
+  private bool IsValidCratePush(SokobanState state, Vector2Int crateTargetPos, int width, int height) {
     if (!IsInBounds(crateTargetPos, width, height)) return false;
-    return grid[crateTargetPos.x, crateTargetPos.y].CanReceiveCrate;
+    return state.CanReceiveCrate(crateTargetPos.x, crateTargetPos.y);
+  }
+
+  private bool IsDeadlock(SokobanState state, Vector2Int pos, int width, int height) {
+    // If it's on a target, it's not a deadlock (usually)
+    if (state.TerrainGrid[pos.x, pos.y].IsTarget()) return false;
+
+    // Check axes (Horizontal and Vertical neighbors)
+    // blocked if Wall or existing Crate (that isn't moving)
+    bool blockedLeft = IsBlocking(state.TerrainGrid, pos.x - 1, pos.y, width, height);
+    bool blockedRight = IsBlocking(state.TerrainGrid, pos.x + 1, pos.y, width, height);
+    bool blockedUp = IsBlocking(state.TerrainGrid, pos.x, pos.y + 1, width, height);
+    bool blockedDown = IsBlocking(state.TerrainGrid, pos.x, pos.y - 1, width, height);
+
+    // Corner Deadlock: Blocked vertically AND horizontally
+    // Top-Left, Top-Right, Bottom-Left, Bottom-Right
+    if ((blockedLeft || blockedRight) && (blockedUp || blockedDown)) {
+      return true;
+    }
+    return false;
+  }
+
+  private bool IsBlocking(TerrainType[,] grid, int x, int y, int width, int height) {
+    // Check bounds
+    if (x < 0 || x >= width || y < 0 || y >= height) return true; // Edge is a wall
+
+    return grid[x, y] == TerrainType.Wall;
+    // Note: Simple deadlocks focus on Walls.
+    // Crates can be moved, so they aren't permanent deadlocks unless frozen.
   }
 
   // ========== UTILITIES ==========
@@ -87,34 +115,30 @@ public class SokobanSolver {
   }
 
   /// <summary>Find shortest solution path (optional extension)</summary>
-  public List<SokobanMove> FindSolutionPath(Cell[,] grid, Vector2Int playerPos) {
-    var parentMap = new Dictionary<string, PathNode>();
+  public List<SokobanMove> FindSolutionPath(SokobanState initialState) {
+    var parentMap = new Dictionary<SokobanState, PathNode>();
     var queue = new Queue<SokobanState>();
-    var visited = new HashSet<string>();
-
-    var initialState = new SokobanState(grid, playerPos);
-    string startHash = initialState.StateHash();
+    var visited = new HashSet<SokobanState>();
 
     queue.Enqueue(initialState);
-    visited.Add(initialState.StateHash());
+    visited.Add(initialState);
 
-    parentMap[startHash] = new PathNode { ParentHash = null, Move = null };
+    parentMap[initialState] = new PathNode { ParentState = null, Move = null };
 
     while (queue.Count > 0) {
       var state = queue.Dequeue();
 
-      if (state.IsWin) {
-        return ReconstructPath(parentMap, state.StateHash());
+      if (state.IsWin()) {
+        return ReconstructPath(parentMap, state);
       }
 
-      foreach (var move in GenerateValidMoves(state.grid, state.playerPos)) {
+      foreach (var move in GenerateValidMoves(state)) {
         var newState = MoveManager.ApplyMove(state, move);
-        string newHash = newState.StateHash();
 
-        if (!visited.Contains(newHash)) {
-          visited.Add(newHash);
-          parentMap[newHash] = new PathNode {
-            ParentHash = state.StateHash(),
+        if (!visited.Contains(newState)) {
+          visited.Add(newState);
+          parentMap[newState] = new PathNode {
+            ParentState = state,
             Move = move
           };
           queue.Enqueue(newState);
@@ -126,16 +150,16 @@ public class SokobanSolver {
   }
 
   private List<SokobanMove>
-    ReconstructPath(Dictionary<string, PathNode> parentMap, string goalHash) {
+    ReconstructPath(Dictionary<SokobanState, PathNode> parentMap, SokobanState goalState) {
     var path = new List<SokobanMove>();
-    string current = goalHash;
+    SokobanState current = goalState;
 
     while (parentMap.ContainsKey(current)) {
       var node = parentMap[current];
-      if (node.ParentHash == null) break;
+      if (node.ParentState == null || node.Move == null) break;
 
-      path.Add(node.Move);
-      current = node.ParentHash;
+      path.Add((SokobanMove)node.Move);
+      current = (SokobanState)node.ParentState;
     }
 
     path.Reverse();

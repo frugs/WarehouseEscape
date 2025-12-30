@@ -78,8 +78,8 @@ public class PlayerController : MonoBehaviour {
         pathQueue.Clear();
 
         // Calculate new path
-        Cell startCell = gridManager.GetCellAtWorldPos(transform.position);
-        Cell targetCell = gridManager.GetCellAtWorldPos(hit.point);
+        var startCell = gridManager.WorldToGrid(transform.position);
+        var targetCell = gridManager.WorldToGrid(hit.point);
 
         if (startCell != null && targetCell != null) {
           var newPath = gridManager.GetPath(new Vector2Int(startCell.x, startCell.y),
@@ -133,43 +133,43 @@ public class PlayerController : MonoBehaviour {
 
     Vector2Int currentPos = GetPlayerGridPos();
     Vector2Int targetPos = currentPos + direction;
-    Cell targetCell = gridManager.GetCell(targetPos.x, targetPos.y);
+
+
 
     // If invalid, unlock and exit
-    if (targetCell == null || !targetCell.PlayerCanWalk) {
+    if (!gridManager.IsValidPos(targetPos)) {
       IsBusy = false;
       pathQueue.Clear(); // Abort path if we hit a wall unexpectedly
       yield break;
     }
 
-    SokobanMove move = null;
+    SokobanMove? maybeMove = null;
 
     // Case A: Player Move
-    if (targetCell.occupant == Occupant.Empty) {
-      move = SokobanMove.PlayerMove(currentPos, targetPos);
+    if (gridManager.GridState.CanPlayerWalk(targetPos.x, targetPos.y)) {
+      maybeMove = SokobanMove.PlayerMove(currentPos, targetPos);
     }
     // Case B: Crate Push
-    else if (targetCell.occupant == Occupant.Crate) {
+    else if (gridManager.GridState.IsCrateAt(targetPos.x, targetPos.y)) {
       // Pushing a crate cancels the mouse path
       pathQueue.Clear();
 
-      Vector2Int crateTarget = targetPos + direction;
-      Cell cTargetCell = gridManager.GetCell(crateTarget.x, crateTarget.y);
-
       // Check if crate destination is valid
-      if (cTargetCell != null && cTargetCell.CanReceiveCrate) {
-        move = SokobanMove.CratePush(currentPos, targetPos, targetPos, crateTarget);
+      Vector2Int crateTarget = targetPos + direction;
+      if (gridManager.GridState.CanReceiveCrate(crateTarget.x, crateTarget.y)) {
+        maybeMove = SokobanMove.CratePush(currentPos, targetPos, targetPos, crateTarget);
       }
     }
 
     // If move isn't valid (e.g. pushing crate into wall), exit
-    if (move == null) {
+    if (maybeMove == null) {
       IsBusy = false;
       yield break;
     }
 
     // This updates the Grid Logic AND the Visual Array pointers instantly.
     // It returns the GameObjects we need to animate.
+    var move = (SokobanMove)maybeMove;
     gridManager.RegisterMoveUpdates(move, out GameObject playerObj, out GameObject crateObj);
 
     List<Coroutine> activeAnimations = new List<Coroutine>();
@@ -181,12 +181,10 @@ public class PlayerController : MonoBehaviour {
 
     // Queue Crate Animation
     if (move.type == MoveType.CratePush && crateObj != null) {
-      Cell finalCell = gridManager.GetCell(move.crateTo.x, move.crateTo.y);
-
       // FIX: Only play fall animation if the crate "disappeared" (became the floor).
       // If occupant is Crate, it means it's sitting on TOP of a filled hole/floor.
-      bool fellInHole = finalCell.terrain == TerrainType.FilledHole &&
-                        finalCell.occupant == Occupant.Empty;
+      bool fellInHole = gridManager.GridState.IsFilledHoleAt(move.crateTo.x, move.crateTo.y) &&
+                        !gridManager.GridState.IsCrateAt(move.crateTo.x, move.crateTo.y);
 
       activeAnimations.Add(fellInHole
         ? StartCoroutine(gridManager.AnimateCrateFall(crateObj, move.crateTo))
@@ -204,7 +202,6 @@ public class PlayerController : MonoBehaviour {
   }
 
   private Vector2Int GetPlayerGridPos() {
-    Cell cell = gridManager.GetCellAtWorldPos(transform.position);
-    return new Vector2Int(cell.x, cell.y);
+    return gridManager.WorldToGrid(transform.position);
   }
 }

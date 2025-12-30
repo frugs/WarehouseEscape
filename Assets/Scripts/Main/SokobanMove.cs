@@ -6,7 +6,7 @@ using UnityEngine;
 /// Pure data - used by PlayerController, Solver, Undo/Redo.
 /// </summary>
 [Serializable]
-public class SokobanMove {
+public struct SokobanMove {
   public Vector2Int playerFrom;
   public Vector2Int playerTo;
   public Vector2Int crateFrom;

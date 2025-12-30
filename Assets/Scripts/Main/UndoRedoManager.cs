@@ -95,8 +95,8 @@ public class MoveAction {
 
   // Helper to bridge World Positions -> GridManager.MoveEntity
   private void MoveEntityByWorldPos(GridManager gridManager, Vector3 fromPos, Vector3 toPos) {
-    Cell fromCell = gridManager.GetCellAtWorldPos(fromPos);
-    Cell toCell = gridManager.GetCellAtWorldPos(toPos);
+    var fromCell = gridManager.WorldToGrid(fromPos);
+    var toCell = gridManager.WorldToGrid(toPos);
 
     if (fromCell != null && toCell != null) {
       // gridManager.MoveEntity(new Vector2Int(fromCell.x, fromCell.y), new Vector2Int(toCell.x, toCell.y));
