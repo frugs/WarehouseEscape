@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Diagnostics;
 using NUnit.Framework;
 
 public class SokobanTestCases {
@@ -83,6 +84,9 @@ public class SokobanTestCases {
 }
 
 public class SokobanParamTests {
+  private const bool LogSolutions = true;
+
+
   [Test, TestCaseSource(typeof(SokobanTestCases), nameof(SokobanTestCases.GetSolverCases))]
   public void Solver_Verifies_Level_Solvability(string levelDataString, bool expectedSolvable) {
     // 1. ARRANGE
@@ -96,10 +100,17 @@ public class SokobanParamTests {
     SokobanSolver solver = new SokobanSolver();
 
     // 2. ACT
-    bool result = solver.IsSolvable(initialState);
+    var solution = solver.FindSolutionPath(initialState);
+    if (LogSolutions && solution != null) {
+      foreach (var move in solution) {
+        UnityEngine.Debug.Log(move);
+      }
+    }
+
 
     // 3. ASSERT
-    Assert.AreEqual(expectedSolvable, result,
-        $"Expected level to be {(expectedSolvable ? "Solvable" : "Unsolvable")}, but Solver returned {result}.");
+    var solvable = solution != null;
+    Assert.AreEqual(expectedSolvable, solvable,
+        $"Expected level to be {(expectedSolvable ? "Solvable" : "Unsolvable")}, but Solver returned {solution}.");
   }
 }

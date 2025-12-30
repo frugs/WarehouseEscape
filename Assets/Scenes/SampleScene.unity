@@ -1006,6 +1006,7 @@ GameObject:
   - component: {fileID: 1936126208}
   - component: {fileID: 1936126209}
   - component: {fileID: 1936126210}
+  - component: {fileID: 1936126211}
   m_Layer: 0
   m_Name: GridManager
   m_TagString: Untagged
@@ -1088,6 +1089,21 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MenuManager
   WinMenu: {fileID: 0}
+--- !u!114 &1936126211
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1936126205}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 165d07ba6aa5cfb4a8fdc86f825cdcb3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Main::SolutionController
+  levelName: Level1
+  stepDelay: 0.2
+  autoPlay: 0
 --- !u!1 &1967644723
 GameObject:
   m_ObjectHideFlags: 0

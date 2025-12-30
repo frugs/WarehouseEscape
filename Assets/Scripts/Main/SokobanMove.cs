@@ -14,6 +14,16 @@ public struct SokobanMove {
   public Vector2Int direction;
   public MoveType type;
 
+  public override string ToString() {
+    if (type == MoveType.PlayerMove) {
+      return $"[Move] Player {playerFrom} -> {playerTo}";
+    }
+
+    // CratePush
+    return $"[Push] Player {playerFrom}->{playerTo} " +
+      $"pushed Crate {crateFrom}->{crateTo} (Dir: {direction})";
+  }
+
   /// <summary>Player-only move (no crate interaction)</summary>
   public static SokobanMove PlayerMove(Vector2Int from, Vector2Int to) {
     return new SokobanMove {

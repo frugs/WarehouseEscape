@@ -1,40 +1,19 @@
 using System.Collections.Generic;
+using System.Diagnostics;
 using UnityEngine;
 
 public class SokobanSolver {
+  const int MAX_ITERATIONS = 5_000_000; // Limit total states explored
+  const long MAX_MS = 15_000;
+
   private struct PathNode {
     public SokobanState? ParentState;
     public SokobanMove? Move;
   }
 
-  /// <summary>Check if current board state is solvable</summary>
-  public bool IsSolvable(SokobanState initialState) {
-    var visited = new HashSet<SokobanState>();
-    var queue = new Queue<SokobanState>();
-
-    queue.Enqueue(initialState);
-    visited.Add(initialState);
-
-    while (queue.Count > 0) {
-      var state = queue.Dequeue();
-
-      if (state.IsWin()) {
-        // Computed from grid!
-        return true;
-      }
-
-      // Generate valid moves → new states
-      foreach (var move in GenerateValidMoves(state)) {
-        var newState = MoveManager.ApplyMove(state, move);
-
-        if (!visited.Contains(newState)) {
-          visited.Add(newState);
-          queue.Enqueue(newState);
-        }
-      }
-    }
-
-    return false;
+  public bool IsSolvable(SokobanState state) {
+    var solution = FindSolutionPath(state);
+    return solution != null;
   }
 
   /// <summary>Generate all legal moves from current state</summary>
@@ -125,7 +104,16 @@ public class SokobanSolver {
 
     parentMap[initialState] = new PathNode { ParentState = null, Move = null };
 
+    int iterations = 0;
+    Stopwatch timer = Stopwatch.StartNew();
+
     while (queue.Count > 0) {
+      if (++iterations > MAX_ITERATIONS || timer.ElapsedMilliseconds > MAX_MS) {
+        UnityEngine.Debug.LogError(
+          $"Solver Timeout! Checked {iterations} states in {timer.ElapsedMilliseconds}ms.");
+        return null; // Give up
+      }
+
       var state = queue.Dequeue();
 
       if (state.IsWin()) {
