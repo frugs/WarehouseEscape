@@ -4,7 +4,8 @@ using JetBrains.Annotations;
 using UnityEngine;
 
 public class PlayerController : MonoBehaviour {
-  [Header("Dependencies")] [SerializeField]
+  [Header("Dependencies")]
+  [SerializeField]
 
   private GridManager gridManager;
   private GameInput inputActions; // The generated C# class from your Input Action Asset

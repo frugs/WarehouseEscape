@@ -5,22 +5,25 @@ using JetBrains.Annotations;
 using UnityEngine;
 
 public class GridManager : MonoBehaviour {
-  [Header("Level Settings")] [SerializeField]
+  [Header("Level Settings")]
+  [SerializeField]
   private int levelNumber = 1;
 
   [SerializeField] private readonly string LevelsDirectoryName = "Levels";
 
-  [Header("References")] [SerializeField]
+  [Header("References")]
+  [SerializeField]
   private TerrainMeshBuilder terrainBuilder;
 
   [SerializeField] private MenuManager menuManager;
   [SerializeField] private Transform cameraTransform;
 
-  [Header("Prefabs")] [SerializeField] private GameObject PlayerTile = null;
+  [Header("Prefabs")][SerializeField] private GameObject PlayerTile = null;
   [SerializeField] private GameObject CrateTile = null;
   [SerializeField] private GameObject TargetTile = null;
 
-  [Header("Animation Timing")] [SerializeField]
+  [Header("Animation Timing")]
+  [SerializeField]
   private readonly float MoveAnimationDuration = 0.2f; // Snappy movement
 
   [SerializeField] private readonly float FallAnimationDuration = 0.15f;
@@ -51,8 +54,7 @@ public class GridManager : MonoBehaviour {
   public void LoadLevel(int level) {
     levelNumber = level;
     string filePath = Path.Combine(LevelsDirectory, $"Level{levelNumber}.txt");
-    if (File.Exists(filePath)) {GenerateGridFromFile(filePath);}
-    else {Debug.LogError($"Level file not found at: {filePath}");}
+    if (File.Exists(filePath)) { GenerateGridFromFile(filePath); } else { Debug.LogError($"Level file not found at: {filePath}"); }
   }
 
   public void GenerateGridFromFile(string filePath) {
@@ -65,11 +67,11 @@ public class GridManager : MonoBehaviour {
     this.gridHeight = data.height;
     this.visualGrid = new GameObject[gridWidth, gridHeight];
 
-    if (terrainBuilder != null) {terrainBuilder.BuildTerrain(data.grid, gridWidth, gridHeight);}
+    if (terrainBuilder != null) { terrainBuilder.BuildTerrain(data.grid, gridWidth, gridHeight); }
     SpawnDynamicObjects();
     SetupCamera();
 
-    if (menuManager != null) {menuManager.ResumeGame();}
+    if (menuManager != null) { menuManager.ResumeGame(); }
   }
 
   private void CleanupLevel() {
@@ -127,8 +129,7 @@ public class GridManager : MonoBehaviour {
     Camera cam = cameraTransform.GetComponent<Camera>();
 
     // Set Orthographic Size based on Grid Size & Aspect Ratio
-    if (cam != null)
-    {
+    if (cam != null) {
       cam.orthographic = true;
 
       float padding = 2f;
@@ -303,10 +304,10 @@ public class GridManager : MonoBehaviour {
 
   public void CheckWinCondition() {
     if (currentState.IsWin) {
-        Debug.Log("Level Complete!");
-        if (menuManager) {
-            menuManager.WinGame();
-        }
+      Debug.Log("Level Complete!");
+      if (menuManager) {
+        menuManager.WinGame();
+      }
     }
   }
 

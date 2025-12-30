@@ -39,12 +39,12 @@ public class MoveManager {
     Cell targetCell = grid[move.crateTo.x, move.crateTo.y];
 
     if (targetCell.terrain == TerrainType.Hole) {
-        // Crate falls in: Hole becomes FilledHole, Crate disappears (Empty)
-        targetCell.FillHole();
-        targetCell.occupant = Occupant.Empty;
+      // Crate falls in: Hole becomes FilledHole, Crate disappears (Empty)
+      targetCell.FillHole();
+      targetCell.occupant = Occupant.Empty;
     } else {
-        // Crate moves to floor
-        targetCell.occupant = Occupant.Crate;
+      // Crate moves to floor
+      targetCell.occupant = Occupant.Crate;
     }
   }
 
