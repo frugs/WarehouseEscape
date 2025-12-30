@@ -7,7 +7,7 @@ public class TerrainMeshBuilder : MonoBehaviour {
   [SerializeField] private Material WallMaterial = null;
   [SerializeField] private Material HoleMaterial = null;
 
-  [Header("Settings")] [SerializeField] private readonly float WallHeight = 1.0f;
+  [Header("Settings")] [SerializeField] private readonly float WallHeight = 1.2f;
   [SerializeField] private readonly float HoleDepth = 1.0f;
 
   private Transform LevelParent, WallsParent, HolesParent;

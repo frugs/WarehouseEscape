@@ -116,14 +116,15 @@ public class GridManager : MonoBehaviour {
   }
 
   private void SetupCamera() {
+    const float cameraAngle = 70.0f;
     if (cameraTransform == null) return;
 
     // Position camera to look at centre of grid
     cameraTransform.position = new Vector3(
       gridWidth / 2.0f,
-      Mathf.Tan(Mathf.Deg2Rad * 80f) * gridHeight / 2.0f,
+      Mathf.Tan(Mathf.Deg2Rad * cameraAngle) * gridHeight / 2.0f,
       0.0f);
-    cameraTransform.rotation = Quaternion.Euler(80f, 0f, 0f);
+    cameraTransform.rotation = Quaternion.Euler(cameraAngle, 0f, 0f);
 
     Camera cam = cameraTransform.GetComponent<Camera>();
 
