@@ -1,6 +1,6 @@
 ﻿<Solution>
   <Project Path="Tests.csproj" />
-  <Project Path="Tools.csproj" />
   <Project Path="Main.csproj" />
+  <Project Path="Tools.csproj" />
   <Project Path="Input.csproj" />
 </Solution>

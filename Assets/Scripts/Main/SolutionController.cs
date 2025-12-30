@@ -1,30 +1,37 @@
 using System.Collections;
+using System.Collections.Generic;
 using System.IO;
+using JetBrains.Annotations;
 using UnityEngine;
 
 [RequireComponent(typeof(GridManager))]
 public class SolutionController : MonoBehaviour {
   [Header("Settings")]
   [Tooltip("Name of the level solution to play (without .json extension)")]
-  [SerializeField] private string levelName = "Level1";
+  [SerializeField] private string LevelName = "Level1";
 
   [Tooltip("Time to wait between each move")]
-  [SerializeField] private float stepDelay = 0.2f;
+  [SerializeField] private float StepDelay = 0.12f;
 
   [Tooltip("If true, starts playing automatically when the scene starts")]
-  [SerializeField] private bool autoPlay = false;
+  [SerializeField] private bool AutoPlay = false;
 
-  private bool isPlaying;
+  [SerializeField]
+  private GridManager GridManager;
 
-  private GridManager gridManager;
-  private Coroutine playbackCoroutine;
+  [SerializeField]
+  private MoveScheduler MoveScheduler;
 
+  private Coroutine PlaybackCoroutine;
+
+  [UsedImplicitly]
   private void Awake() {
-    gridManager = GetComponent<GridManager>();
+    GridManager = GetComponent<GridManager>();
+    MoveScheduler = GetComponent<MoveScheduler>();
   }
 
   private void Start() {
-    if (autoPlay) {
+    if (AutoPlay) {
       // Wait one frame to ensure level is loaded
       StartCoroutine(WaitAndPlay());
     }
@@ -37,24 +44,23 @@ public class SolutionController : MonoBehaviour {
 
   [ContextMenu("Play Solution")]
   public void PlaySolution() {
-    isPlaying = true;
-    if (playbackCoroutine != null) {
-      StopCoroutine(playbackCoroutine);
+    if (PlaybackCoroutine != null) {
+      StopCoroutine(PlaybackCoroutine);
     }
-    playbackCoroutine = StartCoroutine(PlaybackRoutine());
+    PlaybackCoroutine = StartCoroutine(PlaybackRoutine());
   }
 
   [ContextMenu("Stop Playback")]
   public void StopPlayback() {
-    if (playbackCoroutine != null) {
-      StopCoroutine(playbackCoroutine);
-      playbackCoroutine = null;
+    if (PlaybackCoroutine != null) {
+      StopCoroutine(PlaybackCoroutine);
+      PlaybackCoroutine = null;
     }
   }
 
   private IEnumerator PlaybackRoutine() {
     // 1. Locate File
-    string fileName = $"{levelName}_Solution.json";
+    string fileName = $"{LevelName}_Solution.json";
     string path = Path.Combine(Application.streamingAssetsPath, "Solutions", fileName);
 
     if (!File.Exists(path)) {
@@ -79,39 +85,21 @@ public class SolutionController : MonoBehaviour {
     // Disable player input so they don't interfere
 
     // Optional: Reset level to ensure we start from the beginning
-    gridManager.ResetLevel();
+    GridManager.ResetLevel();
     yield return new WaitForSeconds(0.5f); // Wait for reset animation/logic
 
-    // 4. Execute Moves
-    foreach (SokobanMove move in data.Moves) {
-      // Execute Logic & Get Visuals
-      gridManager.RegisterMoveUpdates(move, out GameObject playerObj, out GameObject crateObj);
+    // 4. Schedule Moves
+    PushMovesToScheduler(data.Moves);
+  }
 
-      // Animate Player
-      if (playerObj != null) {
-        StartCoroutine(gridManager.AnimateTransform(playerObj, move.playerTo));
-      }
+  private void PushMovesToScheduler(List<SokobanMove> moves) {
+    // Clear any player inputs or partial paths
+    MoveScheduler.Clear();
 
-      // Animate Crate (Push)
-      if (move.type == MoveType.CratePush && crateObj != null) {
-        // Note: If you want the "Fall in Hole" visual logic, verify GridManager handles it
-        // or replicate the check here. Assuming simple translation for now:
-        StartCoroutine(gridManager.AnimateTransform(crateObj, move.crateTo));
-      }
+    // Set the cinematic playback speed
+    MoveScheduler.StepDelay = StepDelay;
 
-      // Wait for step duration
-      yield return new WaitForSeconds(stepDelay);
-
-      // Check if this move caused a win
-      gridManager.CheckWinCondition();
-    }
-
-    Debug.Log("[SolutionController] Playback Complete.");
-
-    // Return control (optional, usually you want to leave it disabled if they won)
-    // if (playerController) playerController.enabled = true;
-
-    playbackCoroutine = null;
-    isPlaying = false;
+    // Queue the entire solution
+    MoveScheduler.Enqueue(moves);
   }
 }

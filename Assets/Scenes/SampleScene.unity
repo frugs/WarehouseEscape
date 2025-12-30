@@ -1007,6 +1007,7 @@ GameObject:
   - component: {fileID: 1936126209}
   - component: {fileID: 1936126210}
   - component: {fileID: 1936126211}
+  - component: {fileID: 1936126212}
   m_Layer: 0
   m_Name: GridManager
   m_TagString: Untagged
@@ -1102,8 +1103,21 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Main::SolutionController
   levelName: Level1
-  stepDelay: 0.2
+  stepDelay: 0.12
   autoPlay: 0
+--- !u!114 &1936126212
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1936126205}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 79d830973d415284bb89e9cc07e63ca0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Main::MoveExecutor
+  GridManager: {fileID: 0}
 --- !u!1 &1967644723
 GameObject:
   m_ObjectHideFlags: 0

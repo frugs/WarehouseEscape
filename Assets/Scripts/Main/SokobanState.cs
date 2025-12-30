@@ -35,7 +35,7 @@ public readonly struct SokobanState : IEquatable<SokobanState> {
   /// Can the player walk onto this coordinate?
   /// </summary>
   public bool CanPlayerWalk(int x, int y) {
-    if (!IsValidBounds(x, y)) return false;
+    if (!IsValidPos(x, y)) return false;
 
     var terrain = TerrainGrid[x, y];
 
@@ -60,7 +60,7 @@ public readonly struct SokobanState : IEquatable<SokobanState> {
   /// Can a crate be pushed onto this coordinate?
   /// </summary>
   public bool CanReceiveCrate(int x, int y) {
-    if (!IsValidBounds(x, y)) return false;
+    if (!IsValidPos(x, y)) return false;
 
     // 1. Static Terrain Check
     var terrain = TerrainGrid[x, y];
@@ -123,7 +123,7 @@ public readonly struct SokobanState : IEquatable<SokobanState> {
     return totalTargets > 0 && targetsSatisfied == totalTargets;
   }
 
-  private bool IsValidBounds(int x, int y) {
+  public bool IsValidPos(int x, int y) {
     return x >= 0 && x < TerrainGrid.GetLength(0) && y >= 0 && y < TerrainGrid.GetLength(1);
   }
 
