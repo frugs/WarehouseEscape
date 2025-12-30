@@ -4,7 +4,10 @@ using JetBrains.Annotations;
 using UnityEngine;
 
 public class PlayerController : MonoBehaviour {
+  [Header("Dependencies")] [SerializeField]
+
   private GridManager gridManager;
+  private GameInput inputActions; // The generated C# class from your Input Action Asset
 
   // State flags
   public bool IsBusy { get; private set; } // Processing a move/animation
@@ -17,6 +20,19 @@ public class PlayerController : MonoBehaviour {
   private void Awake() {
     gridManager = FindAnyObjectByType<GridManager>();
     pathQueue = new List<Vector2Int>();
+
+    // Initialize the generated input class
+    inputActions = new GameInput();
+  }
+
+  [UsedImplicitly]
+  private void OnEnable() {
+    inputActions.Player.Enable();
+  }
+
+  [UsedImplicitly]
+  private void OnDisable() {
+    inputActions.Player.Disable();
   }
 
   [UsedImplicitly]
@@ -26,35 +42,35 @@ public class PlayerController : MonoBehaviour {
   }
 
   private void HandleInput() {
-    // --- 1. KEYBOARD INPUT (Priority: High) ---
-    // Pressing a key cancels any active pathfinding immediately
-    int x = 0;
-    int y = 0;
+    // MOVEMENT INPUT (Priority: High)
+    if (inputActions.Player.Move.WasPerformedThisFrame()) {
+      Vector2 rawInput = inputActions.Player.Move.ReadValue<Vector2>();
+      int x = 0;
+      int y = 0;
 
-    // Prioritize Horizontal to avoid diagonal confusion
-    if (Input.GetButtonDown("Horizontal")) {
-      x = (int)Mathf.Sign(Input.GetAxisRaw("Horizontal"));
-    } else if (Input.GetButtonDown("Vertical")) {
-      y = (int)Mathf.Sign(Input.GetAxisRaw("Vertical"));
+      // Simple threshold check
+      if (Mathf.Abs(rawInput.x) > 0.5f) {
+        x = (int)Mathf.Sign(rawInput.x);
+      } else if (Mathf.Abs(rawInput.y) > 0.5f) {
+        y = (int)Mathf.Sign(rawInput.y);
+      }
+
+      if (x != 0 || y != 0) {
+        // User took control: Clear the path
+        pathQueue.Clear();
+        // Buffer the input
+        moveBuffer = new Vector2Int(x, y);
+        return;
+      }
     }
 
-    if (x != 0 || y != 0) {
-      // User took control: Clear the path
-      pathQueue.Clear();
-
-      // Buffer the input:
-      // If busy: we store it for the next available frame.
-      // If not busy: we store it and consume it immediately in ProcessMovement.
-      moveBuffer = new Vector2Int(x, y);
-      return;
-    }
-
-    // --- 2. MOUSE INPUT (Priority: Low) ---
-    // Only process mouse if no keyboard input this frame and user isn't holding a key
-    if (Input.GetMouseButtonDown(0)) {
+    // MOUSE INPUT (Priority: Low)
+    if (inputActions.Player.Click.WasPerformedThisFrame()) {
       if (Camera.main == null) return;
 
-      Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+      Vector2 mousePos = inputActions.Player.MousePosition.ReadValue<Vector2>();
+      Ray ray = Camera.main.ScreenPointToRay(mousePos);
+
       if (Physics.Raycast(ray, out RaycastHit hit)) {
         // Clear existing buffer/path
         moveBuffer = null;
@@ -65,7 +81,6 @@ public class PlayerController : MonoBehaviour {
         Cell targetCell = gridManager.GetCellAtWorldPos(hit.point);
 
         if (startCell != null && targetCell != null) {
-          // Note: Ensure GridManager.GetPath is public and implemented as discussed
           var newPath = gridManager.GetPath(new Vector2Int(startCell.x, startCell.y),
             new Vector2Int(targetCell.x, targetCell.y));
           if (newPath != null) {
@@ -78,7 +93,6 @@ public class PlayerController : MonoBehaviour {
 
   private void ProcessMovement() {
     // If busy, we can't start a new move yet.
-    // We just wait for the coroutine to finish and flip IsBusy back to false.
     if (IsBusy) return;
 
     Vector2Int moveDir = Vector2Int.zero;
@@ -120,7 +134,7 @@ public class PlayerController : MonoBehaviour {
     Vector2Int targetPos = currentPos + direction;
     Cell targetCell = gridManager.GetCell(targetPos.x, targetPos.y);
 
-    // --- 1. VALIDATION ---\n        // If invalid, unlock and exit
+    // If invalid, unlock and exit
     if (targetCell == null || !targetCell.PlayerCanWalk) {
       IsBusy = false;
       pathQueue.Clear(); // Abort path if we hit a wall unexpectedly
@@ -135,7 +149,7 @@ public class PlayerController : MonoBehaviour {
     }
     // Case B: Crate Push
     else if (targetCell.occupant == Occupant.Crate) {
-      // Pushing a crate cancels the mouse path (auto-pathing shouldn't push crates implicitly)
+      // Pushing a crate cancels the mouse path
       pathQueue.Clear();
 
       Vector2Int crateTarget = targetPos + direction;
@@ -153,12 +167,10 @@ public class PlayerController : MonoBehaviour {
       yield break;
     }
 
-    // --- 2. ATOMIC UPDATE ---
     // This updates the Grid Logic AND the Visual Array pointers instantly.
     // It returns the GameObjects we need to animate.
     gridManager.RegisterMoveUpdates(move, out GameObject playerObj, out GameObject crateObj);
 
-    // --- 3. CONCURRENT ANIMATION ---
     List<Coroutine> activeAnimations = new List<Coroutine>();
 
     // Queue Player Animation
@@ -180,7 +192,7 @@ public class PlayerController : MonoBehaviour {
         : StartCoroutine(gridManager.AnimateTransform(crateObj, move.crateTo)));
     }
 
-    // Wait for ALL animations to finish
+    // Wait for all animations to finish
     foreach (var anim in activeAnimations) {
       yield return anim;
     }
@@ -191,14 +203,7 @@ public class PlayerController : MonoBehaviour {
   }
 
   private Vector2Int GetPlayerGridPos() {
-    // Simple scan is robust enough for small grids.
-    for (int x = 0; x < gridManager.grid.GetLength(0); x++) {
-      for (int y = 0; y < gridManager.grid.GetLength(1); y++) {
-        if (gridManager.grid[x, y].occupant == Occupant.Player)
-          return new Vector2Int(x, y);
-      }
-    }
-
-    return Vector2Int.zero;
+    Cell cell = gridManager.GetCellAtWorldPos(transform.position);
+    return new Vector2Int(cell.x, cell.y);
   }
 }
