@@ -162,21 +162,9 @@ public class GridManager : MonoBehaviour {
       crateObj = visualGrid[move.crateFrom.x, move.crateFrom.y];
 
     // 2. Update Data Model (The Truth)
-    grid[move.playerFrom.x, move.playerFrom.y].occupant = Occupant.Empty;
-    if (move.type == MoveType.CratePush)
-      grid[move.crateFrom.x, move.crateFrom.y].occupant = Occupant.Empty;
-
-    grid[move.playerTo.x, move.playerTo.y].occupant = Occupant.Player;
-
-    if (move.type == MoveType.CratePush) {
-      Cell target = grid[move.crateTo.x, move.crateTo.y];
-      if (target.terrain == TerrainType.Hole) {
-        target.FillHole();
-        target.occupant = Occupant.Empty; // Crate becomes part of floor logic
-      } else {
-        target.occupant = Occupant.Crate;
-      }
-    }
+    SokobanState currentState = new SokobanState(grid, move.playerFrom);
+    SokobanState newState = MoveManager.ApplyMove(currentState, move);
+    this.grid = newState.grid;
 
     // 3. Update Visual Grid Pointers (The References)
     visualGrid[move.playerFrom.x, move.playerFrom.y] = null;

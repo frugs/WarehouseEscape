@@ -26,18 +26,26 @@ public class MoveManager {
   }
 
   private static void ApplyCratePush(Cell[,] grid, Vector2Int playerPos, SokobanMove move) {
-    // 1. Clear player origin
+    // Clear old positions
+    // We must clear the crate's old position BEFORE placing the player there,
+    // otherwise we would overwrite the player with 'Empty' because playerTo == crateFrom.
     grid[playerPos.x, playerPos.y].occupant = Occupant.Empty;
+    grid[move.crateFrom.x, move.crateFrom.y].occupant = Occupant.Empty;
 
-    // 2. Player to crate position
+    // Move Player (Player enters the tile the crate just left)
     grid[move.playerTo.x, move.playerTo.y].occupant = Occupant.Player;
 
-    // 3. Crate movement + hole filling
+    // Move Crate + Handle Hole Logic
     Cell targetCell = grid[move.crateTo.x, move.crateTo.y];
-    targetCell.FillHole();
 
-    grid[move.crateFrom.x, move.crateFrom.y].occupant = Occupant.Empty;
-    targetCell.occupant = Occupant.Crate;
+    if (targetCell.terrain == TerrainType.Hole) {
+        // Crate falls in: Hole becomes FilledHole, Crate disappears (Empty)
+        targetCell.FillHole();
+        targetCell.occupant = Occupant.Empty;
+    } else {
+        // Crate moves to floor
+        targetCell.occupant = Occupant.Crate;
+    }
   }
 
   // ========== UTILITIES ==========
