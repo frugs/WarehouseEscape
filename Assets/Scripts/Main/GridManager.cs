@@ -26,11 +26,10 @@ public class GridManager : MonoBehaviour {
   [SerializeField] private readonly float FallAnimationDuration = 0.15f;
 
   // ================= STATE =================
-  public Cell[,] grid;
+  public SokobanState currentState;
   private GameObject[,] visualGrid; // Visual representation only
   private int gridWidth;
   private int gridHeight;
-  private int crateCount;
 
   private string LevelsDirectory => Path.Combine(Application.dataPath, LevelsDirectoryName);
 
@@ -52,8 +51,8 @@ public class GridManager : MonoBehaviour {
   public void LoadLevel(int level) {
     levelNumber = level;
     string filePath = Path.Combine(LevelsDirectory, $"Level{levelNumber}.txt");
-    if (File.Exists(filePath)) GenerateGridFromFile(filePath);
-    else Debug.LogError($"Level file not found at: {filePath}");
+    if (File.Exists(filePath)) {GenerateGridFromFile(filePath);}
+    else {Debug.LogError($"Level file not found at: {filePath}");}
   }
 
   public void GenerateGridFromFile(string filePath) {
@@ -61,17 +60,16 @@ public class GridManager : MonoBehaviour {
     if (data == null) return;
 
     CleanupLevel();
-    this.grid = data.grid;
+    this.currentState = new SokobanState(data.grid, data.playerPos);
     this.gridWidth = data.width;
     this.gridHeight = data.height;
-    this.crateCount = data.crateCount;
     this.visualGrid = new GameObject[gridWidth, gridHeight];
 
-    if (terrainBuilder != null) terrainBuilder.BuildTerrain(grid, gridWidth, gridHeight);
+    if (terrainBuilder != null) {terrainBuilder.BuildTerrain(data.grid, gridWidth, gridHeight);}
     SpawnDynamicObjects();
     SetupCamera();
 
-    if (menuManager != null) menuManager.ResumeGame();
+    if (menuManager != null) {menuManager.ResumeGame();}
   }
 
   private void CleanupLevel() {
@@ -94,7 +92,7 @@ public class GridManager : MonoBehaviour {
   private void SpawnDynamicObjects() {
     for (int x = 0; x < gridWidth; x++) {
       for (int y = 0; y < gridHeight; y++) {
-        Cell cell = grid[x, y];
+        Cell cell = currentState.grid[x, y];
         Vector3 pos = GridToWorld(x, y);
 
         if (cell.isTarget) {
@@ -162,9 +160,7 @@ public class GridManager : MonoBehaviour {
       crateObj = visualGrid[move.crateFrom.x, move.crateFrom.y];
 
     // 2. Update Data Model (The Truth)
-    SokobanState currentState = new SokobanState(grid, move.playerFrom);
-    SokobanState newState = MoveManager.ApplyMove(currentState, move);
-    this.grid = newState.grid;
+    currentState = MoveManager.ApplyMove(currentState, move);
 
     // 3. Update Visual Grid Pointers (The References)
     visualGrid[move.playerFrom.x, move.playerFrom.y] = null;
@@ -285,7 +281,7 @@ public class GridManager : MonoBehaviour {
   }
 
   public Cell GetCell(int x, int y) {
-    return IsValidPos(new Vector2Int(x, y)) ? grid[x, y] : null;
+    return IsValidPos(new Vector2Int(x, y)) ? currentState.grid[x, y] : null;
   }
 
   public bool IsValidPos(Vector2Int pos) =>
@@ -306,20 +302,11 @@ public class GridManager : MonoBehaviour {
   }
 
   public void CheckWinCondition() {
-    int cratesOnTargets = 0;
-    for (int x = 0; x < gridWidth; x++) {
-      for (int y = 0; y < gridHeight; y++) {
-        if (grid[x, y].occupant == Occupant.Crate && grid[x, y].isTarget) {
-          cratesOnTargets++;
+    if (currentState.IsWin) {
+        Debug.Log("Level Complete!");
+        if (menuManager) {
+            menuManager.WinGame();
         }
-      }
-    }
-
-    if (cratesOnTargets >= crateCount) {
-      Debug.Log("Level Complete!");
-      if (menuManager) {
-        menuManager.WinGame();
-      }
     }
   }
 

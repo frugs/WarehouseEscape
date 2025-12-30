@@ -123,44 +123,70 @@ public class SokobanSolverTests
     [Test]
     public void Solver_Can_Fill_Hole()
     {
-        // ARRANGE: Player pushes crate into a hole to cross it?
-        // Or simply checking if logic handles Hole filling correctly.
-        // Setup: [Player] [Crate] [Hole] [Target]
-        // Note: In your logic, a crate fills a hole and disappears (Occupant.Empty)
-        // but creates a filled floor (FilledHole).
+      // ARRANGE: Player pushes crate into a hole to cross it?
+      // Or simply checking if logic handles Hole filling correctly.
+      // Setup: [Player] [Crate] [Hole] [Target]
+      // Note: In your logic, a crate fills a hole and disappears (Occupant.Empty)
+      // but creates a filled floor (FilledHole).
 
-        int width = 6;
-        int height = 3;
-        Cell[,] grid = CreateEmptyRoom(width, height);
+      int width = 6;
+      int height = 3;
+      Cell[,] grid = CreateEmptyRoom(width, height);
 
-        Vector2Int playerPos = new Vector2Int(1, 1);
-        grid[1, 1].occupant = Occupant.Player;
+      Vector2Int playerPos = new Vector2Int(1, 1);
+      grid[1, 1].occupant = Occupant.Player;
 
-        grid[2, 1].occupant = Occupant.Crate;
+      grid[2, 1].occupant = Occupant.Crate;
 
-        // The hole the crate must fall into
-        grid[3, 1].terrain = TerrainType.Hole;
+      // The hole the crate must fall into
+      grid[3, 1].terrain = TerrainType.Hole;
 
-        // The target is BEYOND the hole, so we might need another crate?
-        // Actually, let's just test if the solver accepts "Crate in Hole" as a valid state transition
-        // Your win condition requires crates on targets.
-        // If a crate falls in a hole, it's gone.
-        // So this test checks if the solver can navigate *around* or *use* the hole logic without crashing.
+      // The target is BEYOND the hole, so we might need another crate?
+      // Actually, let's just test if the solver accepts "Crate in Hole" as a valid state transition
+      // Your win condition requires crates on targets.
+      // If a crate falls in a hole, it's gone.
+      // So this test checks if the solver can navigate *around* or *use* the hole logic without crashing.
 
-        // Let's change the test: A simple valid push into a hole.
-        // If the goal requires all crates on targets, losing a crate in a hole makes it UNSOLVABLE
-        // (unless you have spare crates, which your parser allows).
+      // Let's change the test: A simple valid push into a hole.
+      // If the goal requires all crates on targets, losing a crate in a hole makes it UNSOLVABLE
+      // (unless you have spare crates, which your parser allows).
 
-        // Let's just verify the MoveManager logic applied by the solver for holes:
-        SokobanState state = new SokobanState(grid, playerPos);
-        SokobanMove move = SokobanMove.CratePush(new Vector2Int(1,1), new Vector2Int(2,1), new Vector2Int(2,1), new Vector2Int(3,1));
+      // Let's just verify the MoveManager logic applied by the solver for holes:
+      SokobanState state = new SokobanState(grid, playerPos);
+      SokobanMove move = SokobanMove.CratePush(new Vector2Int(1,1), new Vector2Int(2,1), new Vector2Int(2,1), new Vector2Int(3,1));
 
-        // ACT
-        SokobanState newState = MoveManager.ApplyMove(state, move);
-        Cell holeCell = newState.grid[3, 1];
+      // ACT
+      SokobanState newState = MoveManager.ApplyMove(state, move);
+      Cell holeCell = newState.grid[3, 1];
 
-        // ASSERT
-        Assert.AreEqual(TerrainType.FilledHole, holeCell.terrain, "Hole should become FilledHole.");
-        Assert.AreEqual(Occupant.Empty, holeCell.occupant, "Filled hole should be empty (crate consumed).");
+      // ASSERT
+      Assert.AreEqual(TerrainType.FilledHole, holeCell.terrain, "Hole should become FilledHole.");
+      Assert.AreEqual(Occupant.Empty, holeCell.occupant, "Filled hole should be empty (crate consumed).");
+    }
+
+    [Test]
+    public void State_Detects_Win_Correctly()
+    {
+      // ARRANGE: 2 Targets, 2 Crates
+      int width = 3;
+      int height = 3;
+      Cell[,] grid = CreateEmptyRoom(width, height);
+
+      // Target 1 & Crate 1
+      grid[1, 1].isTarget = true;
+      grid[1, 1].occupant = Occupant.Crate;
+
+      // Target 2 & Crate 2
+      grid[2, 2].isTarget = true;
+      grid[2, 2].occupant = Occupant.Crate;
+
+      SokobanState state = new SokobanState(grid, new Vector2Int(0,0));
+
+      // ACT & ASSERT
+      Assert.IsTrue(state.IsWin, "Should be a win when all targets have crates.");
+
+      // Remove one crate
+      state.grid[2, 2].occupant = Occupant.Empty;
+      Assert.IsFalse(state.IsWin, "Should NOT be a win if a target is empty.");
     }
 }
