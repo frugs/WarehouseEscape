@@ -2,7 +2,6 @@ using System.Collections.Generic;
 using UnityEngine;
 
 public static class Pather {
-
   /// <summary>
   /// Calculates a path between two grid coordinates using BFS.
   /// Returns a list of coordinates to visit (excluding the start).
@@ -59,9 +58,7 @@ public static class Pather {
     int[] dy = { 1, -1, 0, 0 };
     for (int i = 0; i < 4; i++) {
       var n = new Vector2Int(cell.x + dx[i], cell.y + dy[i]);
-      if (n != null) {
-        list.Add(n);
-      }
+      list.Add(n);
     }
 
     return list;

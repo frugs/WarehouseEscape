@@ -28,8 +28,7 @@ public class SokobanSolver {
 
     // 4 directions
     foreach (Vector2Int direction in new[] {
-               Vector2Int.up, Vector2Int.down,
-               Vector2Int.left, Vector2Int.right
+               Vector2Int.up, Vector2Int.down, Vector2Int.left, Vector2Int.right
              }) {
       Vector2Int targetPos = playerPos + direction;
 
@@ -58,7 +57,8 @@ public class SokobanSolver {
     return moves;
   }
 
-  private bool IsValidCratePush(SokobanState state, Vector2Int crateTargetPos, int width, int height) {
+  private bool IsValidCratePush(SokobanState state, Vector2Int crateTargetPos, int width,
+    int height) {
     if (!IsInBounds(crateTargetPos, width, height)) return false;
     return state.CanReceiveCrate(crateTargetPos.x, crateTargetPos.y);
   }
@@ -79,6 +79,7 @@ public class SokobanSolver {
     if ((blockedLeft || blockedRight) && (blockedUp || blockedDown)) {
       return true;
     }
+
     return false;
   }
 
@@ -136,10 +137,7 @@ public class SokobanSolver {
 
         if (!visited.Contains(newState)) {
           visited.Add(newState);
-          parentMap[newState] = new PathNode {
-            ParentState = state,
-            Move = move
-          };
+          parentMap[newState] = new PathNode { ParentState = state, Move = move };
           queue.Enqueue(newState);
         }
       }

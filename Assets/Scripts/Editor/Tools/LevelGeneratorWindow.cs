@@ -82,6 +82,7 @@ public class LevelGeneratorWindow : EditorWindow {
       for (int x = 0; x < w; x++) {
         chars.Add(GetCharForTile(state, x, y));
       }
+
       writer.WriteLine(string.Join(" ", chars));
     }
   }

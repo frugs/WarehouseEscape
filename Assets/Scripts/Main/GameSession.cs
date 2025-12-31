@@ -2,12 +2,12 @@ using JetBrains.Annotations;
 using UnityEngine;
 
 public class GameSession : MonoBehaviour {
-  [Header("Level Settings")]
-  [SerializeField]
+  [Header("Level Settings")] [SerializeField]
   private int LevelNumber = 1;
 
-  [Header("References")]
-  [SerializeField] private LevelLoader LevelLoader;
+  [Header("References")] [SerializeField]
+  private LevelLoader LevelLoader;
+
   [SerializeField] private MenuManager menuManager;
 
   // ================= STATE =================
@@ -44,9 +44,9 @@ public class GameSession : MonoBehaviour {
   /// Returns the GameObjects that need to be animated so the caller doesn't need to look them up.
   /// </summary>
   public void ApplyMoveToCurrentState(
-      SokobanMove move,
-      out GameObject playerObj,
-      out GameObject crateObj) {
+    SokobanMove move,
+    out GameObject playerObj,
+    out GameObject crateObj) {
     playerObj = null;
     crateObj = null;
 

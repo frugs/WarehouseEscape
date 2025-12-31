@@ -3,7 +3,6 @@ using System.IO;
 using UnityEngine;
 
 public class SokobanSolutionExporter {
-
   /// <summary>
   /// Saves a list of moves to a JSON file in StreamingAssets/Solutions.
   /// </summary>
@@ -17,10 +16,7 @@ public class SokobanSolutionExporter {
     }
 
     SolutionData data = new SolutionData {
-      LevelName = levelName,
-      StepCount = moves.Count,
-      SolveTimeMs = solveTimeMs,
-      Moves = moves
+      LevelName = levelName, StepCount = moves.Count, SolveTimeMs = solveTimeMs, Moves = moves
     };
 
     // Format: StreamingAssets/Solutions/LevelName_Solution.json

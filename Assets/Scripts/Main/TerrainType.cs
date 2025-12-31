@@ -10,7 +10,6 @@ public enum TerrainType {
 }
 
 public static class TerrainTypeExtensions {
-
   /// <summary>Can player step on this cell?</summary>
   public static bool PlayerCanWalk(this TerrainType terrain) =>
     terrain == TerrainType.Floor || terrain == TerrainType.Target;

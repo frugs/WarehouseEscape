@@ -2,7 +2,6 @@ using System.Collections.Generic;
 using System.Diagnostics; // For Stopwatch
 using System.IO;
 using UnityEditor;
-using UnityEngine;
 
 public static class LevelSolverMenu {
   [MenuItem("Assets/Sokoban/Solve Level", false, 10)]

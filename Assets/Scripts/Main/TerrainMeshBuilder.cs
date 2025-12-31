@@ -1,13 +1,12 @@
 using System.Collections.Generic;
-
 using UnityEngine;
 
 public class TerrainMeshBuilder : MonoBehaviour {
-  [Header("Materials")][SerializeField] private Material FloorMaterial = null;
+  [Header("Materials")] [SerializeField] private Material FloorMaterial = null;
   [SerializeField] private Material WallMaterial = null;
   [SerializeField] private Material HoleMaterial = null;
 
-  [Header("Settings")][SerializeField] private readonly float WallHeight = 1.2f;
+  [Header("Settings")] [SerializeField] private readonly float WallHeight = 1.2f;
   [SerializeField] private readonly float HoleDepth = 1.0f;
 
   private Transform LevelParent, WallsParent, HolesParent;
@@ -110,7 +109,8 @@ public class TerrainMeshBuilder : MonoBehaviour {
 
   // ========== FACE GENERATION HELPERS ==========
 
-  private void CheckAndAddWallSide(int x, int y, int dx, int dy, Vector3 dirNormal, TerrainType[,] grid,
+  private void CheckAndAddWallSide(int x, int y, int dx, int dy, Vector3 dirNormal,
+    TerrainType[,] grid,
     int width, int height, List<Vector3> verts, List<int> tris, List<Vector2> uvs) {
     int nx = x + dx;
     int ny = y + dy;
@@ -124,7 +124,8 @@ public class TerrainMeshBuilder : MonoBehaviour {
     }
   }
 
-  private void CheckAndAddHoleSide(int x, int y, int dx, int dy, Vector3 dirNormal, TerrainType[,] grid,
+  private void CheckAndAddHoleSide(int x, int y, int dx, int dy, Vector3 dirNormal,
+    TerrainType[,] grid,
     int width, int height, List<Vector3> verts, List<int> tris, List<Vector2> uvs) {
     int nx = x + dx;
     int ny = y + dy;
@@ -228,7 +229,8 @@ public class TerrainMeshBuilder : MonoBehaviour {
     return CreateGameObjectFromMeshData(meshName, verts, tris, uvs, mat, null);
   }
 
-  private GameObject CreateGameObjectFromMeshData(string meshName, List<Vector3> verts, List<int> tris,
+  private GameObject CreateGameObjectFromMeshData(string meshName, List<Vector3> verts,
+    List<int> tris,
     List<Vector2> uvs, Material mat, Transform parent) {
     if (verts.Count == 0) return null;
 

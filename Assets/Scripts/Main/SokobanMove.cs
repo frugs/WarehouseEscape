@@ -21,16 +21,12 @@ public struct SokobanMove {
 
     // CratePush
     return $"[Push] Player {playerFrom}->{playerTo} " +
-      $"pushed Crate {crateFrom}->{crateTo} (Dir: {direction})";
+           $"pushed Crate {crateFrom}->{crateTo} (Dir: {direction})";
   }
 
   /// <summary>Player-only move (no crate interaction)</summary>
   public static SokobanMove PlayerMove(Vector2Int from, Vector2Int to) {
-    return new SokobanMove {
-      playerFrom = from,
-      playerTo = to,
-      type = MoveType.PlayerMove
-    };
+    return new SokobanMove { playerFrom = from, playerTo = to, type = MoveType.PlayerMove };
   }
 
   /// <summary>Crate push move (player + crate movement)</summary>

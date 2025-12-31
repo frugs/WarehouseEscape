@@ -3,8 +3,8 @@ using System.Collections.Generic;
 public static class GeneratorTemplates {
   // Templates from sokoban_template.txt
   // 0 = Wall/Empty, 1 = Floor, 2 = Floor
-  public static readonly IList<int[,]> Templates = new List<int[,]>
-  {
+  public static readonly IList<int[,]> Templates = new List<int[,]> {
+        // @formatter:off
         // Template 0
         new int[,] {
             { 0, 0, 0, 0, 0 },
@@ -39,7 +39,7 @@ public static class GeneratorTemplates {
         },
         // Template 4
         new int[,] {
-            { 0, 0, 0, 0, 0 },
+            { 0, 0, 1, 0, 0 },
             { 0, 1, 1, 1, 0 }, // Converted 2s -> 1
             { 0, 1, 1, 1, 0 }, // Converted 2 -> 1
             { 0, 1, 1, 1, 0 }, // Converted 2 -> 1
@@ -141,6 +141,6 @@ public static class GeneratorTemplates {
             { 0, 1, 1, 1, 0 },
             { 0, 1, 1, 0, 0 },
         }
-    };
-
+    // @formatter:on
+  };
 }

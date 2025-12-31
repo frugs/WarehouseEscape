@@ -4,12 +4,10 @@ using JetBrains.Annotations;
 using UnityEngine;
 
 public class PlayerController : MonoBehaviour {
-  [Header("Dependencies")]
-  [SerializeField]
+  [Header("Dependencies")] [SerializeField]
   private GameSession GameSession;
 
-  [SerializeField]
-  private MoveScheduler MoveScheduler;
+  [SerializeField] private MoveScheduler MoveScheduler;
 
   private GameInput InputActions; // The generated C# class from your Input Action Asset
 
@@ -93,7 +91,6 @@ public class PlayerController : MonoBehaviour {
       Ray ray = Camera.main.ScreenPointToRay(mousePos);
 
       if (Physics.Raycast(ray, out RaycastHit hit)) {
-
         var playerPos = GridUtils.WorldToGrid(transform.position);
         var targetPos = GridUtils.WorldToGrid(hit.point);
         List<Vector2Int> path = Pather.FindPath(GameSession.CurrentState, playerPos, targetPos);
@@ -125,8 +122,6 @@ public class PlayerController : MonoBehaviour {
     // BFS returns the *target* cells.
     // We iterate through them and construct the move required to get there.
     foreach (var nextPos in pathPoints) {
-      Vector2Int direction = nextPos - current;
-
       // We use a "Look Ahead" trick:
       // Since we aren't moving the player YET, we can't just check GridState normally
       // for the 2nd, 3rd, 4th step.

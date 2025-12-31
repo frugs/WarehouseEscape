@@ -16,6 +16,7 @@ public class SokobanSolverTests {
         }
       }
     }
+
     return grid;
   }
 
@@ -128,7 +129,8 @@ public class SokobanSolverTests {
     var nextCrates = new List<Vector2Int>(); // Crate consumed
 
     // New player pos would be (2,1)
-    SokobanState nextState = new SokobanState(grid, new Vector2Int(2, 1), nextCrates, nextFilledHoles);
+    SokobanState nextState =
+      new SokobanState(grid, new Vector2Int(2, 1), nextCrates, nextFilledHoles);
 
     // 3. Verify the hole is now walkable
     Assert.IsTrue(nextState.CanPlayerWalk(3, 1), "Player SHOULD walk on filled hole.");

@@ -2,11 +2,8 @@ using System.Collections;
 using UnityEngine;
 
 public class MoveAnimator : MonoBehaviour {
-
-  [SerializeField]
-  private float MoveAnimationDuration = 0.2f;
-  [SerializeField]
-  private float FallAnimationDuration = 0.15f;
+  [SerializeField] private float MoveAnimationDuration = 0.2f;
+  [SerializeField] private float FallAnimationDuration = 0.15f;
 
   public IEnumerator AnimateTransform(GameObject obj, Vector2Int targetGridPos) {
     if (obj == null) yield break;

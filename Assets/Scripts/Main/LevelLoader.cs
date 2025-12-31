@@ -3,17 +3,16 @@ using JetBrains.Annotations;
 using UnityEngine;
 
 public class LevelLoader : MonoBehaviour {
-  [Header("References")]
-  [SerializeField] private TerrainMeshBuilder TerrainBuilder;
+  [Header("References")] [SerializeField]
+  private TerrainMeshBuilder TerrainBuilder;
+
   [SerializeField] private Transform CameraTransform;
 
-  [Header("Prefabs")]
-  [SerializeField] private GameObject PlayerPrefab = null;
+  [Header("Prefabs")] [SerializeField] private GameObject PlayerPrefab = null;
   [SerializeField] private GameObject CratePrefab = null;
   [SerializeField] private GameObject TargetPrefab = null;
 
-  [Header("Settings")]
-  [SerializeField] private readonly string LevelsDirectoryName = "Levels";
+  [Header("Settings")] [SerializeField] private readonly string LevelsDirectoryName = "Levels";
 
   private string LevelsDirectory => Path.Combine(Application.dataPath, LevelsDirectoryName);
 
@@ -40,9 +39,9 @@ public class LevelLoader : MonoBehaviour {
   }
 
   public bool LoadLevelFromFile(
-      string filePath,
-      out SokobanState state,
-      out GameObject[,] visualGrid) {
+    string filePath,
+    out SokobanState state,
+    out GameObject[,] visualGrid) {
     LevelData data = LevelParser.ParseLevelFile(filePath);
     if (data == null) {
       state = new SokobanState();
@@ -56,6 +55,7 @@ public class LevelLoader : MonoBehaviour {
     if (TerrainBuilder != null) {
       TerrainBuilder.BuildTerrain(data.grid);
     }
+
     SpawnDynamicObjects(state, visualGrid);
     SetupCamera(data.width, data.height);
 

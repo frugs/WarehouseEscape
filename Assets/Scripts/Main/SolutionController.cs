@@ -8,19 +8,18 @@ using UnityEngine;
 public class SolutionController : MonoBehaviour {
   [Header("Settings")]
   [Tooltip("Name of the level solution to play (without .json extension)")]
-  [SerializeField] private string LevelName = "Level1";
-
-  [Tooltip("Time to wait between each move")]
-  [SerializeField] private float StepDelay = 0.12f;
-
-  [Tooltip("If true, starts playing automatically when the scene starts")]
-  [SerializeField] private bool AutoPlay = false;
-
   [SerializeField]
-  private GameSession GameSession;
+  private string LevelName = "Level1";
 
-  [SerializeField]
-  private MoveScheduler MoveScheduler;
+  [Tooltip("Time to wait between each move")] [SerializeField]
+  private float StepDelay = 0.12f;
+
+  [Tooltip("If true, starts playing automatically when the scene starts")] [SerializeField]
+  private bool AutoPlay = false;
+
+  [SerializeField] private GameSession GameSession;
+
+  [SerializeField] private MoveScheduler MoveScheduler;
 
   private Coroutine PlaybackCoroutine;
 
@@ -47,6 +46,7 @@ public class SolutionController : MonoBehaviour {
     if (PlaybackCoroutine != null) {
       StopCoroutine(PlaybackCoroutine);
     }
+
     PlaybackCoroutine = StartCoroutine(PlaybackRoutine());
   }
 
@@ -65,7 +65,7 @@ public class SolutionController : MonoBehaviour {
 
     if (!File.Exists(path)) {
       Debug.LogError($"[SolutionController] Solution file not found: {path}\n" +
-      "Make sure to run the Solver from the Test Runner or Editor Menu first.");
+                     "Make sure to run the Solver from the Test Runner or Editor Menu first.");
       yield break;
     }
 

@@ -33,6 +33,7 @@ public class MoveScheduler : MonoBehaviour {
     foreach (var move in moves) {
       MoveQueue.Enqueue(move);
     }
+
     TryProcessQueue();
   }
 
@@ -67,8 +68,8 @@ public class MoveScheduler : MonoBehaviour {
                           && !GameSession.CurrentState.IsCrateAt(move.crateTo.x, move.crateTo.y);
 
         anims.Add(fellInHole
-            ? StartCoroutine(MoveAnimator.AnimateCrateFall(crateObj, move.crateTo))
-            : StartCoroutine(MoveAnimator.AnimateTransform(crateObj, move.crateTo)));
+          ? StartCoroutine(MoveAnimator.AnimateCrateFall(crateObj, move.crateTo))
+          : StartCoroutine(MoveAnimator.AnimateTransform(crateObj, move.crateTo)));
       }
 
       // Wait for animations

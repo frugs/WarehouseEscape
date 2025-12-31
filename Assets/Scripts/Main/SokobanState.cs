@@ -9,11 +9,15 @@ public readonly struct SokobanState : IEquatable<SokobanState> {
 
   // 2. Dynamic Data (The only things that change)
   public readonly Vector2Int PlayerPos;
-  public readonly Vector2Int[] CratePositions; // Array is slightly faster/lighter than List for fixed counts
+
+  public readonly Vector2Int[]
+    CratePositions; // Array is slightly faster/lighter than List for fixed counts
+
   public readonly HashSet<Vector2Int> FilledHoles; // Tracks holes that have been filled
 
   // Constructor
-  public SokobanState(TerrainType[,] terrainGrid, Vector2Int playerPos, IEnumerable<Vector2Int> crates, IEnumerable<Vector2Int> filledHoles = null) {
+  public SokobanState(TerrainType[,] terrainGrid, Vector2Int playerPos,
+    IEnumerable<Vector2Int> crates, IEnumerable<Vector2Int> filledHoles = null) {
     TerrainGrid = terrainGrid;
     PlayerPos = playerPos;
 
@@ -26,7 +30,9 @@ public readonly struct SokobanState : IEquatable<SokobanState> {
     CratePositions = sortedCrates;
 
     // Copy filled holes (or create empty if null)
-    FilledHoles = filledHoles != null ? new HashSet<Vector2Int>(filledHoles) : new HashSet<Vector2Int>();
+    FilledHoles = filledHoles != null
+      ? new HashSet<Vector2Int>(filledHoles)
+      : new HashSet<Vector2Int>();
   }
 
   public int GridWidth => TerrainGrid.GetLength(0);
@@ -83,11 +89,12 @@ public readonly struct SokobanState : IEquatable<SokobanState> {
     for (int i = 0; i < CratePositions.Length; i++) {
       if (CratePositions[i].x == x && CratePositions[i].y == y) return true;
     }
+
     return false;
   }
 
   public bool IsPlayerAt(int x, int y) {
-    return PlayerPos.x == x  &&  PlayerPos.y == y;
+    return PlayerPos.x == x && PlayerPos.y == y;
   }
 
   public bool IsFilledHoleAt(int x, int y) {
@@ -169,6 +176,7 @@ public readonly struct SokobanState : IEquatable<SokobanState> {
     foreach (var hole in FilledHoles) {
       holeHash ^= hole.GetHashCode();
     }
+
     hashCode.Add(holeHash);
 
     return hashCode.ToHashCode();

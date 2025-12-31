@@ -63,6 +63,7 @@ public class LevelParser {
     if (validate) {
       ValidateLevelData(levelData);
     }
+
     return levelData;
   }
 
@@ -94,6 +95,7 @@ public class LevelParser {
         if (data.playerDetected) {
           Debug.LogError("More than one player detected");
         }
+
         data.playerDetected = true;
         data.playerPos = new Vector2Int(x, y);
         break;
@@ -110,6 +112,7 @@ public class LevelParser {
         if (data.playerDetected) {
           Debug.LogError("More than one player detected");
         }
+
         data.playerDetected = true;
         data.playerPos = new Vector2Int(x, y);
         break;
