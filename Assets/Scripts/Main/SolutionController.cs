@@ -29,6 +29,7 @@ public class SolutionController : MonoBehaviour {
     MoveScheduler = GetComponent<MoveScheduler>();
   }
 
+  [UsedImplicitly]
   private void Start() {
     if (AutoPlay) {
       // Wait one frame to ensure level is loaded

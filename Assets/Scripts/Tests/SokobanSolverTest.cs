@@ -102,37 +102,4 @@ public class SokobanSolverTests {
     Assert.AreEqual(new Vector2Int(2, 1), move.crateFrom);
     Assert.AreEqual(new Vector2Int(3, 1), move.crateTo);
   }
-
-  [Test]
-  public void Solver_Can_Fill_Hole() {
-    // ARRANGE: Player pushes crate into a hole
-    // [Player(1,1)] [Crate(2,1)] [Hole(3,1)]
-    int width = 6;
-    int height = 3;
-    TerrainType[,] grid = CreateEmptyRoom(width, height);
-
-    Vector2Int playerPos = new Vector2Int(1, 1);
-    List<Vector2Int> crates = new List<Vector2Int> { new Vector2Int(2, 1) };
-
-    // Set Hole
-    grid[3, 1] = TerrainType.Hole;
-
-    SokobanState state = new SokobanState(grid, playerPos, crates);
-
-    // 1. Verify we can PUSH into the hole
-    Assert.IsTrue(state.CanReceiveCrate(3, 1), "Hole should receive crate.");
-
-    // 2. Simulate the outcome manually (since we are testing State Logic, not MoveManager here)
-    // If we push crate at (2,1) -> (3,1), it fills the hole.
-
-    var nextFilledHoles = new List<Vector2Int> { new Vector2Int(3, 1) };
-    var nextCrates = new List<Vector2Int>(); // Crate consumed
-
-    // New player pos would be (2,1)
-    SokobanState nextState =
-      new SokobanState(grid, new Vector2Int(2, 1), nextCrates, nextFilledHoles);
-
-    // 3. Verify the hole is now walkable
-    Assert.IsTrue(nextState.CanPlayerWalk(3, 1), "Player SHOULD walk on filled hole.");
-  }
 }

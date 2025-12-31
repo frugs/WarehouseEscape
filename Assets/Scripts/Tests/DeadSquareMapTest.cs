@@ -68,7 +68,7 @@ public class DeadSquareMapTest {
 # # # # #";
 
     var levelData = LevelParser.ParseLevelFromText(levelText, validate: false);
-    var state = new SokobanState(levelData.grid, levelData.playerPos, levelData.crates, null);
+    var state = new SokobanState(levelData.grid, levelData.playerPos, levelData.crates);
     var map = new DeadSquareMap(state);
 
     // (2,2) is the center bottom of the T.

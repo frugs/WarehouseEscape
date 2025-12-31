@@ -6,7 +6,7 @@ public static class GeneratorTemplates {
   public static readonly IList<int[,]> Templates = new List<int[,]> {
         // @formatter:off
         // Template 0
-        new int[,] {
+        new[,] {
             { 0, 0, 0, 0, 0 },
             { 0, 1, 1, 1, 0 },
             { 0, 1, 1, 1, 0 },
@@ -14,15 +14,15 @@ public static class GeneratorTemplates {
             { 0, 0, 0, 0, 0 },
         },
         // Template 1
-        new int[,] {
-            { 0, 0, 0, 0, 0 },
+        new[,] {
+            { 0, 0, 1, 0, 0 },
             { 0, 1, 1, 1, 0 }, // Converted 2 -> 1
             { 0, 1, 1, 1, 0 },
             { 0, 1, 1, 1, 0 },
             { 0, 0, 0, 0, 0 },
         },
         // Template 2
-        new int[,] {
+        new[,] {
             { 0, 0, 0, 1, 1 },
             { 0, 1, 1, 1, 1 }, // Converted 2s -> 1
             { 0, 1, 1, 1, 0 },
@@ -30,7 +30,7 @@ public static class GeneratorTemplates {
             { 0, 0, 0, 0, 0 },
         },
         // Template 3
-        new int[,] {
+        new[,] {
             { 0, 0, 0, 0, 0 },
             { 0, 1, 1, 1, 0 }, // Converted 2s -> 1
             { 0, 1, 1, 1, 0 },
@@ -38,7 +38,7 @@ public static class GeneratorTemplates {
             { 0, 0, 0, 0, 0 },
         },
         // Template 4
-        new int[,] {
+        new[,] {
             { 0, 0, 1, 0, 0 },
             { 0, 1, 1, 1, 0 }, // Converted 2s -> 1
             { 0, 1, 1, 1, 0 }, // Converted 2 -> 1
@@ -46,7 +46,7 @@ public static class GeneratorTemplates {
             { 0, 0, 0, 0, 0 },
         },
         // Template 5
-        new int[,] {
+        new[,] {
             { 0, 0, 1, 0, 0 },
             { 0, 1, 1, 1, 0 }, // Converted 2 -> 1
             { 1, 1, 1, 1, 0 },
@@ -54,7 +54,7 @@ public static class GeneratorTemplates {
             { 0, 0, 0, 0, 0 },
         },
         // Template 6
-        new int[,] {
+        new[,] {
             { 0, 0, 0, 0, 0 },
             { 0, 1, 1, 1, 0 }, // Converted 2 -> 1
             { 1, 1, 1, 1, 0 },
@@ -62,7 +62,7 @@ public static class GeneratorTemplates {
             { 0, 0, 0, 0, 0 },
         },
         // Template 7
-        new int[,] {
+        new[,] {
             { 0, 0, 1, 0, 0 },
             { 0, 1, 1, 1, 0 }, // Converted 2 -> 1
             { 1, 1, 1, 1, 0 },
@@ -70,7 +70,7 @@ public static class GeneratorTemplates {
             { 0, 0, 1, 0, 0 },
         },
         // Template 8
-        new int[,] {
+        new[,] {
             { 0, 0, 1, 0, 0 },
             { 0, 1, 1, 1, 0 }, // Converted 2s -> 1
             { 1, 1, 1, 1, 1 },
@@ -78,7 +78,7 @@ public static class GeneratorTemplates {
             { 0, 0, 1, 0, 0 },
         },
         // Template 9
-        new int[,] {
+        new[,] {
             { 0, 0, 1, 0, 0 },
             { 0, 1, 1, 1, 0 }, // Converted 2s -> 1
             { 0, 1, 1, 1, 1 }, // Converted 2 -> 1
@@ -86,7 +86,7 @@ public static class GeneratorTemplates {
             { 0, 0, 0, 0, 0 },
         },
         // Template 10
-        new int[,] {
+        new[,] {
             { 0, 0, 0, 0, 0 },
             { 0, 1, 1, 1, 0 }, // Converted 2s -> 1
             { 1, 1, 1, 1, 1 },
@@ -94,7 +94,7 @@ public static class GeneratorTemplates {
             { 0, 0, 0, 0, 0 },
         },
         // Template 11
-        new int[,] {
+        new[,] {
             { 0, 0, 0, 0, 0 },
             { 0, 1, 1, 1, 1 },
             { 0, 1, 1, 1, 1 }, // Converted 2 -> 1
@@ -102,7 +102,7 @@ public static class GeneratorTemplates {
             { 0, 0, 0, 0, 0 },
         },
         // Template 12
-        new int[,] {
+        new[,] {
             { 0, 0, 0, 0, 0 },
             { 0, 1, 1, 1, 0 }, // Converted 2s -> 1
             { 0, 1, 1, 1, 0 }, // Converted 2s -> 1
@@ -110,7 +110,7 @@ public static class GeneratorTemplates {
             { 0, 0, 0, 0, 0 },
         },
         // Template 13
-        new int[,] {
+        new[,] {
             { 0, 0, 0, 0, 0 },
             { 0, 1, 1, 1, 0 }, // Converted 2s -> 1
             { 0, 1, 1, 1, 0 }, // Converted 2 -> 1
@@ -118,7 +118,7 @@ public static class GeneratorTemplates {
             { 1, 1, 0, 0, 0 },
         },
         // Template 14
-        new int[,] {
+        new[,] {
             { 0, 1, 0, 1, 0 },
             { 0, 1, 1, 1, 0 },
             { 0, 1, 1, 1, 0 }, // Converted 2s -> 1
@@ -126,7 +126,7 @@ public static class GeneratorTemplates {
             { 0, 1, 0, 1, 0 },
         },
         // Template 15
-        new int[,] {
+        new[,] {
             { 0, 0, 0, 0, 0 },
             { 0, 1, 1, 1, 0 }, // Converted 2s -> 1
             { 0, 1, 1, 1, 0 }, // Converted 2s -> 1
@@ -134,7 +134,7 @@ public static class GeneratorTemplates {
             { 0, 1, 1, 1, 0 },
         },
         // Template 16
-        new int[,] {
+        new[,] {
             { 0, 0, 0, 0, 0 },
             { 0, 1, 1, 1, 0 }, // Converted 2s -> 1
             { 1, 1, 1, 1, 1 }, // Converted 2 -> 1

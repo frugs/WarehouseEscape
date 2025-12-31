@@ -21,6 +21,7 @@ public static class GridUtils {
     return x >= 0 && x < w && y >= 0 && y < h;
   }
 
+  // ReSharper disable once UnusedMember.Global
   public static bool IsInBounds(Vector2Int pos, TerrainType[,] grid) {
     return IsInBounds(pos.x, pos.y, grid);
   }

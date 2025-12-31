@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using System.Diagnostics;
 using NUnit.Framework;
 
 public class SokobanTestCases {
@@ -111,6 +110,7 @@ public class SokobanParamTests {
     // 3. ASSERT
     var solvable = solution != null;
     Assert.AreEqual(expectedSolvable, solvable,
-      $"Expected level to be {(expectedSolvable ? "Solvable" : "Unsolvable")}, but Solver returned {solution}.");
+      $"Expected level to be {(expectedSolvable ? "Solvable" : "Unsolvable")}, " +
+      "but Solver returned {solution}.");
   }
 }

@@ -10,7 +10,6 @@ public class SokobanGenerator {
   /// <summary>
   /// Generates a valid, solvable Sokoban level.
   /// </summary>
-  /// <param name="boxCount">Number of crates/goals to place.</param>
   /// <returns>A fully constructed SokobanState, or null if generation failed.</returns>
   public SokobanState? Generate(
     int minSize = 6, int maxSize = 12, int targetCount = 3, int holeCount = 2) {
@@ -272,7 +271,7 @@ public class SokobanGenerator {
     }
 
     // Shuffle cuts for variety
-    validCuts = validCuts.OrderBy(x => Random.value).ToList();
+    validCuts = validCuts.OrderBy(_ => Random.value).ToList();
 
     List<Vector2Int> holes = new List<Vector2Int>();
     List<Vector2Int> boxes = new List<Vector2Int>();
@@ -427,19 +426,5 @@ public class SokobanGenerator {
       }
     }
     return visited;
-  }
-
-  private int[,] RotateTemplate(int[,] original, int times) {
-    if (times == 0) return original;
-    int w = original.GetLength(0);
-    int h = original.GetLength(1);
-    int[,] newArr = new int[h, w];
-
-    for (int i = 0; i < w; i++) {
-      for (int j = 0; j < h; j++) {
-        newArr[j, w - 1 - i] = original[i, j];
-      }
-    }
-    return RotateTemplate(newArr, times - 1);
   }
 }

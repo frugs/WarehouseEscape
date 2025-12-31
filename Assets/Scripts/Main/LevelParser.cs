@@ -9,7 +9,7 @@ public class LevelParser {
       return null;
     }
 
-    string[] lines = System.IO.File.ReadAllLines(filePath);
+    string[] lines = File.ReadAllLines(filePath);
     return ParseLevelLines(lines, validate);
   }
 

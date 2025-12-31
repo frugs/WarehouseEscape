@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.IO;
+using JetBrains.Annotations;
 using UnityEditor;
 using UnityEngine;
 
@@ -15,6 +16,7 @@ public class LevelGeneratorWindow : EditorWindow {
     GetWindow<LevelGeneratorWindow>("Sokoban Generator");
   }
 
+  [UsedImplicitly]
   private void OnGUI() {
     GUILayout.Label("Level Settings", EditorStyles.boldLabel);
     MinSize = EditorGUILayout.IntField("Min Size", MinSize);
