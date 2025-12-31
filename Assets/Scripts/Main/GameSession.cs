@@ -86,10 +86,8 @@ public class GameSession : MonoBehaviour {
     }
   }
 
-  [UsedImplicitly]
   public void ResetLevel() => LoadLevel();
 
-  [UsedImplicitly]
   public void NextLevel() {
     LevelNumber++;
     LoadLevel();
