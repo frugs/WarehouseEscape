@@ -1,0 +1,29 @@
+name: Export C# scripts
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - "Assets/Scripts/**/*.cs"
+
+jobs:
+  export-scripts:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Concatenate C# scripts
+        shell: bash
+        run: |
+          # Ensure consistent ordering (optional but helpful)
+          find Assets/Scripts -name '*.cs' -print0 \
+            | sort -z \
+            | xargs -0 tail -n +1 > scripts.txt
+
+      - name: Upload scripts artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: scripts-text
+          path: scripts.txt
