@@ -1,15 +1,18 @@
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using UnityEngine;
 
 public class SokobanSolver {
-  const int MAX_ITERATIONS = 5_000_000; // Limit total states explored
-  const long MAX_MS = 15_000;
+  const int MAX_ITERATIONS = 10_000_000; // Limit total states explored
+  const long MAX_MS = 60_000;
 
   private struct PathNode {
     public SokobanState? ParentState;
     public SokobanMove? Move;
   }
+
+  private DeadSquareMap DeadSquareMap;
 
   public bool IsSolvable(SokobanState state) {
     var solution = FindSolutionPath(state);
@@ -40,7 +43,8 @@ public class SokobanSolver {
       else if (state.IsCrateAt(targetPos.x, targetPos.y)) {
         Vector2Int crateTargetPos = targetPos + direction;
         if (IsValidCratePush(state, crateTargetPos, width, height)
-            && !IsDeadlock(state, crateTargetPos, width, height)) {
+            && !IsDeadlock(state, crateTargetPos, width, height)
+            && !IsCrateInDeadSquare(crateTargetPos)) {
           moves.Add(SokobanMove.CratePush(
             playerPos,
             targetPos,
@@ -78,6 +82,10 @@ public class SokobanSolver {
     return false;
   }
 
+  private bool IsCrateInDeadSquare(Vector2Int crateTargetPos) {
+    return DeadSquareMap.IsDeadSquare(crateTargetPos.x, crateTargetPos.y);
+  }
+
   private bool IsBlocking(TerrainType[,] grid, int x, int y, int width, int height) {
     // Check bounds
     if (x < 0 || x >= width || y < 0 || y >= height) return true; // Edge is a wall
@@ -106,6 +114,8 @@ public class SokobanSolver {
 
     int iterations = 0;
     Stopwatch timer = Stopwatch.StartNew();
+
+    DeadSquareMap = new DeadSquareMap(initialState);
 
     while (queue.Count > 0) {
       if (++iterations > MAX_ITERATIONS || timer.ElapsedMilliseconds > MAX_MS) {

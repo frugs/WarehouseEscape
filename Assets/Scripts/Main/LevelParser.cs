@@ -3,25 +3,25 @@ using System.IO;
 using UnityEngine;
 
 public class LevelParser {
-  public static LevelData ParseLevelFile(string filePath) {
+  public static LevelData ParseLevelFile(string filePath, bool validate = true) {
     if (!File.Exists(filePath)) {
       Debug.LogError($"Level file not found: {filePath}");
       return null;
     }
 
     string[] lines = System.IO.File.ReadAllLines(filePath);
-    return ParseLevelLines(lines);
+    return ParseLevelLines(lines, validate);
   }
 
-  public static LevelData ParseLevelFromText(string levelText) {
+  public static LevelData ParseLevelFromText(string levelText, bool validate = true) {
     // Split by newlines (handling varied line endings)
     string[] lines = levelText.Split(
       new[] { "\r\n", "\r", "\n" },
       System.StringSplitOptions.None);
-    return ParseLevelLines(lines);
+    return ParseLevelLines(lines, validate);
   }
 
-  private static LevelData ParseLevelLines(string[] lines) {
+  private static LevelData ParseLevelLines(string[] lines, bool validate) {
     // Parse dimensions
     string[] sizeValues = lines[0].Split(' ');
     if (sizeValues.Length != 2 ||
@@ -60,7 +60,9 @@ public class LevelParser {
       }
     }
 
-    ValidateLevelData(levelData);
+    if (validate) {
+      ValidateLevelData(levelData);
+    }
     return levelData;
   }
 
@@ -74,6 +76,7 @@ public class LevelParser {
         break;
 
       case 'X':
+      case '#':
         terrain = TerrainType.Wall;
         break;
 
