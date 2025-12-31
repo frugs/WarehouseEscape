@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using JetBrains.Annotations;
 using UnityEngine;
@@ -33,11 +34,26 @@ public class PlayerController : MonoBehaviour {
 
   [UsedImplicitly]
   private void Update() {
+    if (HandleRestartInput()) {
+      return;
+    }
+
     if (HandleDirectionInput()) {
       return;
     }
 
     HandleTargetInput();
+  }
+
+  private bool HandleRestartInput() {
+    if (InputActions.Player.Restart.WasPerformedThisFrame()) {
+      if (InputActions.Player.Restart.IsPressed()) {
+        GridManager.ResetLevel();
+        return true;
+      }
+    }
+
+    return false;
   }
 
   private bool HandleDirectionInput() {
