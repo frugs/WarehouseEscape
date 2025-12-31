@@ -42,6 +42,8 @@ public class PlayerController : MonoBehaviour {
 
   private bool HandleDirectionInput() {
     if (InputActions.Player.Move.WasPerformedThisFrame()) {
+      if (GridManager.GridState.IsWin()) return true;
+
       Vector2 raw = InputActions.Player.Move.ReadValue<Vector2>();
       // Basic Axis Snapping
       Vector2Int dir = Vector2Int.zero;

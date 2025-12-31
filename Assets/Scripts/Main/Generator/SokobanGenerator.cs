@@ -12,7 +12,8 @@ public class SokobanGenerator {
   /// </summary>
   /// <param name="boxCount">Number of crates/goals to place.</param>
   /// <returns>A fully constructed SokobanState, or null if generation failed.</returns>
-  public SokobanState? Generate(int minSize = 6, int maxSize = 12, int boxCount = 5) {
+  public SokobanState? Generate(
+    int minSize = 6, int maxSize = 12, int targetCount = 3, int holeCount = 2) {
     const int TimeoutMs = 60_000;
     Stopwatch timer = Stopwatch.StartNew();
 
@@ -29,9 +30,7 @@ public class SokobanGenerator {
       var roomShape = GenerateRoomShape(maxWidth, maxHeight);
 
       // 2. Populate (Player, crates, Goals)
-      var w = roomShape.GetLength(0);
-      var h = roomShape.GetLength(1);
-      var maybeState = PopulateLevel(w, h, boxCount, roomShape);
+      var maybeState = PopulateLevel(roomShape, targetCount, holeCount);
 
       if (maybeState == null) continue; // Population failed (no space)
       var state = (SokobanState)maybeState;
@@ -232,15 +231,20 @@ public class SokobanGenerator {
     return ret;
   }
 
-  private SokobanState? PopulateLevel(
-    int w, int h, int count, int[,] roomShape) {
+  /// <summary>
+  /// Populates a room shape with Player, Holes, Targets, and Boxes using structural heuristics.
+  /// </summary>
+  private SokobanState? PopulateLevel(int[,] roomShape, int targetCount, int holeCount) {
+    int w = roomShape.GetLength(0);
+    int h = roomShape.GetLength(1);
     TerrainType[,] grid = new TerrainType[w, h];
     List<Vector2Int> floors = new List<Vector2Int>();
 
-    // Convert int map to TerrainType and collect floor positions
+    // 1. Initialize Grid & Collect Floor Candidates
     for (int x = 0; x < w; x++) {
       for (int y = 0; y < h; y++) {
-        if (roomShape[x, y] == 1) {
+        if (roomShape[x, y] == 1) // 1 = Floor
+        {
           grid[x, y] = TerrainType.Floor;
           floors.Add(new Vector2Int(x, y));
         } else {
@@ -249,28 +253,180 @@ public class SokobanGenerator {
       }
     }
 
-    if (floors.Count < count * 2 + 1) return null;
+    int totalBoxes = targetCount + holeCount;
+    // Basic capacity check: 1 Player + N Targets + M Holes + (N+M) Boxes
+    if (floors.Count < 1 + targetCount + holeCount + totalBoxes) return null;
 
-    // Shuffle floors for random placement
-    floors = floors.OrderBy(a => Random.value).ToList();
-    int idx = 0;
+    // 2. Place Player FIRST (Randomly)
+    // We need the player position to determine "Player Side" vs "Behind Hole"
+    int pIdx = Random.Range(0, floors.Count);
+    Vector2Int playerPos = floors[pIdx];
+    floors.RemoveAt(pIdx);
 
-    // 1. Player
-    Vector2Int playerPos = floors[idx++];
-
-    // 2. Goals (Targets)
-    for (int i = 0; i < count; i++) {
-      Vector2Int pos = floors[idx++];
-      grid[pos.x, pos.y] = TerrainType.Target;
+    // 3. Identify Structural Cut Vertices (Hole Candidates)
+    // A cut vertex is a floor tile that, if removed, splits the reachable area from the player.
+    List<Vector2Int> validCuts = new List<Vector2Int>();
+    foreach (var f in floors) {
+      if (IsCutVertexForPlayer(grid, f, playerPos, floors))
+        validCuts.Add(f);
     }
 
-    // 3. crates
-    List<Vector2Int> crates = new List<Vector2Int>();
-    for (int i = 0; i < count; i++) {
-      crates.Add(floors[idx++]);
+    // Shuffle cuts for variety
+    validCuts = validCuts.OrderBy(x => Random.value).ToList();
+
+    List<Vector2Int> holes = new List<Vector2Int>();
+    List<Vector2Int> boxes = new List<Vector2Int>();
+    int targetsPlaced = 0;
+
+    // 4. Place Holes using "Lock and Key" heuristic
+    for (int i = 0; i < holeCount; i++) {
+      if (i < validCuts.Count) {
+        // --- SMART HOLE PLACEMENT ---
+        Vector2Int holePos = validCuts[i];
+        holes.Add(holePos);
+        floors.Remove(holePos);
+
+        // A. Force a Target BEHIND the hole (The "Lock")
+        // This forces the player to fill the hole to solve the level.
+        if (targetsPlaced < targetCount) {
+          Vector2Int? behindPos = GetPositionBehindHole(grid, holePos, playerPos, floors);
+          if (behindPos.HasValue) {
+            grid[behindPos.Value.x, behindPos.Value.y] = TerrainType.Target;
+            floors.Remove(behindPos.Value);
+            targetsPlaced++;
+
+            // B. Force a Box on PLAYER SIDE (The "Key")
+            // Ensures the player has access to a box to fill the hole.
+            if (boxes.Count < totalBoxes) {
+              Vector2Int? playerSidePos = GetPositionOnPlayerSide(grid, holePos, playerPos, floors);
+              if (playerSidePos.HasValue) {
+                boxes.Add(playerSidePos.Value);
+                floors.Remove(playerSidePos.Value);
+              }
+            }
+          }
+        }
+      } else {
+        // --- FALLBACK: RANDOM HOLE ---
+        // If we run out of smart cuts, just pick a random floor.
+        if (floors.Count == 0) break;
+        int r = Random.Range(0, floors.Count);
+        holes.Add(floors[r]);
+        floors.RemoveAt(r);
+      }
     }
 
-    return new SokobanState(grid, playerPos, crates);
+    // 5. Apply Holes to Grid
+    foreach (var hole in holes) {
+      grid[hole.x, hole.y] = TerrainType.Hole;
+    }
+
+    // 6. Place Remaining Targets (Randomly)
+    while (targetsPlaced < targetCount) {
+      if (floors.Count == 0) break;
+      int r = Random.Range(0, floors.Count);
+      grid[floors[r].x, floors[r].y] = TerrainType.Target;
+      floors.RemoveAt(r);
+      targetsPlaced++;
+    }
+
+    // 7. Place Remaining Boxes (Randomly)
+    while (boxes.Count < totalBoxes) {
+      if (floors.Count == 0) break;
+      int r = Random.Range(0, floors.Count);
+      boxes.Add(floors[r]);
+      floors.RemoveAt(r);
+    }
+
+    return new SokobanState(grid, playerPos, boxes);
+  }
+
+  // ---------------- Helper Methods ----------------
+
+  /// <summary>
+  /// Returns true if removing 'candidate' makes some floors unreachable from 'playerPos'.
+  /// </summary>
+  private bool IsCutVertexForPlayer(TerrainType[,] grid, Vector2Int candidate, Vector2Int playerPos, List<Vector2Int> availableFloors) {
+    // availableFloors contains ALL floors currently available (including candidate).
+    // If graph is connected, CountReachable should equal (availableFloors.Count - 1).
+    // If it's less, removing 'candidate' disconnected something.
+
+    // Note: We +1 to availableFloors count to account for the PlayerPos itself which isn't in 'availableFloors' list
+    // but IS reachable.
+    int totalReachableNodes = availableFloors.Count; // floors list + player
+
+    int reachable = CountReachable(grid, playerPos, ignore: candidate);
+
+    // If reachable nodes < total nodes (minus the one we ignored), we have a cut.
+    return reachable < totalReachableNodes;
+  }
+
+  private Vector2Int? GetPositionBehindHole(TerrainType[,] grid, Vector2Int hole, Vector2Int playerPos, List<Vector2Int> availableFloors) {
+    // 1. Get reachable set ignoring the hole
+    HashSet<Vector2Int> reachable = GetReachableSet(grid, playerPos, ignore: hole);
+
+    // 2. Find floors NOT in reachable set (The "Behind" side)
+    var candidates = availableFloors.Where(f => f != hole && !reachable.Contains(f)).ToList();
+
+    if (candidates.Count > 0)
+      return candidates[Random.Range(0, candidates.Count)];
+
+    return null;
+  }
+
+  private Vector2Int? GetPositionOnPlayerSide(TerrainType[,] grid, Vector2Int hole, Vector2Int playerPos, List<Vector2Int> availableFloors) {
+    // 1. Get reachable set ignoring the hole
+    HashSet<Vector2Int> reachable = GetReachableSet(grid, playerPos, ignore: hole);
+
+    // 2. Find floors IN the reachable set (The "Player" side)
+    var candidates = availableFloors.Where(f => f != hole && reachable.Contains(f)).ToList();
+
+    if (candidates.Count > 0)
+      return candidates[Random.Range(0, candidates.Count)];
+
+    return null;
+  }
+
+  private int CountReachable(TerrainType[,] grid, Vector2Int start, Vector2Int ignore) {
+    return GetReachableSet(grid, start, ignore).Count;
+  }
+
+  private HashSet<Vector2Int> GetReachableSet(TerrainType[,] grid, Vector2Int start, Vector2Int ignore) {
+    int w = grid.GetLength(0);
+    int h = grid.GetLength(1);
+    HashSet<Vector2Int> visited = new HashSet<Vector2Int>();
+    Queue<Vector2Int> q = new Queue<Vector2Int>();
+
+    if (start == ignore) return visited;
+
+    q.Enqueue(start);
+    visited.Add(start);
+
+    while (q.Count > 0) {
+      var p = q.Dequeue();
+      foreach (var dir in new[] { Vector2Int.up, Vector2Int.down, Vector2Int.left, Vector2Int.right }) {
+        Vector2Int n = p + dir;
+
+        // Bounds Check
+        if (n.x < 0 || n.y < 0 || n.x >= w || n.y >= h) continue;
+
+        // Ignore the candidate hole/blocker
+        if (n == ignore) continue;
+
+        // Wall Check
+        if (grid[n.x, n.y] == TerrainType.Wall) continue;
+
+        // Note: We treat existing Targets/Floors as walkable.
+        // Since we haven't placed Targets yet in the grid (mostly), this primarily checks walls.
+        // But if we placed some Targets already, they are walkable.
+
+        if (!visited.Contains(n)) {
+          visited.Add(n);
+          q.Enqueue(n);
+        }
+      }
+    }
+    return visited;
   }
 
   private int[,] RotateTemplate(int[,] original, int times) {

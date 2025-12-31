@@ -1027,7 +1027,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c76202bea8df2a2479e5a277f7375bff, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GridManager
-  levelNumber: 1
+  levelNumber: 2
   terrainBuilder: {fileID: 0}
   menuManager: {fileID: 0}
   cameraTransform: {fileID: 0}
@@ -1102,9 +1102,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 165d07ba6aa5cfb4a8fdc86f825cdcb3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Main::SolutionController
-  levelName: Level1
-  stepDelay: 0.12
-  autoPlay: 0
+  LevelName: Level0
+  StepDelay: 0.12
+  AutoPlay: 0
+  GridManager: {fileID: 0}
+  MoveScheduler: {fileID: 0}
 --- !u!114 &1936126212
 MonoBehaviour:
   m_ObjectHideFlags: 0

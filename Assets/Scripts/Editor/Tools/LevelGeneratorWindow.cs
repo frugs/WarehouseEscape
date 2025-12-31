@@ -4,9 +4,10 @@ using UnityEditor;
 using UnityEngine;
 
 public class LevelGeneratorWindow : EditorWindow {
-  private int MinSize = 10;
-  private int MaxSize = 10;
-  private int BoxCount = 3;
+  private int MinSize = 30;
+  private int MaxSize = 40;
+  private int TargetCount = 3;
+  private int HoleCount = 2;
   private string LevelName = "GeneratedLevel";
 
   [MenuItem("Sokoban/Open Generator")]
@@ -18,7 +19,8 @@ public class LevelGeneratorWindow : EditorWindow {
     GUILayout.Label("Level Settings", EditorStyles.boldLabel);
     MinSize = EditorGUILayout.IntField("Min Size", MinSize);
     MaxSize = EditorGUILayout.IntField("Max Size", MaxSize);
-    BoxCount = EditorGUILayout.IntField("Box Count", BoxCount);
+    TargetCount = EditorGUILayout.IntField("Target Count", TargetCount);
+    HoleCount = EditorGUILayout.IntField("Hole Count", HoleCount);
     LevelName = EditorGUILayout.TextField("Level Name", LevelName);
 
     EditorGUILayout.Space();
@@ -34,7 +36,7 @@ public class LevelGeneratorWindow : EditorWindow {
 
   private SokobanState? GenerateState() {
     var generator = new SokobanGenerator();
-    return generator.Generate(MinSize, MaxSize, BoxCount);
+    return generator.Generate(MinSize, MaxSize, TargetCount, HoleCount);
   }
 
   private void GenerateAndLog() {
@@ -90,6 +92,7 @@ public class LevelGeneratorWindow : EditorWindow {
     bool isCrate = state.IsCrateAt(x, y);
 
     if (t == TerrainType.Wall) return '#';
+    if (t == TerrainType.Hole) return 'H';
     if (t == TerrainType.Target) {
       if (isPlayer) return 'p';
       if (isCrate) return 'b';

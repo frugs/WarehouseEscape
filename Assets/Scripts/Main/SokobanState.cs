@@ -29,6 +29,9 @@ public readonly struct SokobanState : IEquatable<SokobanState> {
     FilledHoles = filledHoles != null ? new HashSet<Vector2Int>(filledHoles) : new HashSet<Vector2Int>();
   }
 
+  public int GridWidth => TerrainGrid.GetLength(0);
+  public int GridHeight => TerrainGrid.GetLength(1);
+
   // ========== LOGIC HELPERS ==========
 
   /// <summary>

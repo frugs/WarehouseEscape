@@ -1,10 +1,10 @@
-8 9
-E E H H H H H E
-X X X E E E H E
-X T P B E E H E
-X X X E B T H E
-X T X X B E H E
-X E X E T E X X
-X B E b B B T X
-X E E E T E E X
-X X X X X X X X
+13 9
+# # # # # # # # # # # # #
+# . . . # # # # # # # # #
+# . . P # # # # # # # # #
+# T B B # # # # # . . . #
+# # # H . B . . # . B . #
+# . . . . . . H T . . . #
+# . B . # . . . # # . . #
+# T . . # # . # # # # # #
+# # # # # # # # # # # # #
