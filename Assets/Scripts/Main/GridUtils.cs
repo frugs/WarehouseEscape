@@ -1,5 +1,6 @@
 using UnityEngine;
 
+// ReSharper disable UnusedMember.Global
 public static class GridUtils {
   public static Vector2Int WorldToGrid(this Vector3 worldPos) {
     int x = Mathf.FloorToInt(worldPos.x);
@@ -21,7 +22,6 @@ public static class GridUtils {
     return x >= 0 && x < w && y >= 0 && y < h;
   }
 
-  // ReSharper disable once UnusedMember.Global
   public static bool IsInBounds(Vector2Int pos, TerrainType[,] grid) {
     return IsInBounds(pos.x, pos.y, grid);
   }
