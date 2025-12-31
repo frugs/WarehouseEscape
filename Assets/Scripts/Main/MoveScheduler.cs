@@ -53,7 +53,7 @@ public class MoveScheduler : MonoBehaviour {
       var move = MoveQueue.Dequeue();
 
       // 1. Logic & Visual Pointers (The "Instant" part)
-      GridManager.RegisterMoveUpdates(move, out GameObject playerObj, out GameObject crateObj);
+      GridManager.ApplyMoveToCurrentState(move, out GameObject playerObj, out GameObject crateObj);
 
       // 2. Animations (The "Over Time" part)
       var anims = new List<Coroutine>();

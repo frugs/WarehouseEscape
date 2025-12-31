@@ -1,4 +1,3 @@
-using System.Collections;
 using JetBrains.Annotations;
 using UnityEngine;
 
@@ -13,9 +12,7 @@ public class GridManager : MonoBehaviour {
 
   // ================= STATE =================
   private SokobanState CurrentState;
-  private GameObject[,] VisualGrid; // Visual representation only
-  private int GridWidth;
-  private int GridHeight;
+  private GameObject[,] VisualGrid;
 
   public SokobanState GridState => CurrentState;
 
@@ -47,7 +44,7 @@ public class GridManager : MonoBehaviour {
   /// Updates BOTH the Logic Data (Cells) and the Visual Array (GameObject references).
   /// Returns the GameObjects that need to be animated so the caller doesn't need to look them up.
   /// </summary>
-  public void RegisterMoveUpdates(
+  public void ApplyMoveToCurrentState(
       SokobanMove move,
       out GameObject playerObj,
       out GameObject crateObj) {
@@ -80,8 +77,6 @@ public class GridManager : MonoBehaviour {
       VisualGrid[move.crateTo.x, move.crateTo.y] = crateObj;
     }
   }
-
-  // ================= UTILS =================
 
   public void CheckWinCondition() {
     if (CurrentState.IsWin()) {
