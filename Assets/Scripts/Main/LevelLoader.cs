@@ -74,7 +74,7 @@ public class LevelLoader : MonoBehaviour {
     foreach (var t in GameObject.FindObjectsByType<GameObject>(FindObjectsSortMode.None)) {
       // Cleanup any stray objects including completed crates
       if (t.name.StartsWith("Target_") || t.name.StartsWith("Crate_") ||
-          t.name.StartsWith("FilledHoleCrate_") || t.name == "Player")
+          t.name.StartsWith("FilledHole_") || t.name == "Player")
         Destroy(t);
     }
   }

@@ -5,6 +5,7 @@ using UnityEngine;
 
 public class MoveScheduler : MonoBehaviour {
   [SerializeField] private GridManager GridManager;
+  [SerializeField] private MoveAnimator MoveAnimator;
 
   // The unified queue
   private readonly Queue<SokobanMove> MoveQueue = new Queue<SokobanMove>();
@@ -20,6 +21,7 @@ public class MoveScheduler : MonoBehaviour {
   [UsedImplicitly]
   private void Awake() {
     GridManager = GetComponent<GridManager>();
+    MoveAnimator = GetComponent<MoveAnimator>();
   }
 
   public void Enqueue(SokobanMove move) {
@@ -57,7 +59,7 @@ public class MoveScheduler : MonoBehaviour {
       var anims = new List<Coroutine>();
 
       if (playerObj != null)
-        anims.Add(StartCoroutine(GridManager.AnimateTransform(playerObj, move.playerTo)));
+        anims.Add(StartCoroutine(MoveAnimator.AnimateTransform(playerObj, move.playerTo)));
 
       if (move.type == MoveType.CratePush && crateObj != null) {
         // Handle the "fell in hole" logic here centrally
@@ -65,8 +67,8 @@ public class MoveScheduler : MonoBehaviour {
                           && !GridManager.GridState.IsCrateAt(move.crateTo.x, move.crateTo.y);
 
         anims.Add(fellInHole
-            ? StartCoroutine(GridManager.AnimateCrateFall(crateObj, move.crateTo))
-            : StartCoroutine(GridManager.AnimateTransform(crateObj, move.crateTo)));
+            ? StartCoroutine(MoveAnimator.AnimateCrateFall(crateObj, move.crateTo))
+            : StartCoroutine(MoveAnimator.AnimateTransform(crateObj, move.crateTo)));
       }
 
       // Wait for animations
