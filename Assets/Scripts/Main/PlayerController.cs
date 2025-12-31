@@ -12,8 +12,8 @@ public class PlayerController : MonoBehaviour {
 
   [UsedImplicitly]
   private void Awake() {
-    GameSession = FindAnyObjectByType<GameSession>();
-    MoveScheduler = FindAnyObjectByType<MoveScheduler>();
+    GameSession = GetComponent<GameSession>();
+    MoveScheduler = GetComponent<MoveScheduler>();
 
     // Initialize the generated input class
     InputActions = new GameInput();
@@ -45,6 +45,7 @@ public class PlayerController : MonoBehaviour {
   private bool HandleRestartInput() {
     if (InputActions.Player.Restart.WasPerformedThisFrame()) {
       if (InputActions.Player.Restart.IsPressed()) {
+        MoveScheduler.ClearInterrupt();
         GameSession.ResetLevel();
         return true;
       }
@@ -90,8 +91,8 @@ public class PlayerController : MonoBehaviour {
       Ray ray = Camera.main.ScreenPointToRay(mousePos);
 
       if (Physics.Raycast(ray, out RaycastHit hit)) {
-        var playerPos = GridUtils.WorldToGrid(transform.position);
-        var targetPos = GridUtils.WorldToGrid(hit.point);
+        var playerPos = GameSession.CurrentState.PlayerPos;
+        var targetPos = hit.point.WorldToGrid();
         List<Vector2Int> path = Pather.FindPath(GameSession.CurrentState, playerPos, targetPos);
 
         if (path != null && path.Count > 0) {

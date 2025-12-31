@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using JetBrains.Annotations;
@@ -12,9 +13,6 @@ public class MoveScheduler : MonoBehaviour {
 
   // Configurable delay for solution playback
   public float StepDelay { get; set; } = 0f;
-
-  // Unified Busy Check: Busy if animating OR if moves are waiting
-  public bool IsBusy => CurrentProcess != null || MoveQueue.Count > 0;
 
   private Coroutine CurrentProcess;
 
@@ -41,6 +39,12 @@ public class MoveScheduler : MonoBehaviour {
     MoveQueue.Clear();
     // Note: We deliberately do NOT stop the currently playing animation
     // to avoid visual snapping/glitches. We just clear future steps.
+  }
+
+  public void ClearInterrupt() {
+    StopAllCoroutines();
+    CurrentProcess = null;
+    Clear();
   }
 
   private void TryProcessQueue() {

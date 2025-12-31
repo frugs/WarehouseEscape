@@ -1010,6 +1010,7 @@ GameObject:
   - component: {fileID: 1936126212}
   - component: {fileID: 1936126213}
   - component: {fileID: 1936126214}
+  - component: {fileID: 1936126215}
   m_Layer: 0
   m_Name: GameController
   m_TagString: Untagged
@@ -1103,7 +1104,7 @@ MonoBehaviour:
   LevelName: Level0
   StepDelay: 0.12
   AutoPlay: 0
-  GridManager: {fileID: 0}
+  GameSession: {fileID: 0}
   MoveScheduler: {fileID: 0}
 --- !u!114 &1936126212
 MonoBehaviour:
@@ -1117,7 +1118,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 79d830973d415284bb89e9cc07e63ca0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Main::MoveExecutor
-  GridManager: {fileID: 0}
+  GameSession: {fileID: 0}
   MoveAnimator: {fileID: 0}
 --- !u!114 &1936126213
 MonoBehaviour:
@@ -1150,6 +1151,20 @@ MonoBehaviour:
   m_EditorClassIdentifier: Main::MoveAnimator
   MoveAnimationDuration: 0.2
   FallAnimationDuration: 0.15
+--- !u!114 &1936126215
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1936126205}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c73203c3ad52f85429503d246e51b186, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Main::PlayerController
+  GameSession: {fileID: 0}
+  MoveScheduler: {fileID: 0}
 --- !u!1 &1967644723
 GameObject:
   m_ObjectHideFlags: 0
