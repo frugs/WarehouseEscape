@@ -132,7 +132,7 @@ public class SokobanSolver {
       }
 
       foreach (var move in GenerateValidMoves(state)) {
-        var newState = MoveManager.ApplyMove(state, move);
+        var newState = MoveRules.ApplyMove(state, move);
 
         if (!visited.Contains(newState)) {
           visited.Add(newState);

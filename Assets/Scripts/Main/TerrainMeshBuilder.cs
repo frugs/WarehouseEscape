@@ -12,12 +12,15 @@ public class TerrainMeshBuilder : MonoBehaviour {
 
   private Transform LevelParent, WallsParent, HolesParent;
 
-  public void BuildTerrain(TerrainType[,] grid, int gridWidth, int gridHeight) {
+  public void BuildTerrain(TerrainType[,] grid) {
+    var w = grid.GetLength(0);
+    var h = grid.GetLength(1);
+
     SetupHierarchy();
 
-    CreateFloor(grid, gridWidth, gridHeight);
-    CreateWalls(grid, gridWidth, gridHeight);
-    CreateHoles(grid, gridWidth, gridHeight);
+    CreateFloor(grid, w, h);
+    CreateWalls(grid, w, h);
+    CreateHoles(grid, w, h);
   }
 
   public void ClearPreviousLevel() {

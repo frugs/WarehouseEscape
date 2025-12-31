@@ -1008,6 +1008,7 @@ GameObject:
   - component: {fileID: 1936126210}
   - component: {fileID: 1936126211}
   - component: {fileID: 1936126212}
+  - component: {fileID: 1936126213}
   m_Layer: 0
   m_Name: GridManager
   m_TagString: Untagged
@@ -1027,13 +1028,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c76202bea8df2a2479e5a277f7375bff, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GridManager
-  levelNumber: 0
-  terrainBuilder: {fileID: 0}
+  LevelNumber: 1
+  LevelLoader: {fileID: 0}
   menuManager: {fileID: 0}
-  cameraTransform: {fileID: 0}
-  PlayerTile: {fileID: 721129335946948922, guid: 081bf8a76a88e34408793b404f24af5d, type: 3}
-  CrateTile: {fileID: 4699907650127345005, guid: 4fc469b1f980a6b429697cc87278a555, type: 3}
-  TargetTile: {fileID: 5504698377664096694, guid: f5ee4a16c1e9af04ca27e6740c476264, type: 3}
 --- !u!4 &1936126207
 Transform:
   m_ObjectHideFlags: 0
@@ -1120,6 +1117,23 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Main::MoveExecutor
   GridManager: {fileID: 0}
+--- !u!114 &1936126213
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1936126205}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 200603a0c89d305468c0c112f32cc421, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Main::LevelLoader
+  TerrainBuilder: {fileID: 0}
+  CameraTransform: {fileID: 0}
+  PlayerPrefab: {fileID: 721129335946948922, guid: 081bf8a76a88e34408793b404f24af5d, type: 3}
+  CratePrefab: {fileID: 4699907650127345005, guid: 4fc469b1f980a6b429697cc87278a555, type: 3}
+  TargetPrefab: {fileID: 5504698377664096694, guid: f5ee4a16c1e9af04ca27e6740c476264, type: 3}
 --- !u!1 &1967644723
 GameObject:
   m_ObjectHideFlags: 0

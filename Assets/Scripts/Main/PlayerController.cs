@@ -94,9 +94,9 @@ public class PlayerController : MonoBehaviour {
 
       if (Physics.Raycast(ray, out RaycastHit hit)) {
 
-        var playerPos = GridManager.WorldToGrid(transform.position);
-        var targetPos = GridManager.WorldToGrid(hit.point);
-        List<Vector2Int> path = GridManager.GetPath(playerPos, targetPos);
+        var playerPos = GridUtils.WorldToGrid(transform.position);
+        var targetPos = GridUtils.WorldToGrid(hit.point);
+        List<Vector2Int> path = Pather.FindPath(GridManager.GridState, playerPos, targetPos);
 
         if (path != null && path.Count > 0) {
           // We need to convert a list of coordinates [ (1,1), (1,2), (1,3) ]

@@ -127,7 +127,11 @@ public readonly struct SokobanState : IEquatable<SokobanState> {
   }
 
   public bool IsValidPos(int x, int y) {
-    return x >= 0 && x < TerrainGrid.GetLength(0) && y >= 0 && y < TerrainGrid.GetLength(1);
+    return GridUtils.IsInBounds(x, y, TerrainGrid);
+  }
+
+  public bool IsValidPos(Vector2Int pos) {
+    return IsValidPos(pos.x, pos.y);
   }
 
   // ========== EQUALITY & HASHING (CRITICAL FOR SOLVER) ==========
