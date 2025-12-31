@@ -1,12 +1,10 @@
-22 11
-E E E E X X X X X E E E E E E E E E E E E E
-E E E E X E E E X E E E E E E E E E E E E E
-E E E E X B E E X E E E E E E E E E E E E E
-E E X X X E E B X X X E E E E E E E E E E E
-E E X E E B E E B E X E E E E E E E E E E E
-X X X E X E X X X E X E E E E E X X X X X X
-X E E E X E X X X E X X X X X X X E E T T X
-X E B E E B E E E E E E E E E E E E E T T X
-X X X X X E X X X X E X P X X X X E E T T X
-E E E E X E E E E E E X X X E E X X X X X X
-E E E E X X X X X X X X E E E E E E E E E E
+8 9
+E E H H H H H E
+X X X E E E H E
+X T P B E E H E
+X X X E B T H E
+X T X X B E H E
+X E X E T E X X
+X B E b B B T X
+X E E E T E E X
+X X X X X X X X

@@ -14,8 +14,8 @@ public class SokobanSolver {
 
   private DeadSquareMap DeadSquareMap;
 
-  public bool IsSolvable(SokobanState state) {
-    var solution = FindSolutionPath(state);
+  public bool IsSolvable(SokobanState state, int maxIterations = MAX_ITERATIONS) {
+    var solution = FindSolutionPath(state, maxIterations);
     return solution != null;
   }
 
@@ -102,7 +102,8 @@ public class SokobanSolver {
   }
 
   /// <summary>Find shortest solution path (optional extension)</summary>
-  public List<SokobanMove> FindSolutionPath(SokobanState initialState) {
+  public List<SokobanMove> FindSolutionPath(
+    SokobanState initialState, int maxIterations = MAX_ITERATIONS) {
     var parentMap = new Dictionary<SokobanState, PathNode>();
     var queue = new Queue<SokobanState>();
     var visited = new HashSet<SokobanState>();
@@ -118,7 +119,7 @@ public class SokobanSolver {
     DeadSquareMap = new DeadSquareMap(initialState);
 
     while (queue.Count > 0) {
-      if (++iterations > MAX_ITERATIONS || timer.ElapsedMilliseconds > MAX_MS) {
+      if (++iterations > maxIterations || timer.ElapsedMilliseconds > MAX_MS) {
         UnityEngine.Debug.LogError(
           $"Solver Timeout! Checked {iterations} states in {timer.ElapsedMilliseconds}ms.");
         return null; // Give up
