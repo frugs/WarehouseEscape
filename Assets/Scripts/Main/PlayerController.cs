@@ -6,7 +6,7 @@ using UnityEngine;
 public class PlayerController : MonoBehaviour {
   [Header("Dependencies")]
   [SerializeField]
-  private GridManager GridManager;
+  private GameSession GameSession;
 
   [SerializeField]
   private MoveScheduler MoveScheduler;
@@ -15,7 +15,7 @@ public class PlayerController : MonoBehaviour {
 
   [UsedImplicitly]
   private void Awake() {
-    GridManager = FindAnyObjectByType<GridManager>();
+    GameSession = FindAnyObjectByType<GameSession>();
     MoveScheduler = FindAnyObjectByType<MoveScheduler>();
 
     // Initialize the generated input class
@@ -48,7 +48,7 @@ public class PlayerController : MonoBehaviour {
   private bool HandleRestartInput() {
     if (InputActions.Player.Restart.WasPerformedThisFrame()) {
       if (InputActions.Player.Restart.IsPressed()) {
-        GridManager.ResetLevel();
+        GameSession.ResetLevel();
         return true;
       }
     }
@@ -58,7 +58,7 @@ public class PlayerController : MonoBehaviour {
 
   private bool HandleDirectionInput() {
     if (InputActions.Player.Move.WasPerformedThisFrame()) {
-      if (GridManager.GridState.IsWin()) return true;
+      if (GameSession.CurrentState.IsWin()) return true;
 
       Vector2 raw = InputActions.Player.Move.ReadValue<Vector2>();
       // Basic Axis Snapping
@@ -72,7 +72,7 @@ public class PlayerController : MonoBehaviour {
       if (dir != Vector2Int.zero) {
         // Attempt to build move based on CURRENT logical state
         // (which is already at the destination of any active animation)
-        if (MoveRules.TryBuildMove(GridManager.GridState, dir, out SokobanMove move)) {
+        if (MoveRules.TryBuildMove(GameSession.CurrentState, dir, out SokobanMove move)) {
           MoveScheduler.Clear();
           MoveScheduler.StepDelay = 0f;
           MoveScheduler.Enqueue(move);
@@ -96,7 +96,7 @@ public class PlayerController : MonoBehaviour {
 
         var playerPos = GridUtils.WorldToGrid(transform.position);
         var targetPos = GridUtils.WorldToGrid(hit.point);
-        List<Vector2Int> path = Pather.FindPath(GridManager.GridState, playerPos, targetPos);
+        List<Vector2Int> path = Pather.FindPath(GameSession.CurrentState, playerPos, targetPos);
 
         if (path != null && path.Count > 0) {
           // We need to convert a list of coordinates [ (1,1), (1,2), (1,3) ]

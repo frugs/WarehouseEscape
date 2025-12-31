@@ -4,7 +4,7 @@ using JetBrains.Annotations;
 using UnityEngine;
 
 public class MoveScheduler : MonoBehaviour {
-  [SerializeField] private GridManager GridManager;
+  [SerializeField] private GameSession GameSession;
   [SerializeField] private MoveAnimator MoveAnimator;
 
   // The unified queue
@@ -20,7 +20,7 @@ public class MoveScheduler : MonoBehaviour {
 
   [UsedImplicitly]
   private void Awake() {
-    GridManager = GetComponent<GridManager>();
+    GameSession = GetComponent<GameSession>();
     MoveAnimator = GetComponent<MoveAnimator>();
   }
 
@@ -53,7 +53,7 @@ public class MoveScheduler : MonoBehaviour {
       var move = MoveQueue.Dequeue();
 
       // 1. Logic & Visual Pointers (The "Instant" part)
-      GridManager.ApplyMoveToCurrentState(move, out GameObject playerObj, out GameObject crateObj);
+      GameSession.ApplyMoveToCurrentState(move, out GameObject playerObj, out GameObject crateObj);
 
       // 2. Animations (The "Over Time" part)
       var anims = new List<Coroutine>();
@@ -63,8 +63,8 @@ public class MoveScheduler : MonoBehaviour {
 
       if (move.type == MoveType.CratePush && crateObj != null) {
         // Handle the "fell in hole" logic here centrally
-        bool fellInHole = GridManager.GridState.IsFilledHoleAt(move.crateTo.x, move.crateTo.y)
-                          && !GridManager.GridState.IsCrateAt(move.crateTo.x, move.crateTo.y);
+        bool fellInHole = GameSession.CurrentState.IsFilledHoleAt(move.crateTo.x, move.crateTo.y)
+                          && !GameSession.CurrentState.IsCrateAt(move.crateTo.x, move.crateTo.y);
 
         anims.Add(fellInHole
             ? StartCoroutine(MoveAnimator.AnimateCrateFall(crateObj, move.crateTo))
@@ -78,7 +78,7 @@ public class MoveScheduler : MonoBehaviour {
       if (StepDelay > 0) yield return new WaitForSeconds(StepDelay);
 
       // Check win after every move
-      GridManager.CheckWinCondition();
+      GameSession.CheckWinCondition();
     }
 
     CurrentProcess = null;

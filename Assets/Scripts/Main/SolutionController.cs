@@ -4,7 +4,7 @@ using System.IO;
 using JetBrains.Annotations;
 using UnityEngine;
 
-[RequireComponent(typeof(GridManager))]
+[RequireComponent(typeof(GameSession))]
 public class SolutionController : MonoBehaviour {
   [Header("Settings")]
   [Tooltip("Name of the level solution to play (without .json extension)")]
@@ -17,7 +17,7 @@ public class SolutionController : MonoBehaviour {
   [SerializeField] private bool AutoPlay = false;
 
   [SerializeField]
-  private GridManager GridManager;
+  private GameSession GameSession;
 
   [SerializeField]
   private MoveScheduler MoveScheduler;
@@ -26,7 +26,7 @@ public class SolutionController : MonoBehaviour {
 
   [UsedImplicitly]
   private void Awake() {
-    GridManager = GetComponent<GridManager>();
+    GameSession = GetComponent<GameSession>();
     MoveScheduler = GetComponent<MoveScheduler>();
   }
 
@@ -85,7 +85,7 @@ public class SolutionController : MonoBehaviour {
     // Disable player input so they don't interfere
 
     // Optional: Reset level to ensure we start from the beginning
-    GridManager.ResetLevel();
+    GameSession.ResetLevel();
     yield return new WaitForSeconds(0.5f); // Wait for reset animation/logic
 
     // 4. Schedule Moves

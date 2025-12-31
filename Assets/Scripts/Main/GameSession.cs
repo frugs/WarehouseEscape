@@ -1,7 +1,7 @@
 using JetBrains.Annotations;
 using UnityEngine;
 
-public class GridManager : MonoBehaviour {
+public class GameSession : MonoBehaviour {
   [Header("Level Settings")]
   [SerializeField]
   private int LevelNumber = 1;
@@ -11,10 +11,9 @@ public class GridManager : MonoBehaviour {
   [SerializeField] private MenuManager menuManager;
 
   // ================= STATE =================
-  private SokobanState CurrentState;
   private GameObject[,] VisualGrid;
 
-  public SokobanState GridState => CurrentState;
+  public SokobanState CurrentState { get; private set; }
 
   [UsedImplicitly]
   private void Awake() {
