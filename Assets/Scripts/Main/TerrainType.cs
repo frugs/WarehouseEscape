@@ -2,11 +2,14 @@ using System;
 
 /// <summary>Pure terrain types - no visual dependencies</summary>
 [Serializable]
-public enum TerrainType {
-  Floor,
-  Target,
-  Wall,
-  Hole, // Impassable until filled by crate
+public enum TerrainType
+{
+    Floor,
+    Wall,
+    Hole,
+    Target,
+    Entrance,   // new
+    Exit        // new
 }
 
 public static class TerrainTypeExtensions {
@@ -22,4 +25,8 @@ public static class TerrainTypeExtensions {
 
   public static bool IsHole(this TerrainType terrain) => terrain == TerrainType.Hole;
   public static bool IsTarget(this TerrainType terrain) => terrain == TerrainType.Target;
+  public static bool IsEntrance(this TerrainType t)
+        => t == TerrainType.Entrance;
+  public static bool IsExit(this TerrainType t)
+        => t == TerrainType.Exit;
 }
