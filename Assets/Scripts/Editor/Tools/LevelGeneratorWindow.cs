@@ -5,7 +5,6 @@ using UnityEditor;
 using UnityEngine;
 
 public class LevelGeneratorWindow : EditorWindow {
-  private int MinSize = 30;
   private int MaxSize = 40;
   private int TargetCount = 3;
   private int HoleCount = 2;
@@ -19,7 +18,6 @@ public class LevelGeneratorWindow : EditorWindow {
   [UsedImplicitly]
   private void OnGUI() {
     GUILayout.Label("Level Settings", EditorStyles.boldLabel);
-    MinSize = EditorGUILayout.IntField("Min Size", MinSize);
     MaxSize = EditorGUILayout.IntField("Max Size", MaxSize);
     TargetCount = EditorGUILayout.IntField("Target Count", TargetCount);
     HoleCount = EditorGUILayout.IntField("Hole Count", HoleCount);
@@ -38,7 +36,7 @@ public class LevelGeneratorWindow : EditorWindow {
 
   private SokobanState? GenerateState() {
     var generator = new SokobanGenerator();
-    return generator.Generate(MinSize, MaxSize, TargetCount, HoleCount);
+    return generator.Generate(MaxSize, MaxSize, TargetCount, HoleCount);
   }
 
   private void GenerateAndLog() {

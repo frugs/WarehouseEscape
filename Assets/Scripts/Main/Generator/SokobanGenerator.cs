@@ -4,8 +4,8 @@ using System.Linq;
 using UnityEngine;
 
 public class SokobanGenerator {
-  private const int AttemptsPerLevel = 100;
-  private const int GeneratorSolverLimit = 100_000;
+  private const int AttemptsPerLevel = 500;
+  private const int GeneratorSolverLimit = 1_000_000;
 
   /// <summary>
   /// Generates a valid, solvable Sokoban level.
