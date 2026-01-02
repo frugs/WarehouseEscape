@@ -6,6 +6,7 @@ public class WalkableAreaScanner {
   private static readonly Vector2Int[] Cardinals = Vector2IntExtensions.Cardinals;
 
   private int[] _visitedMap;
+  private int[] _crateMap;
   private int _currentGen = 1;
   private int _width;
   private int _height;
@@ -17,12 +18,14 @@ public class WalkableAreaScanner {
     _width = width;
     _height = height;
     _visitedMap = new int[width * height];
+    _crateMap = new int[width * height];
   }
 
   public void Reset(int width, int height) {
     _width = width;
     _height = height;
     _visitedMap = new int[width * height];
+    _crateMap = new int[width * height];
     _currentGen = 1;
   }
 
@@ -61,6 +64,11 @@ public class WalkableAreaScanner {
     // Mark Start Visited
     _visitedMap![start.y * w + start.x] = _currentGen;
 
+    // Populate crate positions
+    foreach (var c in state.CratePositions) {
+      _crateMap[c.y * w + c.x] = _currentGen;
+    }
+
     Vector2Int minPos = start;
     // Profiler.EndSample();
 
@@ -88,14 +96,17 @@ public class WalkableAreaScanner {
           continue;
         }
 
-        // Profiler.BeginSample("Scanner.VisitedCheck");
+        // Profiler.BeginSample("Scanner.VisitedOrBlockedByCrateCheck");
         int idx = neighbor.y * _width + neighbor.x;
         bool visited = _visitedMap[idx] == _currentGen;
+        bool blockedByCrate = _crateMap[idx] == _currentGen;
         // Profiler.EndSample();
 
-        if (!visited) {
+        if (!visited && !blockedByCrate) {
           // Profiler.BeginSample("Scanner.CanWalk");
-          bool canWalk = state.CanPlayerWalk(neighbor.x, neighbor.y);
+          var terrain = state.TerrainGrid[neighbor.x, neighbor.y];
+          bool canWalk = terrain.PlayerCanWalk() ||
+                         (terrain.IsHole() && state.IsFilledHoleAt(neighbor.x, neighbor.y));
           // Profiler.EndSample();
 
           if (canWalk) {
