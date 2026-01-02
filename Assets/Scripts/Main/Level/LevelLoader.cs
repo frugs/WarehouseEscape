@@ -24,9 +24,9 @@ public class LevelLoader : MonoBehaviour {
 
   // ================= LEVEL LOADING =================
   public bool LoadLevel(
-    int level,
-    out SokobanState state,
-    out GameObject[,] visualGrid) {
+      int level,
+      out SokobanState state,
+      out GameObject[,] visualGrid) {
     string filePath = Path.Combine(LevelsDirectory, $"Level{level}.txt");
     if (File.Exists(filePath)) {
       return LoadLevelFromFile(filePath, out state, out visualGrid);
@@ -39,9 +39,9 @@ public class LevelLoader : MonoBehaviour {
   }
 
   public bool LoadLevelFromFile(
-    string filePath,
-    out SokobanState state,
-    out GameObject[,] visualGrid) {
+      string filePath,
+      out SokobanState state,
+      out GameObject[,] visualGrid) {
     LevelData data = LevelParser.ParseLevelFile(filePath);
     if (data == null) {
       state = new SokobanState();
@@ -113,9 +113,9 @@ public class LevelLoader : MonoBehaviour {
 
     // Position camera to look at centre of grid
     CameraTransform.position = new Vector3(
-      gridWidth / 2.0f,
-      Mathf.Tan(Mathf.Deg2Rad * cameraAngle) * gridHeight / 2.0f,
-      0.0f);
+        gridWidth / 2.0f,
+        Mathf.Tan(Mathf.Deg2Rad * cameraAngle) * gridHeight / 2.0f,
+        0.0f);
     CameraTransform.rotation = Quaternion.Euler(cameraAngle, 0f, 0f);
 
     Camera cam = CameraTransform.GetComponent<Camera>();

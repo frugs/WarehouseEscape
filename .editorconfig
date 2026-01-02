@@ -109,6 +109,16 @@ csharp_style_var_for_built_in_types = false:silent
 csharp_style_var_when_type_is_apparent = true:suggestion
 csharp_style_var_elsewhere = false:silent
 
+# Other
+resharper_csharp_wrap_parameters_style = chop_if_long
+resharper_csharp_wrap_arguments_style = chop_if_long
+resharper_continuous_indent_multiplier = 2
+resharper_csharp_wrap_before_declaration_lpar = false  # Don't wrap *before* the (
+resharper_csharp_wrap_after_declaration_lpar = true    # Wrap *after* the (
+resharper_csharp_wrap_before_invocation_lpar = false
+resharper_csharp_wrap_after_invocation_lpar = true
+csharp_prefer_braces = when_multiline
+
 #### Documentation ####
 # (Note: Alignment in doc comments is not strictly enforceable via editorconfig properties,
 # but formatting rules above help maintain structure.)

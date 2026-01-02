@@ -12,14 +12,17 @@ public class SokobanGenerator {
   /// </summary>
   /// <returns>A fully constructed SokobanState, or null if generation failed.</returns>
   public SokobanState? Generate(
-    int minSize = 6, int maxSize = 12, int targetCount = 3, int holeCount = 2) {
+      int minSize = 6,
+      int maxSize = 12,
+      int targetCount = 3,
+      int holeCount = 2) {
     const int TimeoutMs = 60_000;
     Stopwatch timer = Stopwatch.StartNew();
 
     for (int i = 0; i < AttemptsPerLevel; i++) {
       if (timer.ElapsedMilliseconds > TimeoutMs) {
         UnityEngine.Debug.LogError(
-          $"Timeout! {i} attempts in {timer.ElapsedMilliseconds}ms.");
+            $"Timeout! {i} attempts in {timer.ElapsedMilliseconds}ms.");
         return null; // Give up
       }
 
@@ -99,6 +102,7 @@ public class SokobanGenerator {
         if (mapVal == 1 && tempVal == 0) return false;
       }
     }
+
     return true;
   }
 
@@ -138,6 +142,7 @@ public class SokobanGenerator {
     foreach (var pos in largestRegion) {
       newMap[pos.x, pos.y] = 1;
     }
+
     return newMap;
   }
 
@@ -155,7 +160,7 @@ public class SokobanGenerator {
       region.Add(p);
 
       foreach (
-        var dir in new[] { Vector2Int.up, Vector2Int.down, Vector2Int.left, Vector2Int.right }) {
+          var dir in new[] { Vector2Int.up, Vector2Int.down, Vector2Int.left, Vector2Int.right }) {
         Vector2Int n = p + dir;
         if (n.x >= 0 && n.y >= 0 && n.x < w && n.y < h) {
           if (map[n.x, n.y] == 1 && visited[n.x, n.y] == 0) {
@@ -165,6 +170,7 @@ public class SokobanGenerator {
         }
       }
     }
+
     return region;
   }
 
@@ -215,6 +221,7 @@ public class SokobanGenerator {
     for (int i = 0; i < n; i++) {
       ret = Rotate90(ret);
     }
+
     return ret;
   }
 
@@ -227,6 +234,7 @@ public class SokobanGenerator {
         ret[j, w - 1 - i] = matrix[i, j];
       }
     }
+
     return ret;
   }
 
@@ -345,7 +353,11 @@ public class SokobanGenerator {
   /// <summary>
   /// Returns true if removing 'candidate' makes some floors unreachable from 'playerPos'.
   /// </summary>
-  private bool IsCutVertexForPlayer(TerrainType[,] grid, Vector2Int candidate, Vector2Int playerPos, List<Vector2Int> availableFloors) {
+  private bool IsCutVertexForPlayer(
+      TerrainType[,] grid,
+      Vector2Int candidate,
+      Vector2Int playerPos,
+      List<Vector2Int> availableFloors) {
     // availableFloors contains ALL floors currently available (including candidate).
     // If graph is connected, CountReachable should equal (availableFloors.Count - 1).
     // If it's less, removing 'candidate' disconnected something.
@@ -360,7 +372,11 @@ public class SokobanGenerator {
     return reachable < totalReachableNodes;
   }
 
-  private Vector2Int? GetPositionBehindHole(TerrainType[,] grid, Vector2Int hole, Vector2Int playerPos, List<Vector2Int> availableFloors) {
+  private Vector2Int? GetPositionBehindHole(
+      TerrainType[,] grid,
+      Vector2Int hole,
+      Vector2Int playerPos,
+      List<Vector2Int> availableFloors) {
     // 1. Get reachable set ignoring the hole
     HashSet<Vector2Int> reachable = GetReachableSet(grid, playerPos, ignore: hole);
 
@@ -373,7 +389,11 @@ public class SokobanGenerator {
     return null;
   }
 
-  private Vector2Int? GetPositionOnPlayerSide(TerrainType[,] grid, Vector2Int hole, Vector2Int playerPos, List<Vector2Int> availableFloors) {
+  private Vector2Int? GetPositionOnPlayerSide(
+      TerrainType[,] grid,
+      Vector2Int hole,
+      Vector2Int playerPos,
+      List<Vector2Int> availableFloors) {
     // 1. Get reachable set ignoring the hole
     HashSet<Vector2Int> reachable = GetReachableSet(grid, playerPos, ignore: hole);
 
@@ -390,7 +410,10 @@ public class SokobanGenerator {
     return GetReachableSet(grid, start, ignore).Count;
   }
 
-  private HashSet<Vector2Int> GetReachableSet(TerrainType[,] grid, Vector2Int start, Vector2Int ignore) {
+  private HashSet<Vector2Int> GetReachableSet(
+      TerrainType[,] grid,
+      Vector2Int start,
+      Vector2Int ignore) {
     int w = grid.GetLength(0);
     int h = grid.GetLength(1);
     HashSet<Vector2Int> visited = new HashSet<Vector2Int>();
@@ -403,7 +426,9 @@ public class SokobanGenerator {
 
     while (q.Count > 0) {
       var p = q.Dequeue();
-      foreach (var dir in new[] { Vector2Int.up, Vector2Int.down, Vector2Int.left, Vector2Int.right }) {
+      foreach (var dir in new[] {
+                   Vector2Int.up, Vector2Int.down, Vector2Int.left, Vector2Int.right
+               }) {
         Vector2Int n = p + dir;
 
         // Bounds Check
@@ -425,6 +450,7 @@ public class SokobanGenerator {
         }
       }
     }
+
     return visited;
   }
 }

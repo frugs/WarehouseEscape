@@ -44,9 +44,9 @@ public class GameSession : MonoBehaviour {
   /// Returns the GameObjects that need to be animated so the caller doesn't need to look them up.
   /// </summary>
   public void ApplyMoveToCurrentState(
-    SokobanMove move,
-    out GameObject playerObj,
-    out GameObject crateObj) {
+      SokobanMove move,
+      out GameObject playerObj,
+      out GameObject crateObj) {
     playerObj = null;
     crateObj = null;
 

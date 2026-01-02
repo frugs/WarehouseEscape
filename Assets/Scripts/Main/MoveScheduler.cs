@@ -70,9 +70,10 @@ public class MoveScheduler : MonoBehaviour {
         bool fellInHole = GameSession.CurrentState.IsFilledHoleAt(move.crateTo.x, move.crateTo.y)
                           && !GameSession.CurrentState.IsCrateAt(move.crateTo.x, move.crateTo.y);
 
-        anims.Add(fellInHole
-          ? StartCoroutine(MoveAnimator.AnimateCrateFall(crateObj, move.crateTo))
-          : StartCoroutine(MoveAnimator.AnimateTransform(crateObj, move.crateTo)));
+        anims.Add(
+            fellInHole
+                ? StartCoroutine(MoveAnimator.AnimateCrateFall(crateObj, move.crateTo))
+                : StartCoroutine(MoveAnimator.AnimateTransform(crateObj, move.crateTo)));
       }
 
       // Wait for animations

@@ -11,28 +11,33 @@ public readonly struct SokobanState : IEquatable<SokobanState> {
   public readonly Vector2Int PlayerPos;
 
   public readonly Vector2Int[]
-    CratePositions; // Array is slightly faster/lighter than List for fixed counts
+      CratePositions; // Array is slightly faster/lighter than List for fixed counts
 
   public readonly HashSet<Vector2Int> FilledHoles; // Tracks holes that have been filled
 
   // Constructor
-  public SokobanState(TerrainType[,] terrainGrid, Vector2Int playerPos,
-    IEnumerable<Vector2Int> crates, IEnumerable<Vector2Int> filledHoles = null) {
+  public SokobanState(
+      TerrainType[,] terrainGrid,
+      Vector2Int playerPos,
+      IEnumerable<Vector2Int> crates,
+      IEnumerable<Vector2Int> filledHoles = null) {
     TerrainGrid = terrainGrid;
     PlayerPos = playerPos;
 
     // Always sort crates to ensure Hash consistency (State A with crates at [1,2] is identical to State B with crates at [2,1])
     var sortedCrates = crates.ToArray();
-    Array.Sort(sortedCrates, (a, b) => {
-      int cmp = a.x.CompareTo(b.x);
-      return cmp != 0 ? cmp : a.y.CompareTo(b.y);
-    });
+    Array.Sort(
+        sortedCrates,
+        (a, b) => {
+          int cmp = a.x.CompareTo(b.x);
+          return cmp != 0 ? cmp : a.y.CompareTo(b.y);
+        });
     CratePositions = sortedCrates;
 
     // Copy filled holes (or create empty if null)
     FilledHoles = filledHoles != null
-      ? new HashSet<Vector2Int>(filledHoles)
-      : new HashSet<Vector2Int>();
+        ? new HashSet<Vector2Int>(filledHoles)
+        : new HashSet<Vector2Int>();
   }
 
   public int GridWidth => TerrainGrid.GetLength(0);

@@ -47,7 +47,7 @@ public class DeadSquareMap {
 
       // Check all neighbors A to see if they can push INTO B
       foreach (var dir in new[] {
-                 Vector2Int.up, Vector2Int.down, Vector2Int.left, Vector2Int.right
+                   Vector2Int.up, Vector2Int.down, Vector2Int.left, Vector2Int.right
                }) {
         // Geometric Layout: [Player C] -> [Crate A] -> [Dest B]
         // We know B. We want to verify A.

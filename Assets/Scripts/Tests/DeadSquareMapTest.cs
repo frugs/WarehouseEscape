@@ -16,9 +16,9 @@ public class DeadSquareMapTest {
 
     // Construct State from Data
     var state = new SokobanState(
-      levelData.grid,
-      levelData.playerPos,
-      levelData.crates
+        levelData.grid,
+        levelData.playerPos,
+        levelData.crates
     );
 
     var map = new DeadSquareMap(state);

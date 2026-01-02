@@ -61,17 +61,57 @@ public class TerrainMeshBuilder : MonoBehaviour {
 
         // 2. SIDE FACES (Check 4 neighbors)
         // North (Z+1)
-        CheckAndAddWallSide(x, y, 0, 1, Vector3.forward, grid, gridWidth, gridHeight, vertices,
-          triangles, uvs);
+        CheckAndAddWallSide(
+            x,
+            y,
+            0,
+            1,
+            Vector3.forward,
+            grid,
+            gridWidth,
+            gridHeight,
+            vertices,
+            triangles,
+            uvs);
         // South (Z-1)
-        CheckAndAddWallSide(x, y, 0, -1, Vector3.back, grid, gridWidth, gridHeight, vertices,
-          triangles, uvs);
+        CheckAndAddWallSide(
+            x,
+            y,
+            0,
+            -1,
+            Vector3.back,
+            grid,
+            gridWidth,
+            gridHeight,
+            vertices,
+            triangles,
+            uvs);
         // East (X+1)
-        CheckAndAddWallSide(x, y, 1, 0, Vector3.right, grid, gridWidth, gridHeight, vertices,
-          triangles, uvs);
+        CheckAndAddWallSide(
+            x,
+            y,
+            1,
+            0,
+            Vector3.right,
+            grid,
+            gridWidth,
+            gridHeight,
+            vertices,
+            triangles,
+            uvs);
         // West (X-1)
-        CheckAndAddWallSide(x, y, -1, 0, Vector3.left, grid, gridWidth, gridHeight, vertices,
-          triangles, uvs);
+        CheckAndAddWallSide(
+            x,
+            y,
+            -1,
+            0,
+            Vector3.left,
+            grid,
+            gridWidth,
+            gridHeight,
+            vertices,
+            triangles,
+            uvs);
       }
     }
 
@@ -93,14 +133,54 @@ public class TerrainMeshBuilder : MonoBehaviour {
         AddHorizontalQuad(center + Vector3.down * HoleDepth, vertices, triangles, uvs);
 
         // 2. INNER WALLS (Check 4 neighbors)
-        CheckAndAddHoleSide(x, y, 0, 1, Vector3.forward, grid, gridWidth, gridHeight, vertices,
-          triangles, uvs);
-        CheckAndAddHoleSide(x, y, 0, -1, Vector3.back, grid, gridWidth, gridHeight, vertices,
-          triangles, uvs);
-        CheckAndAddHoleSide(x, y, 1, 0, Vector3.right, grid, gridWidth, gridHeight, vertices,
-          triangles, uvs);
-        CheckAndAddHoleSide(x, y, -1, 0, Vector3.left, grid, gridWidth, gridHeight, vertices,
-          triangles, uvs);
+        CheckAndAddHoleSide(
+            x,
+            y,
+            0,
+            1,
+            Vector3.forward,
+            grid,
+            gridWidth,
+            gridHeight,
+            vertices,
+            triangles,
+            uvs);
+        CheckAndAddHoleSide(
+            x,
+            y,
+            0,
+            -1,
+            Vector3.back,
+            grid,
+            gridWidth,
+            gridHeight,
+            vertices,
+            triangles,
+            uvs);
+        CheckAndAddHoleSide(
+            x,
+            y,
+            1,
+            0,
+            Vector3.right,
+            grid,
+            gridWidth,
+            gridHeight,
+            vertices,
+            triangles,
+            uvs);
+        CheckAndAddHoleSide(
+            x,
+            y,
+            -1,
+            0,
+            Vector3.left,
+            grid,
+            gridWidth,
+            gridHeight,
+            vertices,
+            triangles,
+            uvs);
       }
     }
 
@@ -109,9 +189,18 @@ public class TerrainMeshBuilder : MonoBehaviour {
 
   // ========== FACE GENERATION HELPERS ==========
 
-  private void CheckAndAddWallSide(int x, int y, int dx, int dy, Vector3 dirNormal,
-    TerrainType[,] grid,
-    int width, int height, List<Vector3> verts, List<int> tris, List<Vector2> uvs) {
+  private void CheckAndAddWallSide(
+      int x,
+      int y,
+      int dx,
+      int dy,
+      Vector3 dirNormal,
+      TerrainType[,] grid,
+      int width,
+      int height,
+      List<Vector3> verts,
+      List<int> tris,
+      List<Vector2> uvs) {
     int nx = x + dx;
     int ny = y + dy;
 
@@ -124,9 +213,18 @@ public class TerrainMeshBuilder : MonoBehaviour {
     }
   }
 
-  private void CheckAndAddHoleSide(int x, int y, int dx, int dy, Vector3 dirNormal,
-    TerrainType[,] grid,
-    int width, int height, List<Vector3> verts, List<int> tris, List<Vector2> uvs) {
+  private void CheckAndAddHoleSide(
+      int x,
+      int y,
+      int dx,
+      int dy,
+      Vector3 dirNormal,
+      TerrainType[,] grid,
+      int width,
+      int height,
+      List<Vector3> verts,
+      List<int> tris,
+      List<Vector2> uvs) {
     int nx = x + dx;
     int ny = y + dy;
 
@@ -140,8 +238,11 @@ public class TerrainMeshBuilder : MonoBehaviour {
     }
   }
 
-  private void AddHorizontalQuad(Vector3 center, List<Vector3> verts, List<int> tris,
-    List<Vector2> uvs) {
+  private void AddHorizontalQuad(
+      Vector3 center,
+      List<Vector3> verts,
+      List<int> tris,
+      List<Vector2> uvs) {
     int i = verts.Count;
     float s = 0.5f;
 
@@ -174,8 +275,13 @@ public class TerrainMeshBuilder : MonoBehaviour {
     uvs.Add(new Vector2(0, 1));
   }
 
-  private void AddVerticalQuad(Vector3 center, Vector3 normal, float height, List<Vector3> verts,
-    List<int> tris, List<Vector2> uvs) {
+  private void AddVerticalQuad(
+      Vector3 center,
+      Vector3 normal,
+      float height,
+      List<Vector3> verts,
+      List<int> tris,
+      List<Vector2> uvs) {
     // Calculate tangent vectors
     Vector3 right = Vector3.Cross(Vector3.up, normal).normalized;
 
@@ -216,8 +322,11 @@ public class TerrainMeshBuilder : MonoBehaviour {
     return new Vector3(x + 0.5f, yPos, y + 0.5f);
   }
 
-  private GameObject GenerateMesh(string meshName, List<Vector2Int> positions, float yHeight,
-    Material mat) {
+  private GameObject GenerateMesh(
+      string meshName,
+      List<Vector2Int> positions,
+      float yHeight,
+      Material mat) {
     List<Vector3> verts = new List<Vector3>();
     List<int> tris = new List<int>();
     List<Vector2> uvs = new List<Vector2>();
@@ -229,9 +338,13 @@ public class TerrainMeshBuilder : MonoBehaviour {
     return CreateGameObjectFromMeshData(meshName, verts, tris, uvs, mat, null);
   }
 
-  private GameObject CreateGameObjectFromMeshData(string meshName, List<Vector3> verts,
-    List<int> tris,
-    List<Vector2> uvs, Material mat, Transform parent) {
+  private GameObject CreateGameObjectFromMeshData(
+      string meshName,
+      List<Vector3> verts,
+      List<int> tris,
+      List<Vector2> uvs,
+      Material mat,
+      Transform parent) {
     if (verts.Count == 0) return null;
 
     GameObject go = new GameObject(meshName);
@@ -241,6 +354,7 @@ public class TerrainMeshBuilder : MonoBehaviour {
     mesh.vertices = verts.ToArray();
     mesh.triangles = tris.ToArray();
     mesh.uv = uvs.ToArray();
+
     mesh.RecalculateNormals();
 
     go.AddComponent<MeshFilter>().mesh = mesh;

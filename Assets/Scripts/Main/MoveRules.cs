@@ -40,10 +40,10 @@ public static class MoveRules {
 
   private static SokobanState ApplyPlayerMove(SokobanState state, SokobanMove move) {
     return new SokobanState(
-      state.TerrainGrid,
-      move.playerTo,
-      state.CratePositions,
-      state.FilledHoles);
+        state.TerrainGrid,
+        move.playerTo,
+        state.CratePositions,
+        state.FilledHoles);
   }
 
   private static SokobanState ApplyCratePush(SokobanState state, SokobanMove move) {

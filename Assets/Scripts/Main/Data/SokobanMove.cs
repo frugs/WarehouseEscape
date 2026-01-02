@@ -31,17 +31,17 @@ public struct SokobanMove {
 
   /// <summary>Crate push move (player + crate movement)</summary>
   public static SokobanMove CratePush(
-    Vector2Int playerFrom,
-    Vector2Int playerTo,
-    Vector2Int crateFrom,
-    Vector2Int crateTo) {
+      Vector2Int playerFrom,
+      Vector2Int playerTo,
+      Vector2Int crateFrom,
+      Vector2Int crateTo) {
     return new SokobanMove {
-      playerFrom = playerFrom,
-      playerTo = playerTo,
-      crateFrom = crateFrom,
-      crateTo = crateTo,
-      direction = crateTo - crateFrom,
-      type = MoveType.CratePush
+        playerFrom = playerFrom,
+        playerTo = playerTo,
+        crateFrom = crateFrom,
+        crateTo = crateTo,
+        direction = crateTo - crateFrom,
+        type = MoveType.CratePush
     };
   }
 }

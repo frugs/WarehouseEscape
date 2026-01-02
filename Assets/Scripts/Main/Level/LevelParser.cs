@@ -16,8 +16,8 @@ public class LevelParser {
   public static LevelData ParseLevelFromText(string levelText, bool validate = true) {
     // Split by newlines (handling varied line endings)
     string[] lines = levelText.Split(
-      new[] { "\r\n", "\r", "\n" },
-      System.StringSplitOptions.None);
+        new[] { "\r\n", "\r", "\n" },
+        System.StringSplitOptions.None);
     return ParseLevelLines(lines, validate);
   }
 
@@ -37,14 +37,14 @@ public class LevelParser {
     }
 
     var levelData = new LevelData {
-      width = width,
-      height = height,
-      grid = new TerrainType[width, height],
-      playerDetected = false,
-      targetCount = 0,
-      crateCount = 0,
-      playerPos = new Vector2Int(-1, -1),
-      crates = new List<Vector2Int>(),
+        width = width,
+        height = height,
+        grid = new TerrainType[width, height],
+        playerDetected = false,
+        targetCount = 0,
+        crateCount = 0,
+        playerPos = new Vector2Int(-1, -1),
+        crates = new List<Vector2Int>(),
     };
 
     for (int y = 0; y < height; y++) {

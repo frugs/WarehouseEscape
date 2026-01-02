@@ -27,7 +27,7 @@ public class SokobanSolver {
 
     // 4 directions
     foreach (Vector2Int direction in new[] {
-               Vector2Int.up, Vector2Int.down, Vector2Int.left, Vector2Int.right
+                 Vector2Int.up, Vector2Int.down, Vector2Int.left, Vector2Int.right
              }) {
       Vector2Int targetPos = playerPos + direction;
 
@@ -43,12 +43,13 @@ public class SokobanSolver {
         if (IsValidCratePush(state, crateTargetPos, width, height)
             && !IsDeadlock(state, crateTargetPos, width, height)
             && !IsCrateInDeadSquare(crateTargetPos)) {
-          moves.Add(SokobanMove.CratePush(
-            playerPos,
-            targetPos,
-            targetPos,
-            crateTargetPos
-          ));
+          moves.Add(
+              SokobanMove.CratePush(
+                  playerPos,
+                  targetPos,
+                  targetPos,
+                  crateTargetPos
+              ));
         }
       }
     }
@@ -56,8 +57,11 @@ public class SokobanSolver {
     return moves;
   }
 
-  private bool IsValidCratePush(SokobanState state, Vector2Int crateTargetPos, int width,
-    int height) {
+  private bool IsValidCratePush(
+      SokobanState state,
+      Vector2Int crateTargetPos,
+      int width,
+      int height) {
     if (!IsInBounds(crateTargetPos, width, height)) return false;
     return state.CanReceiveCrate(crateTargetPos.x, crateTargetPos.y);
   }
@@ -103,7 +107,8 @@ public class SokobanSolver {
 
   /// <summary>Find shortest solution path (optional extension)</summary>
   public List<SokobanMove> FindSolutionPath(
-    SokobanState initialState, int maxIterations = MAX_ITERATIONS) {
+      SokobanState initialState,
+      int maxIterations = MAX_ITERATIONS) {
     var parentMap = new Dictionary<SokobanState, PathNode>();
     var queue = new Queue<SokobanState>();
     var visited = new HashSet<SokobanState>();
@@ -121,7 +126,7 @@ public class SokobanSolver {
     while (queue.Count > 0) {
       if (++iterations > maxIterations || timer.ElapsedMilliseconds > MAX_MS) {
         UnityEngine.Debug.LogError(
-          $"Solver Timeout! Checked {iterations} states in {timer.ElapsedMilliseconds}ms.");
+            $"Solver Timeout! Checked {iterations} states in {timer.ElapsedMilliseconds}ms.");
         return null; // Give up
       }
 
@@ -146,7 +151,7 @@ public class SokobanSolver {
   }
 
   private List<SokobanMove>
-    ReconstructPath(Dictionary<SokobanState, PathNode> parentMap, SokobanState goalState) {
+      ReconstructPath(Dictionary<SokobanState, PathNode> parentMap, SokobanState goalState) {
     var path = new List<SokobanMove>();
     SokobanState current = goalState;
 

@@ -6,15 +6,15 @@ public class SokobanTestCases {
     // CASE 1: Simple 3x1 win (Player pushes Crate to Target)
     // P = Player, B = Box, T = Target, . = Floor
     string level1 =
-      "5 1\n" + // Width Height
-      "P B T . ."; // Map
+        "5 1\n" + // Width Height
+        "P B T . ."; // Map
     yield return new TestCaseData(level1, true).SetName("Simple_Push_Win");
 
     // CASE 2: Blocked by Wall (Player, Box, Wall, Target)
     // X = Wall
     string level2 =
-      "5 1\n" +
-      "P B X T .";
+        "5 1\n" +
+        "P B X T .";
     yield return new TestCaseData(level2, false).SetName("Blocked_By_Wall");
 
     // CASE 3: Box in Corner (Unsolvable)
@@ -24,22 +24,22 @@ public class SokobanTestCases {
     // Target is far away
     {
       string level =
-        "5 5\n" +
-        "X X X X X\n" +
-        "X P . . X\n" +
-        "X B . . X\n" + // Box at 1,2 against wall X=0
-        "X X . T X\n" + // Corner at 0,3 and 1,3
-        "X X X X X";
+          "5 5\n" +
+          "X X X X X\n" +
+          "X P . . X\n" +
+          "X B . . X\n" + // Box at 1,2 against wall X=0
+          "X X . T X\n" + // Corner at 0,3 and 1,3
+          "X X X X X";
       yield return new TestCaseData(level, false).SetName("Box_In_Corner_Deadlock");
     }
 
     // CASE 4: Two Boxes, Two Targets (Solvable)
     {
       string level =
-        "6 3\n" +
-        "X X . B T X\n" +
-        "X P B . . T\n" +
-        "X X X X X X";
+          "6 3\n" +
+          "X X . B T X\n" +
+          "X P B . . T\n" +
+          "X X X X X X";
       yield return new TestCaseData(level, true).SetName("Two_Boxes_Two_Targets");
     }
 
@@ -49,8 +49,8 @@ public class SokobanTestCases {
     // So this level is UNSOLVABLE unless there is a SPARE box.
     {
       string level =
-        "5 1\n" +
-        "P B H T .";
+          "5 1\n" +
+          "P B H T .";
       yield return new TestCaseData(level, false).SetName("Hole_Consumes_Box_No_Win");
     }
 
@@ -59,24 +59,24 @@ public class SokobanTestCases {
     // 1st box fills hole. 2nd box crosses filled hole to target.
     {
       string level =
-        "6 1\n" +
-        "P B H B T .";
+          "6 1\n" +
+          "P B H B T .";
       yield return new TestCaseData(level, true).SetName("Hole_Fill_Bridge_Win");
     }
 
     // Original level 1
     {
       string level =
-        "8 9\n" +
-        "E E H H H H H E\n" +
-        "X X X E E E H E\n" +
-        "X T P B E E H E\n" +
-        "X X X E B T H E\n" +
-        "X T X X B E H E\n" +
-        "X E X E T E X X\n" +
-        "X B E b B B T X\n" +
-        "X E E E T E E X\n" +
-        "X X X X X X X X";
+          "8 9\n" +
+          "E E H H H H H E\n" +
+          "X X X E E E H E\n" +
+          "X T P B E E H E\n" +
+          "X X X E B T H E\n" +
+          "X T X X B E H E\n" +
+          "X E X E T E X X\n" +
+          "X B E b B B T X\n" +
+          "X E E E T E E X\n" +
+          "X X X X X X X X";
       yield return new TestCaseData(level, true).SetName("Original_Level_1");
     }
   }
@@ -109,8 +109,10 @@ public class SokobanParamTests {
 
     // 3. ASSERT
     var solvable = solution != null;
-    Assert.AreEqual(expectedSolvable, solvable,
-      $"Expected level to be {(expectedSolvable ? "Solvable" : "Unsolvable")}, " +
-      "but Solver returned {solution}.");
+    Assert.AreEqual(
+        expectedSolvable,
+        solvable,
+        $"Expected level to be {(expectedSolvable ? "Solvable" : "Unsolvable")}, " +
+        "but Solver returned {solution}.");
   }
 }
