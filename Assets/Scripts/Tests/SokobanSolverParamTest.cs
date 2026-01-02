@@ -91,7 +91,7 @@ public class SokobanParamTests {
     // 1. ARRANGE
     // Parse the ASCII string into a LevelData object
     LevelData data = LevelParser.ParseLevelFromText(levelDataString);
-    var initialState = new SokobanState(data.grid, data.playerPos, data.crates.ToArray());
+    var initialState = SokobanState.Create(data.grid, data.playerPos, data.crates);
 
     Assert.IsNotNull(data, "Level parsing failed. Check input string format.");
 

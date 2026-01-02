@@ -4,40 +4,42 @@ using System.Linq;
 using UnityEngine;
 
 public readonly struct SokobanState : IEquatable<SokobanState> {
+  public static readonly Comparison<Vector2Int> CrateComparer = (a, b) => {
+    int cmp = a.x.CompareTo(b.x);
+    return cmp != 0 ? cmp : a.y.CompareTo(b.y);
+  };
+
   // 1. Static Reference (Shared by all states, zero memory cost per state)
-  public readonly TerrainType[,] TerrainGrid;
+  public TerrainType[,] TerrainGrid { get; }
 
   // 2. Dynamic Data (The only things that change)
-  public readonly Vector2Int PlayerPos;
+  public Vector2Int PlayerPos { get; }
 
-  public readonly Vector2Int[]
-      CratePositions; // Array is slightly faster/lighter than List for fixed counts
+  // Array is slightly faster/lighter than List for fixed counts
+  public Vector2Int[] CratePositions { get; }
 
-  public readonly HashSet<Vector2Int> FilledHoles; // Tracks holes that have been filled
+  public CowHashSet<Vector2Int> FilledHoles { get; } // Tracks holes that have been filled
 
-  // Constructor
-  public SokobanState(
+  public static SokobanState Create(
       TerrainType[,] terrainGrid,
       Vector2Int playerPos,
       IEnumerable<Vector2Int> crates,
-      IEnumerable<Vector2Int> filledHoles = null) {
+      CowHashSet<Vector2Int>? filledHoles = null) {
+    var sortedCrates = crates.ToArray();
+    Array.Sort(sortedCrates, CrateComparer);
+    return new SokobanState(terrainGrid, playerPos, sortedCrates, filledHoles);
+  }
+
+
+  private SokobanState(
+      TerrainType[,] terrainGrid,
+      Vector2Int playerPos,
+      Vector2Int[] crates,
+      CowHashSet<Vector2Int>? filledHoles = null) {
     TerrainGrid = terrainGrid;
     PlayerPos = playerPos;
-
-    // Always sort crates to ensure Hash consistency (State A with crates at [1,2] is identical to State B with crates at [2,1])
-    var sortedCrates = crates.ToArray();
-    Array.Sort(
-        sortedCrates,
-        (a, b) => {
-          int cmp = a.x.CompareTo(b.x);
-          return cmp != 0 ? cmp : a.y.CompareTo(b.y);
-        });
-    CratePositions = sortedCrates;
-
-    // Copy filled holes (or create empty if null)
-    FilledHoles = filledHoles != null
-        ? new HashSet<Vector2Int>(filledHoles)
-        : new HashSet<Vector2Int>();
+    CratePositions = crates;
+    FilledHoles = filledHoles ?? CowHashSet<Vector2Int>.Empty;
   }
 
   public int GridWidth => TerrainGrid.GetLength(0);
@@ -91,8 +93,8 @@ public readonly struct SokobanState : IEquatable<SokobanState> {
   /// </summary>
   public bool IsCrateAt(int x, int y) {
     // Linear scan is faster than Hash lookup for small N (N < 20)
-    for (int i = 0; i < CratePositions.Length; i++) {
-      if (CratePositions[i].x == x && CratePositions[i].y == y) return true;
+    foreach (var crate in CratePositions) {
+      if (crate.x == x && crate.y == y) return true;
     }
 
     return false;
@@ -105,7 +107,6 @@ public readonly struct SokobanState : IEquatable<SokobanState> {
   public bool IsFilledHoleAt(int x, int y) {
     return FilledHoles.Contains(new Vector2Int(x, y));
   }
-
 
   /// <summary>
   /// Does this state represent a Win?
@@ -146,23 +147,80 @@ public readonly struct SokobanState : IEquatable<SokobanState> {
     return IsValidPos(pos.x, pos.y);
   }
 
-  // ========== EQUALITY & HASHING (CRITICAL FOR SOLVER) ==========
+  public SokobanState WithPlayerMove(Vector2Int newPlayerPos) {
+    return new SokobanState(TerrainGrid, newPlayerPos, CratePositions, FilledHoles);
+  }
+
+  public SokobanState WithCratePush(
+      Vector2Int newPlayerPos,
+      Vector2Int oldCratePos,
+      Vector2Int newCratePos) {
+    // 1. Check for Hole Interaction
+    var terrain = TerrainGrid[newCratePos.x, newCratePos.y];
+
+    // Note: IsFilledHoleAt uses our own FilledHoles wrapper
+    bool fellInHole = terrain.IsHole() && !IsFilledHoleAt(newCratePos.x, newCratePos.y);
+
+    CowHashSet<Vector2Int> newHoles;
+    Vector2Int[] newCrates;
+    int oldLen = CratePositions.Length;
+
+    // --- Logic Branch A: Crate Removed (Fell in Hole) ---
+    if (fellInHole) {
+      newHoles = FilledHoles.Add(newCratePos); // CowHashSet handles copy
+      newCrates = new Vector2Int[oldLen - 1];
+
+      int dst = 0;
+      for (int i = 0; i < oldLen; i++) {
+        if (CratePositions[i] == oldCratePos) continue;
+        newCrates[dst++] = CratePositions[i];
+      }
+    }
+    // --- Logic Branch B: Crate Moved (Standard Push) ---
+    else {
+      newHoles = FilledHoles; // Share reference
+      newCrates = new Vector2Int[oldLen];
+
+      int dst = 0;
+      bool inserted = false;
+
+      for (int i = 0; i < oldLen; i++) {
+        Vector2Int current = CratePositions[i];
+
+        // Skip the old crate position
+        if (current == oldCratePos) continue;
+
+        // Check insertion point
+        if (!inserted) {
+          if (CrateComparer(newCratePos, current) < 0) {
+            newCrates[dst++] = newCratePos;
+            inserted = true;
+          }
+        }
+
+        newCrates[dst++] = current;
+      }
+
+      // If new crate is the largest, append at end
+      if (!inserted) {
+        newCrates[dst] = newCratePos;
+      }
+    }
+
+    return new SokobanState(TerrainGrid, newPlayerPos, newCrates, newHoles);
+  }
 
   public bool Equals(SokobanState other) {
-    // 1. Player check
     if (PlayerPos != other.PlayerPos) return false;
 
-    // 2. Crate check (Arrays are sorted, so direct index comparison works)
+    // Fast Array Compare (Valid only if sorted!)
     if (CratePositions.Length != other.CratePositions.Length) return false;
     for (int i = 0; i < CratePositions.Length; i++) {
       if (CratePositions[i] != other.CratePositions[i]) return false;
     }
 
-    // 3. Filled Holes check
-    // (Count check first for speed)
-    if (FilledHoles.Count != other.FilledHoles.Count) return false;
-    // (Set equality)
-    return FilledHoles.SetEquals(other.FilledHoles);
+    // Fast Hash/Set Compare
+    return FilledHoles.Equals(other.FilledHoles);
   }
 
   public override bool Equals(object obj) => obj is SokobanState other && Equals(other);
@@ -172,8 +230,8 @@ public readonly struct SokobanState : IEquatable<SokobanState> {
     hashCode.Add(PlayerPos);
 
     // Hash all crates
-    for (int i = 0; i < CratePositions.Length; i++) {
-      hashCode.Add(CratePositions[i]);
+    foreach (var crate in CratePositions) {
+      hashCode.Add(crate);
     }
 
     // Hash holes (XOR or aggregate to be order-independent)

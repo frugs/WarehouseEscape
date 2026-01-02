@@ -49,7 +49,7 @@ public class SokobanSolver {
     // This ensures our visited set works correctly immediately.
     var walkable =
         walkableAreaScanner.GetWalkableArea(initialState, out var startCanonicalPos);
-    var canonicalStart = new SokobanState(
+    var canonicalStart = SokobanState.Create(
         initialState.TerrainGrid,
         startCanonicalPos,
         initialState.CratePositions,
@@ -120,11 +120,7 @@ public class SokobanSolver {
                   out var nextCanonicalPos);
               // Profiler.EndSample();
 
-              var nextCanonical = new SokobanState(
-                  nextRawState.TerrainGrid,
-                  nextCanonicalPos,
-                  nextRawState.CratePositions,
-                  nextRawState.FilledHoles);
+              var nextCanonical = nextRawState.WithPlayerMove(nextCanonicalPos);
 
               if (!visited.Contains(nextCanonical)) {
                 queue.Enqueue(

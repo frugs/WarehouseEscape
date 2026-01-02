@@ -21,7 +21,10 @@ public static class LevelSolverMenu {
     }
 
     // 3. Convert to Solver State
-    SokobanState startState = new SokobanState(rawData.grid, rawData.playerPos, rawData.crates);
+    SokobanState startState = SokobanState.Create(
+        rawData.grid,
+        rawData.playerPos,
+        rawData.crates);
 
     // 4. Run Solver
     Stopwatch sw = Stopwatch.StartNew();
@@ -36,8 +39,8 @@ public static class LevelSolverMenu {
     // 5. Handle Result
     if (solution != null) {
       UnityEngine.Debug.Log(
-        $"<color=green>SOLVED!</color> Found solution " +
-        $"({solution.Count} steps) in {sw.ElapsedMilliseconds}ms.");
+          $"<color=green>SOLVED!</color> Found solution " +
+          $"({solution.Count} steps) in {sw.ElapsedMilliseconds}ms.");
 
       // Export using your new SolutionExporter
       string levelName = Path.GetFileNameWithoutExtension(path);
@@ -47,7 +50,7 @@ public static class LevelSolverMenu {
       AssetDatabase.Refresh();
     } else {
       UnityEngine.Debug.LogError(
-        $"<color=red>UNSOLVABLE</color> or Timed Out (Time: {sw.ElapsedMilliseconds}ms).");
+          $"<color=red>UNSOLVABLE</color> or Timed Out (Time: {sw.ElapsedMilliseconds}ms).");
     }
   }
 

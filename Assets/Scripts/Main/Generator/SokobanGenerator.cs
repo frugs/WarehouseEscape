@@ -345,7 +345,7 @@ public class SokobanGenerator {
       floors.RemoveAt(r);
     }
 
-    return new SokobanState(grid, playerPos, boxes);
+    return SokobanState.Create(grid, playerPos, boxes);
   }
 
   // ---------------- Helper Methods ----------------

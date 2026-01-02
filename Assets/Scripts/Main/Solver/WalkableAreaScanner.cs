@@ -5,8 +5,7 @@ using UnityEngine.Profiling;
 public class WalkableAreaScanner {
   private static readonly Vector2Int[] Cardinals = Vector2IntExtensions.Cardinals;
 
-  private int[] _visitedMap;
-  private int[] _crateMap;
+  private int[] _skipMap;
   private int _currentGen = 1;
   private int _width;
   private int _height;
@@ -17,15 +16,13 @@ public class WalkableAreaScanner {
   public WalkableAreaScanner(int width = 0, int height = 0) {
     _width = width;
     _height = height;
-    _visitedMap = new int[width * height];
-    _crateMap = new int[width * height];
+    _skipMap = new int[width * height];
   }
 
   public void Reset(int width, int height) {
     _width = width;
     _height = height;
-    _visitedMap = new int[width * height];
-    _crateMap = new int[width * height];
+    _skipMap = new int[width * height];
     _currentGen = 1;
   }
 
@@ -47,7 +44,7 @@ public class WalkableAreaScanner {
     // Ensure Array Capacity
     int w = state.GridWidth;
     int h = state.GridHeight;
-    if (_visitedMap == null || _width != w || _height != h) {
+    if (_skipMap == null || _width != w || _height != h) {
       Reset(w, h);
     } else {
       _currentGen++;
@@ -62,11 +59,11 @@ public class WalkableAreaScanner {
     _queue.Enqueue(start);
 
     // Mark Start Visited
-    _visitedMap![start.y * w + start.x] = _currentGen;
+    _skipMap![start.y * w + start.x] = _currentGen;
 
-    // Populate crate positions
+    // Always skip crate positions
     foreach (var c in state.CratePositions) {
-      _crateMap[c.y * w + c.x] = _currentGen;
+      _skipMap[c.y * w + c.x] = _currentGen;
     }
 
     Vector2Int minPos = start;
@@ -85,24 +82,18 @@ public class WalkableAreaScanner {
         // Profiler.BeginSample("Scanner.Neighbor");
         var neighbor = current + dir;
 
-        // Bounds Check (Implicitly handled by index calc, but safe to verify)
-        // Note: CanPlayerWalk checks bounds too, but for array access we need to be safe.
-        // Or we can rely on CanPlayerWalk returning false for out of bounds,
-        // BUT we need to check visited BEFORE CanPlayerWalk to save time.
-
         // Inline Bounds Check for speed
         if (neighbor.x < 0 || neighbor.x >= w || neighbor.y < 0 || neighbor.y >= h) {
           // Profiler.EndSample();
           continue;
         }
 
-        // Profiler.BeginSample("Scanner.VisitedOrBlockedByCrateCheck");
+        // Profiler.BeginSample("Scanner.SkipCheck");
         int idx = neighbor.y * _width + neighbor.x;
-        bool visited = _visitedMap[idx] == _currentGen;
-        bool blockedByCrate = _crateMap[idx] == _currentGen;
+        bool skip = _skipMap[idx] == _currentGen;
         // Profiler.EndSample();
 
-        if (!visited && !blockedByCrate) {
+        if (!skip) {
           // Profiler.BeginSample("Scanner.CanWalk");
           var terrain = state.TerrainGrid[neighbor.x, neighbor.y];
           bool canWalk = terrain.PlayerCanWalk() ||
@@ -110,7 +101,7 @@ public class WalkableAreaScanner {
           // Profiler.EndSample();
 
           if (canWalk) {
-            _visitedMap[idx] = _currentGen; // Mark Visited
+            _skipMap[idx] = _currentGen; // Mark Visited
             _queue.Enqueue(neighbor);
           }
         }

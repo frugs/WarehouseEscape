@@ -38,7 +38,7 @@ public class SokobanSolverTests {
     grid[3, 1] = TerrainType.Target;
 
     // Construct State
-    SokobanState state = new SokobanState(grid, playerPos, crates);
+    SokobanState state = SokobanState.Create(grid, playerPos, crates);
     SokobanSolver solver = new SokobanSolver();
 
     // ACT
@@ -61,7 +61,7 @@ public class SokobanSolverTests {
     // Target is elsewhere
     grid[3, 3] = TerrainType.Target;
 
-    SokobanState state = new SokobanState(grid, playerPos, crates);
+    SokobanState state = SokobanState.Create(grid, playerPos, crates);
     SokobanSolver solver = new SokobanSolver();
 
     // ACT
@@ -84,7 +84,7 @@ public class SokobanSolverTests {
 
     grid[3, 1] = TerrainType.Target;
 
-    SokobanState state = new SokobanState(grid, playerPos, crates);
+    SokobanState state = SokobanState.Create(grid, playerPos, crates);
     SokobanSolver solver = new SokobanSolver();
 
     // ACT

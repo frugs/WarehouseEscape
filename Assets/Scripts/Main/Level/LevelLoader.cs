@@ -49,7 +49,7 @@ public class LevelLoader : MonoBehaviour {
       return false;
     }
 
-    state = new SokobanState(data.grid, data.playerPos, data.crates.ToArray());
+    state = SokobanState.Create(data.grid, data.playerPos, data.crates);
     visualGrid = new GameObject[data.width, data.height];
 
     if (TerrainBuilder != null) {

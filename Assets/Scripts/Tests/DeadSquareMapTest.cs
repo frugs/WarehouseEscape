@@ -1,6 +1,15 @@
 using NUnit.Framework;
 
 public class DeadSquareMapTest {
+  private static SokobanState CreateStateFromText(string levelText) {
+    var levelData = LevelParser.ParseLevelFromText(levelText, validate: false);
+    return SokobanState.Create(levelData.grid, levelData.playerPos, levelData.crates);
+  }
+
+  private static DeadSquareMap CreateDeadSquareMapFromText(string levelText) {
+    return new DeadSquareMap(CreateStateFromText(levelText));
+  }
+
   [Test]
   public void Test_SimpleCorridor() {
     // 5x3 Level
@@ -10,18 +19,7 @@ public class DeadSquareMapTest {
 # # # # #
 # T . . #
 # # # # #";
-
-    var levelData = LevelParser.ParseLevelFromText(levelText, validate: false);
-    Assert.IsNotNull(levelData, "Parser failed");
-
-    // Construct State from Data
-    var state = new SokobanState(
-        levelData.grid,
-        levelData.playerPos,
-        levelData.crates
-    );
-
-    var map = new DeadSquareMap(state);
+    var map = CreateDeadSquareMapFromText(levelText);
 
     // Validations
     Assert.IsFalse(map.IsDeadSquare(1, 1), "Target (1,1) should be Safe");
@@ -40,9 +38,7 @@ public class DeadSquareMapTest {
 # . . #
 # # # #";
 
-    var levelData = LevelParser.ParseLevelFromText(levelText, validate: false);
-    var state = new SokobanState(levelData.grid, levelData.playerPos, levelData.crates);
-    var map = new DeadSquareMap(state);
+    var map = CreateDeadSquareMapFromText(levelText);
 
     // (2,1) Top-Right floor
     // Push Left? Dest(1,1) OK. Player Stand(3,1) -> Wall. FAIL.
@@ -67,9 +63,7 @@ public class DeadSquareMapTest {
 # . . . #
 # # # # #";
 
-    var levelData = LevelParser.ParseLevelFromText(levelText, validate: false);
-    var state = new SokobanState(levelData.grid, levelData.playerPos, levelData.crates);
-    var map = new DeadSquareMap(state);
+    var map = CreateDeadSquareMapFromText(levelText);
 
     // (2,2) is the center bottom of the T.
     // It can push Up-Left to (1,1) target?
@@ -93,9 +87,7 @@ public class DeadSquareMapTest {
 # . . # #
 # # # # #";
 
-    var levelData = LevelParser.ParseLevelFromText(levelText, validate: false);
-    var state = new SokobanState(levelData.grid, levelData.playerPos, levelData.crates);
-    var map = new DeadSquareMap(state);
+    var map = CreateDeadSquareMapFromText(levelText);
 
     // 1. Target (1,1) is inherently Safe.
     Assert.IsFalse(map.IsDeadSquare(1, 1), "Target (1,1)");
@@ -123,9 +115,7 @@ public class DeadSquareMapTest {
 # T . . . .
 # # # # # #";
 
-    var levelData = LevelParser.ParseLevelFromText(levelText, validate: false);
-    var state = new SokobanState(levelData.grid, levelData.playerPos, levelData.crates);
-    var map = new DeadSquareMap(state);
+    var map = CreateDeadSquareMapFromText(levelText);
 
     Assert.IsFalse(map.IsDeadSquare(1, 3), "Target (1, 3)");
     Assert.IsFalse(map.IsDeadSquare(2, 3));
