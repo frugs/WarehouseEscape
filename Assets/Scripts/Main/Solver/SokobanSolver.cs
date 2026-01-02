@@ -36,10 +36,13 @@ public class SokobanSolver {
     var height = initialState.GridHeight;
     int statesExplored = 0;
 
+    var walkableAreaScannerOuter = new WalkableAreaScanner();
+    var walkableAreaScannerInner = new WalkableAreaScanner();
+
     // 2. Canonicalize Start State
     // We convert the initial raw state into a canonical state (player at top-left-most reachable pos)
     // This ensures our visited set works correctly immediately.
-    var (_, startCanonicalPos) = GetReachableAndCanonical(initialState);
+    _ = walkableAreaScannerOuter.GetWalkableAreaNoCopy(initialState, out var startCanonicalPos);
     var canonicalStart = new SokobanState(
         initialState.TerrainGrid,
         startCanonicalPos,
@@ -78,8 +81,7 @@ public class SokobanSolver {
       // We need to re-calculate reachable squares for the current canonical state
       // to find where we can push from.
       // (Optimization note: We could cache this in a wrapper class to avoid re-flood-filling)
-      var (reachable, _) = GetReachableAndCanonical(currentState);
-
+      var reachable = walkableAreaScannerOuter.GetWalkableAreaNoCopy(currentState, out _);
       foreach (var standPos in reachable) {
         // Check all 4 directions for potential pushes
         foreach (var dir in Vector2IntExtensions.Cardinals) {
@@ -102,7 +104,9 @@ public class SokobanSolver {
               // 5. Canonicalize the Next State
               // After pushing, the player is at 'cratePos'. We flood fill from there
               // to find the new canonical player position.
-              var (_, nextCanonicalPos) = GetReachableAndCanonical(nextRawState);
+              _ = walkableAreaScannerInner.GetWalkableAreaNoCopy(
+                  nextRawState,
+                  out var nextCanonicalPos);
               var nextCanonical = new SokobanState(
                   nextRawState.TerrainGrid,
                   nextCanonicalPos,
@@ -125,47 +129,6 @@ public class SokobanSolver {
     UnityEngine.Debug.Log(
         $"Unsolvable - Checked {statesExplored} states in {timer.ElapsedMilliseconds}ms.");
     return null; // Unsolvable
-  }
-
-  /// <summary>
-  /// Performs a flood fill to find all reachable squares from the player's current position.
-  /// Returns the list of reachable squares AND the "Canonical" position (Min X, then Min Y).
-  /// </summary>
-  private (List<Vector2Int> reachable, Vector2Int canonicalPos) GetReachableAndCanonical(
-      SokobanState state) {
-    var reachable = new List<Vector2Int>();
-    var visited = new HashSet<Vector2Int>();
-    var queue = new Queue<Vector2Int>();
-
-    var start = state.PlayerPos;
-    queue.Enqueue(start);
-    visited.Add(start);
-
-    Vector2Int minPos = start;
-
-    while (queue.Count > 0) {
-      var current = queue.Dequeue();
-      reachable.Add(current);
-
-      // Canonical check: "min x > min y"
-      // We prioritize Smallest X. If X is equal, prioritize Smallest Y.
-      if (current.x < minPos.x || (current.x == minPos.x && current.y < minPos.y)) {
-        minPos = current;
-      }
-
-      foreach (var dir in Vector2IntExtensions.Cardinals) {
-        var neighbor = current + dir;
-
-        // We can only walk to neighbors that are valid (Floor/Target/FilledHole) and NO CRATE.
-        // CanPlayerWalk handles these checks.
-        if (!visited.Contains(neighbor) && state.CanPlayerWalk(neighbor.x, neighbor.y)) {
-          visited.Add(neighbor);
-          queue.Enqueue(neighbor);
-        }
-      }
-    }
-
-    return (reachable, minPos);
   }
 
   /// <summary>
