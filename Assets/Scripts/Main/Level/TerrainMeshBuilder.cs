@@ -29,26 +29,33 @@ public class TerrainMeshBuilder : MonoBehaviour {
   // ========== CORE MESH GENERATION ==========
 
   private void CreateFloor(TerrainType[,] grid, int gridWidth, int gridHeight) {
-    var floorPositions = new List<Vector2Int>();
+    List<Vector3> verts = new List<Vector3>();
+    List<int> tris = new List<int>();
+    List<Vector2> uvs = new List<Vector2>();
+    List<Color> colors = new List<Color>();
+
     for (int x = 0; x < gridWidth; x++) {
       for (int y = 0; y < gridHeight; y++) {
         if (grid[x, y] == TerrainType.Floor) {
-          floorPositions.Add(new Vector2Int(x, y));
+          AddHorizontalQuad(
+              GridToWorld(x, y, 0f),
+              verts,
+              tris,
+              uvs,
+              colors,
+              Color.white);
         }
       }
     }
 
-    if (floorPositions.Count > 0) {
-      // Floor at Y=0
-      GameObject go = GenerateMesh("Floor", floorPositions, 0f, FloorMaterial);
-      go.transform.parent = LevelParent;
-    }
+    CreateGameObjectFromMeshData("Floor", verts, tris, uvs, colors, FloorMaterial, LevelParent);
   }
 
   private void CreateWalls(TerrainType[,] grid, int gridWidth, int gridHeight) {
-    List<Vector3> vertices = new List<Vector3>();
-    List<int> triangles = new List<int>();
-    List<Vector2> uvs = new List<Vector2>();
+    var vertices = new List<Vector3>();
+    var triangles = new List<int>();
+    var uvs = new List<Vector2>();
+    var colors = new List<Color>();
 
     for (int x = 0; x < gridWidth; x++) {
       for (int y = 0; y < gridHeight; y++) {
@@ -57,7 +64,13 @@ public class TerrainMeshBuilder : MonoBehaviour {
         Vector3 basePos = GridToWorld(x, y, 0);
 
         // 1. TOP FACE (Y = wallHeight)
-        AddHorizontalQuad(basePos + Vector3.up * WallHeight, vertices, triangles, uvs);
+        AddHorizontalQuad(
+            basePos + Vector3.up * WallHeight,
+            vertices,
+            triangles,
+            uvs,
+            colors,
+            Color.white);
 
         // 2. SIDE FACES (Check 4 neighbors)
         // North (Z+1)
@@ -72,7 +85,8 @@ public class TerrainMeshBuilder : MonoBehaviour {
             gridHeight,
             vertices,
             triangles,
-            uvs);
+            uvs,
+            colors);
         // South (Z-1)
         CheckAndAddWallSide(
             x,
@@ -85,7 +99,8 @@ public class TerrainMeshBuilder : MonoBehaviour {
             gridHeight,
             vertices,
             triangles,
-            uvs);
+            uvs,
+            colors);
         // East (X+1)
         CheckAndAddWallSide(
             x,
@@ -98,7 +113,8 @@ public class TerrainMeshBuilder : MonoBehaviour {
             gridHeight,
             vertices,
             triangles,
-            uvs);
+            uvs,
+            colors);
         // West (X-1)
         CheckAndAddWallSide(
             x,
@@ -111,17 +127,26 @@ public class TerrainMeshBuilder : MonoBehaviour {
             gridHeight,
             vertices,
             triangles,
-            uvs);
+            uvs,
+            colors);
       }
     }
 
-    CreateGameObjectFromMeshData("Walls", vertices, triangles, uvs, WallMaterial, WallsParent);
+    CreateGameObjectFromMeshData(
+        "Walls",
+        vertices,
+        triangles,
+        uvs,
+        colors,
+        WallMaterial,
+        WallsParent);
   }
 
   private void CreateHoles(TerrainType[,] grid, int gridWidth, int gridHeight) {
-    List<Vector3> vertices = new List<Vector3>();
-    List<int> triangles = new List<int>();
-    List<Vector2> uvs = new List<Vector2>();
+    var vertices = new List<Vector3>();
+    var triangles = new List<int>();
+    var uvs = new List<Vector2>();
+    var colors = new List<Color>();
 
     for (int x = 0; x < gridWidth; x++) {
       for (int y = 0; y < gridHeight; y++) {
@@ -130,7 +155,13 @@ public class TerrainMeshBuilder : MonoBehaviour {
         Vector3 center = GridToWorld(x, y, 0);
 
         // 1. BOTTOM FACE (Y = -holeDepth)
-        AddHorizontalQuad(center + Vector3.down * HoleDepth, vertices, triangles, uvs);
+        AddHorizontalQuad(
+            center + Vector3.down * HoleDepth,
+            vertices,
+            triangles,
+            uvs,
+            colors,
+            Color.black);
 
         // 2. INNER WALLS (Check 4 neighbors)
         CheckAndAddHoleSide(
@@ -144,7 +175,8 @@ public class TerrainMeshBuilder : MonoBehaviour {
             gridHeight,
             vertices,
             triangles,
-            uvs);
+            uvs,
+            colors);
         CheckAndAddHoleSide(
             x,
             y,
@@ -156,7 +188,8 @@ public class TerrainMeshBuilder : MonoBehaviour {
             gridHeight,
             vertices,
             triangles,
-            uvs);
+            uvs,
+            colors);
         CheckAndAddHoleSide(
             x,
             y,
@@ -168,7 +201,8 @@ public class TerrainMeshBuilder : MonoBehaviour {
             gridHeight,
             vertices,
             triangles,
-            uvs);
+            uvs,
+            colors);
         CheckAndAddHoleSide(
             x,
             y,
@@ -180,11 +214,19 @@ public class TerrainMeshBuilder : MonoBehaviour {
             gridHeight,
             vertices,
             triangles,
-            uvs);
+            uvs,
+            colors);
       }
     }
 
-    CreateGameObjectFromMeshData("Holes", vertices, triangles, uvs, HoleMaterial, HolesParent);
+    CreateGameObjectFromMeshData(
+        "Holes",
+        vertices,
+        triangles,
+        uvs,
+        colors,
+        HoleMaterial,
+        HolesParent);
   }
 
   // ========== FACE GENERATION HELPERS ==========
@@ -200,7 +242,8 @@ public class TerrainMeshBuilder : MonoBehaviour {
       int height,
       List<Vector3> verts,
       List<int> tris,
-      List<Vector2> uvs) {
+      List<Vector2> uvs,
+      List<Color> colors) {
     int nx = x + dx;
     int ny = y + dy;
 
@@ -209,7 +252,16 @@ public class TerrainMeshBuilder : MonoBehaviour {
     if (isEdge || grid[nx, ny] != TerrainType.Wall) {
       Vector3 center = GridToWorld(x, y, 0);
       Vector3 faceCenter = center + (dirNormal * 0.5f) + (Vector3.up * (WallHeight / 2));
-      AddVerticalQuad(faceCenter, dirNormal, WallHeight, verts, tris, uvs);
+      AddVerticalQuad(
+          faceCenter,
+          dirNormal,
+          WallHeight,
+          verts,
+          tris,
+          uvs,
+          colors,
+          Color.white,
+          Color.white);
     }
   }
 
@@ -224,7 +276,8 @@ public class TerrainMeshBuilder : MonoBehaviour {
       int height,
       List<Vector3> verts,
       List<int> tris,
-      List<Vector2> uvs) {
+      List<Vector2> uvs,
+      List<Color> colors) {
     int nx = x + dx;
     int ny = y + dy;
 
@@ -234,7 +287,16 @@ public class TerrainMeshBuilder : MonoBehaviour {
       Vector3 center = GridToWorld(x, y, 0);
       Vector3 faceCenter = center + (dirNormal * 0.5f) + (Vector3.down * (HoleDepth / 2));
       // Invert normal because we are looking INTO the hole
-      AddVerticalQuad(faceCenter, -dirNormal, HoleDepth, verts, tris, uvs);
+      AddVerticalQuad(
+          faceCenter,
+          -dirNormal,
+          HoleDepth,
+          verts,
+          tris,
+          uvs,
+          colors,
+          Color.black,
+          Color.white);
     }
   }
 
@@ -242,7 +304,9 @@ public class TerrainMeshBuilder : MonoBehaviour {
       Vector3 center,
       List<Vector3> verts,
       List<int> tris,
-      List<Vector2> uvs) {
+      List<Vector2> uvs,
+      List<Color> colors,
+      Color c) {
     int i = verts.Count;
     float s = 0.5f;
 
@@ -273,6 +337,11 @@ public class TerrainMeshBuilder : MonoBehaviour {
     uvs.Add(new Vector2(1, 0));
     uvs.Add(new Vector2(1, 1));
     uvs.Add(new Vector2(0, 1));
+
+    colors.Add(c);
+    colors.Add(c);
+    colors.Add(c);
+    colors.Add(c);
   }
 
   private void AddVerticalQuad(
@@ -281,23 +350,21 @@ public class TerrainMeshBuilder : MonoBehaviour {
       float height,
       List<Vector3> verts,
       List<int> tris,
-      List<Vector2> uvs) {
+      List<Vector2> uvs,
+      List<Color> colors,
+      Color bottomColor,
+      Color topColor) {
     // Calculate tangent vectors
     Vector3 right = Vector3.Cross(Vector3.up, normal).normalized;
-
     Vector3 halfRight = right * 0.5f;
     Vector3 halfUp = Vector3.up * (height * 0.5f);
 
     int i = verts.Count;
 
-    // 0: Bottom-Left
-    verts.Add(center - halfRight - halfUp);
-    // 1: Bottom-Right
-    verts.Add(center + halfRight - halfUp);
-    // 2: Top-Right
-    verts.Add(center + halfRight + halfUp);
-    // 3: Top-Left
-    verts.Add(center - halfRight + halfUp);
+    verts.Add(center - halfRight - halfUp); // 0: Bottom-Left
+    verts.Add(center + halfRight - halfUp); // 1: Bottom-Right
+    verts.Add(center + halfRight + halfUp); // 2: Top-Right
+    verts.Add(center - halfRight + halfUp); // 3: Top-Left
 
     // Triangles (Clockwise Winding)
     // 0 -> 1 -> 2
@@ -314,6 +381,11 @@ public class TerrainMeshBuilder : MonoBehaviour {
     uvs.Add(new Vector2(1, 0));
     uvs.Add(new Vector2(1, 1));
     uvs.Add(new Vector2(0, 1));
+
+    colors.Add(bottomColor); // 0
+    colors.Add(bottomColor); // 1
+    colors.Add(topColor); // 2
+    colors.Add(topColor); // 3
   }
 
   // ========== UTILS ==========
@@ -322,46 +394,35 @@ public class TerrainMeshBuilder : MonoBehaviour {
     return new Vector3(x + 0.5f, yPos, y + 0.5f);
   }
 
-  private GameObject GenerateMesh(
-      string meshName,
-      List<Vector2Int> positions,
-      float yHeight,
-      Material mat) {
-    List<Vector3> verts = new List<Vector3>();
-    List<int> tris = new List<int>();
-    List<Vector2> uvs = new List<Vector2>();
-
-    foreach (var pos in positions) {
-      AddHorizontalQuad(GridToWorld(pos.x, pos.y, yHeight), verts, tris, uvs);
-    }
-
-    return CreateGameObjectFromMeshData(meshName, verts, tris, uvs, mat, null);
-  }
-
-  private GameObject CreateGameObjectFromMeshData(
+  private void CreateGameObjectFromMeshData(
       string meshName,
       List<Vector3> verts,
       List<int> tris,
       List<Vector2> uvs,
+      List<Color> colors,
       Material mat,
       Transform parent) {
-    if (verts.Count == 0) return null;
+    if (verts.Count == 0) return;
 
     GameObject go = new GameObject(meshName);
-    if (parent) go.transform.parent = parent;
+    if (parent) {
+      go.transform.parent = parent;
+    }
 
     Mesh mesh = new Mesh();
     mesh.vertices = verts.ToArray();
     mesh.triangles = tris.ToArray();
     mesh.uv = uvs.ToArray();
 
+    if (colors != null && colors.Count == verts.Count) {
+      mesh.colors = colors.ToArray();
+    }
+
     mesh.RecalculateNormals();
 
     go.AddComponent<MeshFilter>().mesh = mesh;
     go.AddComponent<MeshRenderer>().material = mat ?? FloorMaterial;
     go.AddComponent<MeshCollider>();
-
-    return go;
   }
 
   private void SetupHierarchy() {

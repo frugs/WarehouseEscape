@@ -1121,7 +1121,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::TerrainMeshBuilder
   FloorMaterial: {fileID: 2100000, guid: e544726a9e892284bb46ee1cda49de38, type: 2}
   WallMaterial: {fileID: 2100000, guid: e544726a9e892284bb46ee1cda49de38, type: 2}
-  HoleMaterial: {fileID: 2100000, guid: e544726a9e892284bb46ee1cda49de38, type: 2}
+  HoleMaterial: {fileID: 2100000, guid: e2666e08cf354684f89cad204815ddca, type: 2}
 --- !u!114 &1936126210
 MonoBehaviour:
   m_ObjectHideFlags: 0
