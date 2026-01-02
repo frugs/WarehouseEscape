@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.Profiling;
 
 public class WalkableAreaScanner {
   private int[] _skipMap;
@@ -37,8 +36,6 @@ public class WalkableAreaScanner {
   public List<Vector2Int> GetWalkableAreaNoCopy(
       SokobanState state,
       out Vector2Int canonicalPlayerPos) {
-    // Profiler.BeginSample("Scanner.Setup");
-
     // Ensure Array Capacity
     int w = state.GridWidth;
     int h = state.GridHeight;
@@ -65,7 +62,6 @@ public class WalkableAreaScanner {
     }
 
     Vector2Int minPos = start;
-    // Profiler.EndSample();
 
     while (_queue.Count > 0) {
       var current = _queue.Dequeue();
@@ -77,34 +73,26 @@ public class WalkableAreaScanner {
       }
 
       foreach (var dir in Vector2IntExtensions.Cardinals) {
-        // Profiler.BeginSample("Scanner.Neighbor");
         var neighbor = current + dir;
 
         // Inline Bounds Check for speed
         if (neighbor.x < 0 || neighbor.x >= w || neighbor.y < 0 || neighbor.y >= h) {
-          // Profiler.EndSample();
           continue;
         }
 
-        // Profiler.BeginSample("Scanner.SkipCheck");
         int idx = neighbor.y * _width + neighbor.x;
         bool skip = _skipMap[idx] == _currentGen;
-        // Profiler.EndSample();
 
         if (!skip) {
-          // Profiler.BeginSample("Scanner.CanWalk");
           var terrain = state.TerrainGrid[neighbor.x, neighbor.y];
           bool canWalk = terrain.PlayerCanWalk() ||
                          (terrain.IsHole() && state.IsFilledHoleAt(neighbor.x, neighbor.y));
-          // Profiler.EndSample();
 
           if (canWalk) {
             _skipMap[idx] = _currentGen; // Mark Visited
             _queue.Enqueue(neighbor);
           }
         }
-
-        // Profiler.EndSample(); // Scanner.Neighbor
       }
     }
 

@@ -1,7 +1,6 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using UnityEngine;
-using UnityEngine.Profiling;
 
 public class SokobanSolver {
   private const int MAX_ITERATIONS = 10_000_000; // Limit total states explored
@@ -96,29 +95,23 @@ public class SokobanSolver {
             var pushTo = cratePos + dir;
 
             // Can we push it? (Target cell must be valid and not a deadlock)
-            // Profiler.BeginSample("Solver.LogicChecks");
             bool valid = IsValidCratePush(currentState, pushTo) &&
                          !IsDeadlock(currentState, pushTo, width, height) &&
                          !IsCrateInDeadSquare(pushTo);
-            // Profiler.EndSample();
 
             if (valid) {
               // Construct the Push Move
               var pushMove = SokobanMove.CratePush(standPos, cratePos, cratePos, pushTo);
 
               // Apply the push to get the 'raw' next state
-              // Profiler.BeginSample("Solver.ApplyMove");
               var nextRawState = MoveRules.ApplyMove(currentState, pushMove);
-              // Profiler.EndSample();
 
               // 5. Canonicalize the Next State
               // After pushing, the player is at 'cratePos'. We flood fill from there
               // to find the new canonical player position.
-              // Profiler.BeginSample("Solver.ChildCanonical");
               var nextWalkable = walkableAreaScanner.GetWalkableAreaNoCopy(
                   nextRawState,
                   out var nextCanonicalPos);
-              // Profiler.EndSample();
 
               var nextCanonical = nextRawState.WithPlayerMove(nextCanonicalPos);
 
