@@ -3,8 +3,6 @@ using UnityEngine;
 using UnityEngine.Profiling;
 
 public class WalkableAreaScanner {
-  private static readonly Vector2Int[] Cardinals = Vector2IntExtensions.Cardinals;
-
   private int[] _skipMap;
   private int _currentGen = 1;
   private int _width;
@@ -78,7 +76,7 @@ public class WalkableAreaScanner {
         minPos = current;
       }
 
-      foreach (var dir in Cardinals) {
+      foreach (var dir in Vector2IntExtensions.Cardinals) {
         // Profiler.BeginSample("Scanner.Neighbor");
         var neighbor = current + dir;
 
