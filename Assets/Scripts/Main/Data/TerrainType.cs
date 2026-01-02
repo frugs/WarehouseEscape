@@ -23,6 +23,7 @@ public static class TerrainTypeExtensions {
       terrain == TerrainType.Target ||
       terrain == TerrainType.Hole;
 
+  public static bool IsWall(this TerrainType terrain) => terrain == TerrainType.Wall;
   public static bool IsHole(this TerrainType terrain) => terrain == TerrainType.Hole;
   public static bool IsTarget(this TerrainType terrain) => terrain == TerrainType.Target;
   public static bool IsEntrance(this TerrainType t)

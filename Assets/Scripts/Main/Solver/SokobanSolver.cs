@@ -3,67 +3,227 @@ using System.Diagnostics;
 using UnityEngine;
 
 public class SokobanSolver {
-  const int MAX_ITERATIONS = 10_000_000; // Limit total states explored
-  const long MAX_MS = 60_000;
+  private const int MAX_ITERATIONS = 10_000_000; // Limit total states explored
+  private const long MAX_MS = 60_000; // 60s timeout
 
   private struct PathNode {
     public SokobanState? ParentState;
     public SokobanMove? Move;
   }
 
-  private DeadSquareMap DeadSquareMap;
+  private DeadSquareMap DeadSquareMap { get; set; }
 
+  /// <summary>
+  /// Checks if a level is solvable within the given iteration limit.
+  /// </summary>
   public bool IsSolvable(SokobanState state, int maxIterations = MAX_ITERATIONS) {
     var solution = FindSolutionPath(state, maxIterations);
     return solution != null;
   }
 
-  /// <summary>Generate all legal moves from current state</summary>
-  private List<SokobanMove> GenerateValidMoves(SokobanState state) {
-    var playerPos = state.PlayerPos;
-    var moves = new List<SokobanMove>();
-    int width = state.TerrainGrid.GetLength(0);
-    int height = state.TerrainGrid.GetLength(1);
+  /// <summary>
+  /// Finds the shortest solution path using BFS with Canonical State Optimization.
+  /// This treats all reachable player positions as a single state.
+  /// </summary>
+  public List<SokobanMove> FindSolutionPath(
+      SokobanState initialState,
+      int maxIterations = MAX_ITERATIONS) {
+    // 1. Setup
+    var parentMap = new Dictionary<SokobanState, PathNode>();
+    var visited = new HashSet<SokobanState>();
+    var queue = new Queue<SokobanState>();
+    var width = initialState.GridWidth;
+    var height = initialState.GridHeight;
+    int statesExplored = 0;
 
-    // 4 directions
-    foreach (Vector2Int direction in new[] {
-                 Vector2Int.up, Vector2Int.down, Vector2Int.left, Vector2Int.right
-             }) {
-      Vector2Int targetPos = playerPos + direction;
+    // 2. Canonicalize Start State
+    // We convert the initial raw state into a canonical state (player at top-left-most reachable pos)
+    // This ensures our visited set works correctly immediately.
+    var (_, startCanonicalPos) = GetReachableAndCanonical(initialState);
+    var canonicalStart = new SokobanState(
+        initialState.TerrainGrid,
+        startCanonicalPos,
+        initialState.CratePositions,
+        initialState.FilledHoles);
 
-      if (!IsInBounds(targetPos, width, height)) continue;
+    queue.Enqueue(canonicalStart);
+    visited.Add(canonicalStart);
 
-      // Player move to empty cell
-      if (state.CanPlayerWalk(targetPos.x, targetPos.y)) {
-        moves.Add(SokobanMove.PlayerMove(playerPos, targetPos));
+    // Note: The parentMap stores the path of CANONICAL states.
+    // We treat the canonicalStart as the root (Parent = null).
+    parentMap[canonicalStart] = new PathNode { ParentState = null, Move = null };
+
+    int iterations = 0;
+    Stopwatch timer = Stopwatch.StartNew();
+    DeadSquareMap = new DeadSquareMap(initialState);
+
+    // 3. BFS Loop
+    while (queue.Count > 0) {
+      if (++iterations > maxIterations || timer.ElapsedMilliseconds > MAX_MS) {
+        UnityEngine.Debug.LogError(
+            $"Solver Timeout! Checked {statesExplored} states in {timer.ElapsedMilliseconds}ms.");
+        return null; // Give up
       }
-      // Crate push
-      else if (state.IsCrateAt(targetPos.x, targetPos.y)) {
-        Vector2Int crateTargetPos = targetPos + direction;
-        if (IsValidCratePush(state, crateTargetPos, width, height)
-            && !IsDeadlock(state, crateTargetPos, width, height)
-            && !IsCrateInDeadSquare(crateTargetPos)) {
-          moves.Add(
-              SokobanMove.CratePush(
-                  playerPos,
-                  targetPos,
-                  targetPos,
-                  crateTargetPos
-              ));
+
+      var currentState = queue.Dequeue();
+
+      // Check Win on the canonical state (crates are the same)
+      if (currentState.IsWin()) {
+        UnityEngine.Debug.Log(
+            $"Solved - Checked {statesExplored} states in {timer.ElapsedMilliseconds}ms.");
+        return ReconstructPath(parentMap, currentState, initialState);
+      }
+
+      // 4. Generate Moves (Pushes Only)
+      // We need to re-calculate reachable squares for the current canonical state
+      // to find where we can push from.
+      // (Optimization note: We could cache this in a wrapper class to avoid re-flood-filling)
+      var (reachable, _) = GetReachableAndCanonical(currentState);
+
+      foreach (var standPos in reachable) {
+        // Check all 4 directions for potential pushes
+        foreach (var dir in Vector2IntExtensions.Cardinals) {
+          var cratePos = standPos + dir;
+
+          // Is there a crate here?
+          if (currentState.IsCrateAt(cratePos.x, cratePos.y)) {
+            var pushTo = cratePos + dir;
+
+            // Can we push it? (Target cell must be valid and not a deadlock)
+            if (IsValidCratePush(currentState, pushTo) &&
+                !IsDeadlock(currentState, pushTo, width, height) &&
+                !IsCrateInDeadSquare(pushTo)) {
+              // Construct the Push Move
+              var pushMove = SokobanMove.CratePush(standPos, cratePos, cratePos, pushTo);
+
+              // Apply the push to get the 'raw' next state
+              var nextRawState = MoveRules.ApplyMove(currentState, pushMove);
+
+              // 5. Canonicalize the Next State
+              // After pushing, the player is at 'cratePos'. We flood fill from there
+              // to find the new canonical player position.
+              var (_, nextCanonicalPos) = GetReachableAndCanonical(nextRawState);
+              var nextCanonical = new SokobanState(
+                  nextRawState.TerrainGrid,
+                  nextCanonicalPos,
+                  nextRawState.CratePositions,
+                  nextRawState.FilledHoles);
+
+              if (!visited.Contains(nextCanonical)) {
+                queue.Enqueue(nextCanonical);
+                parentMap[nextCanonical] =
+                    new PathNode { ParentState = currentState, Move = pushMove };
+                visited.Add(nextCanonical);
+                statesExplored++;
+              }
+            }
+          }
         }
       }
     }
 
-    return moves;
+    UnityEngine.Debug.Log(
+        $"Unsolvable - Checked {statesExplored} states in {timer.ElapsedMilliseconds}ms.");
+    return null; // Unsolvable
   }
 
-  private bool IsValidCratePush(
-      SokobanState state,
-      Vector2Int crateTargetPos,
-      int width,
-      int height) {
-    if (!IsInBounds(crateTargetPos, width, height)) return false;
-    return state.CanReceiveCrate(crateTargetPos.x, crateTargetPos.y);
+  /// <summary>
+  /// Performs a flood fill to find all reachable squares from the player's current position.
+  /// Returns the list of reachable squares AND the "Canonical" position (Min X, then Min Y).
+  /// </summary>
+  private (List<Vector2Int> reachable, Vector2Int canonicalPos) GetReachableAndCanonical(
+      SokobanState state) {
+    var reachable = new List<Vector2Int>();
+    var visited = new HashSet<Vector2Int>();
+    var queue = new Queue<Vector2Int>();
+
+    var start = state.PlayerPos;
+    queue.Enqueue(start);
+    visited.Add(start);
+
+    Vector2Int minPos = start;
+
+    while (queue.Count > 0) {
+      var current = queue.Dequeue();
+      reachable.Add(current);
+
+      // Canonical check: "min x > min y"
+      // We prioritize Smallest X. If X is equal, prioritize Smallest Y.
+      if (current.x < minPos.x || (current.x == minPos.x && current.y < minPos.y)) {
+        minPos = current;
+      }
+
+      foreach (var dir in Vector2IntExtensions.Cardinals) {
+        var neighbor = current + dir;
+
+        // We can only walk to neighbors that are valid (Floor/Target/FilledHole) and NO CRATE.
+        // CanPlayerWalk handles these checks.
+        if (!visited.Contains(neighbor) && state.CanPlayerWalk(neighbor.x, neighbor.y)) {
+          visited.Add(neighbor);
+          queue.Enqueue(neighbor);
+        }
+      }
+    }
+
+    return (reachable, minPos);
+  }
+
+  /// <summary>
+  /// Reconstructs the full solution (Walks + Pushes) from the map of Canonical States.
+  /// </summary>
+  private List<SokobanMove> ReconstructPath(
+      Dictionary<SokobanState, PathNode> parentMap,
+      SokobanState endState,
+      SokobanState realStartState) {
+    var pushSequence = new List<SokobanMove>();
+    var current = endState;
+
+    // 1. Extract the sequence of PUSH moves (backwards)
+    while (parentMap.ContainsKey(current)) {
+      var node = parentMap[current];
+      if (node.ParentState == null || node.Move == null) break; // Reached canonical start
+
+      pushSequence.Add(node.Move.Value);
+      current = node.ParentState.Value;
+    }
+
+    pushSequence.Reverse();
+
+    // 2. Fill in the WALK moves between pushes
+    var fullPath = new List<SokobanMove>();
+    var simState = realStartState; // Simulate strictly to ensure path validity
+
+    foreach (var pushMove in pushSequence) {
+      // The player is at simState.PlayerPos.
+      // They need to walk to pushMove.playerFrom to perform the push.
+
+      // Note: Pather.FindPath returns a list of coordinates.
+      var walkPathCoords = Pather.FindPath(simState, simState.PlayerPos, pushMove.playerFrom);
+
+      // Pather returns null if already there or unreachable (should be reachable by definition of our solver)
+      if (walkPathCoords != null && walkPathCoords.Count > 0) {
+        // Convert coords to atomic PlayerMoves
+        var walkPos = simState.PlayerPos;
+        foreach (var target in walkPathCoords) {
+          fullPath.Add(SokobanMove.PlayerMove(walkPos, target));
+          walkPos = target;
+        }
+      }
+
+      // Now Add the Push
+      fullPath.Add(pushMove);
+
+      // Update simulation state
+      simState = MoveRules.ApplyMove(simState, pushMove);
+    }
+
+    return fullPath;
+  }
+
+  // --- Helpers (Unchanged logic, just copied for context) ---
+
+  private bool IsValidCratePush(SokobanState state, Vector2Int targetPos) {
+    return state.CanReceiveCrate(targetPos.x, targetPos.y);
   }
 
   private bool IsDeadlock(SokobanState state, Vector2Int pos, int width, int height) {
@@ -86,84 +246,16 @@ public class SokobanSolver {
     return false;
   }
 
-  private bool IsCrateInDeadSquare(Vector2Int crateTargetPos) {
-    return DeadSquareMap.IsDeadSquare(crateTargetPos.x, crateTargetPos.y);
-  }
-
   private bool IsBlocking(TerrainType[,] grid, int x, int y, int width, int height) {
     // Check bounds
     if (x < 0 || x >= width || y < 0 || y >= height) return true; // Edge is a wall
 
-    return grid[x, y] == TerrainType.Wall;
+    return grid[x, y].IsWall();
     // Note: Simple deadlocks focus on Walls.
     // Crates can be moved, so they aren't permanent deadlocks unless frozen.
   }
 
-  // ========== UTILITIES ==========
-
-  private bool IsInBounds(Vector2Int pos, int width, int height) {
-    return pos.x >= 0 && pos.x < width && pos.y >= 0 && pos.y < height;
-  }
-
-  /// <summary>Find shortest solution path (optional extension)</summary>
-  public List<SokobanMove> FindSolutionPath(
-      SokobanState initialState,
-      int maxIterations = MAX_ITERATIONS) {
-    var parentMap = new Dictionary<SokobanState, PathNode>();
-    var queue = new Queue<SokobanState>();
-    var visited = new HashSet<SokobanState>();
-
-    queue.Enqueue(initialState);
-    visited.Add(initialState);
-
-    parentMap[initialState] = new PathNode { ParentState = null, Move = null };
-
-    int iterations = 0;
-    Stopwatch timer = Stopwatch.StartNew();
-
-    DeadSquareMap = new DeadSquareMap(initialState);
-
-    while (queue.Count > 0) {
-      if (++iterations > maxIterations || timer.ElapsedMilliseconds > MAX_MS) {
-        UnityEngine.Debug.LogError(
-            $"Solver Timeout! Checked {iterations} states in {timer.ElapsedMilliseconds}ms.");
-        return null; // Give up
-      }
-
-      var state = queue.Dequeue();
-
-      if (state.IsWin()) {
-        return ReconstructPath(parentMap, state);
-      }
-
-      foreach (var move in GenerateValidMoves(state)) {
-        var newState = MoveRules.ApplyMove(state, move);
-
-        if (!visited.Contains(newState)) {
-          visited.Add(newState);
-          parentMap[newState] = new PathNode { ParentState = state, Move = move };
-          queue.Enqueue(newState);
-        }
-      }
-    }
-
-    return null; // Unsolvable
-  }
-
-  private List<SokobanMove>
-      ReconstructPath(Dictionary<SokobanState, PathNode> parentMap, SokobanState goalState) {
-    var path = new List<SokobanMove>();
-    SokobanState current = goalState;
-
-    while (parentMap.ContainsKey(current)) {
-      var node = parentMap[current];
-      if (node.ParentState == null || node.Move == null) break;
-
-      path.Add((SokobanMove)node.Move);
-      current = (SokobanState)node.ParentState;
-    }
-
-    path.Reverse();
-    return path;
+  private bool IsCrateInDeadSquare(Vector2Int pos) {
+    return DeadSquareMap.IsDeadSquare(pos.x, pos.y);
   }
 }
