@@ -11,6 +11,11 @@ public class SokobanSolver {
     public SokobanMove? Move;
   }
 
+  private struct SolverContext {
+    public SokobanState State;
+    public List<Vector2Int> WalkableArea;
+  }
+
   private DeadSquareMap DeadSquareMap { get; set; }
 
   /// <summary>
@@ -31,25 +36,25 @@ public class SokobanSolver {
     // 1. Setup
     var parentMap = new Dictionary<SokobanState, PathNode>();
     var visited = new HashSet<SokobanState>();
-    var queue = new Queue<SokobanState>();
+    var queue = new Queue<SolverContext>();
     var width = initialState.GridWidth;
     var height = initialState.GridHeight;
     int statesExplored = 0;
 
-    var walkableAreaScannerOuter = new WalkableAreaScanner();
-    var walkableAreaScannerInner = new WalkableAreaScanner();
+    var walkableAreaScanner = new WalkableAreaScanner();
 
     // 2. Canonicalize Start State
     // We convert the initial raw state into a canonical state (player at top-left-most reachable pos)
     // This ensures our visited set works correctly immediately.
-    _ = walkableAreaScannerOuter.GetWalkableAreaNoCopy(initialState, out var startCanonicalPos);
+    var walkable =
+        walkableAreaScanner.GetWalkableArea(initialState, out var startCanonicalPos);
     var canonicalStart = new SokobanState(
         initialState.TerrainGrid,
         startCanonicalPos,
         initialState.CratePositions,
         initialState.FilledHoles);
 
-    queue.Enqueue(canonicalStart);
+    queue.Enqueue(new SolverContext() { State = initialState, WalkableArea = walkable });
     visited.Add(canonicalStart);
 
     // Note: The parentMap stores the path of CANONICAL states.
@@ -68,21 +73,19 @@ public class SokobanSolver {
         return null; // Give up
       }
 
-      var currentState = queue.Dequeue();
+      var currentContext = queue.Dequeue();
+      var currentState = currentContext.State;
+      walkable = currentContext.WalkableArea;
 
       // Check Win on the canonical state (crates are the same)
       if (currentState.IsWin()) {
         UnityEngine.Debug.Log(
             $"Solved - Checked {statesExplored} states in {timer.ElapsedMilliseconds}ms.");
-        return ReconstructPath(parentMap, currentState, initialState);
+        return ReconstructPath(parentMap, currentContext.State, initialState);
       }
 
       // 4. Generate Moves (Pushes Only)
-      // We need to re-calculate reachable squares for the current canonical state
-      // to find where we can push from.
-      // (Optimization note: We could cache this in a wrapper class to avoid re-flood-filling)
-      var reachable = walkableAreaScannerOuter.GetWalkableAreaNoCopy(currentState, out _);
-      foreach (var standPos in reachable) {
+      foreach (var standPos in walkable) {
         // Check all 4 directions for potential pushes
         foreach (var dir in Vector2IntExtensions.Cardinals) {
           var cratePos = standPos + dir;
@@ -104,7 +107,7 @@ public class SokobanSolver {
               // 5. Canonicalize the Next State
               // After pushing, the player is at 'cratePos'. We flood fill from there
               // to find the new canonical player position.
-              _ = walkableAreaScannerInner.GetWalkableAreaNoCopy(
+              var nextWalkable = walkableAreaScanner.GetWalkableAreaNoCopy(
                   nextRawState,
                   out var nextCanonicalPos);
               var nextCanonical = new SokobanState(
@@ -114,7 +117,10 @@ public class SokobanSolver {
                   nextRawState.FilledHoles);
 
               if (!visited.Contains(nextCanonical)) {
-                queue.Enqueue(nextCanonical);
+                queue.Enqueue(
+                    new SolverContext() {
+                        State = nextCanonical, WalkableArea = new List<Vector2Int>(nextWalkable)
+                    });
                 parentMap[nextCanonical] =
                     new PathNode { ParentState = currentState, Move = pushMove };
                 visited.Add(nextCanonical);

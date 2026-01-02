@@ -4,7 +4,7 @@ using UnityEngine;
 public class WalkableAreaScanner {
   private readonly HashSet<Vector2Int> _visited = new HashSet<Vector2Int>();
   private readonly Queue<Vector2Int> _queue = new Queue<Vector2Int>();
-  private readonly List<Vector2Int> _reachable = new List<Vector2Int>(100);
+  private readonly List<Vector2Int> _walkable = new List<Vector2Int>(100);
 
   // ReSharper disable once UnusedMember.Global
   public List<Vector2Int> GetWalkableArea(
@@ -25,7 +25,7 @@ public class WalkableAreaScanner {
 
     _visited.Clear();
     _queue.Clear();
-    _reachable.Clear();
+    _walkable.Clear();
 
     var start = state.PlayerPos;
     _queue.Enqueue(start);
@@ -35,7 +35,7 @@ public class WalkableAreaScanner {
 
     while (_queue.Count > 0) {
       var current = _queue.Dequeue();
-      _reachable.Add(current);
+      _walkable.Add(current);
 
       // Canonical check: "min x > min y"
       // We prioritize Smallest X. If X is equal, prioritize Smallest Y.
@@ -56,6 +56,6 @@ public class WalkableAreaScanner {
     }
 
     canonicalPlayerPos = minPos;
-    return _reachable;
+    return _walkable;
   }
 }
