@@ -1,18 +1,36 @@
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Profiling;
 
 public class WalkableAreaScanner {
-  private readonly HashSet<Vector2Int> _visited = new HashSet<Vector2Int>();
-  private readonly Queue<Vector2Int> _queue = new Queue<Vector2Int>();
+  private static readonly Vector2Int[] Cardinals = Vector2IntExtensions.Cardinals;
+
+  private int[] _visitedMap;
+  private int _currentGen = 1;
+  private int _width;
+  private int _height;
+
+  private readonly Queue<Vector2Int> _queue = new Queue<Vector2Int>(100);
   private readonly List<Vector2Int> _walkable = new List<Vector2Int>(100);
 
-  // ReSharper disable once UnusedMember.Global
+  public WalkableAreaScanner(int width = 0, int height = 0) {
+    _width = width;
+    _height = height;
+    _visitedMap = new int[width * height];
+  }
+
+  public void Reset(int width, int height) {
+    _width = width;
+    _height = height;
+    _visitedMap = new int[width * height];
+    _currentGen = 1;
+  }
+
   public List<Vector2Int> GetWalkableArea(
       SokobanState state,
       out Vector2Int canonicalPlayerPos) {
     return new List<Vector2Int>(GetWalkableAreaNoCopy(state, out canonicalPlayerPos));
   }
-
 
   /// <summary>
   /// Performs a flood fill to find all reachable squares from the player's current position.
@@ -21,37 +39,72 @@ public class WalkableAreaScanner {
   public List<Vector2Int> GetWalkableAreaNoCopy(
       SokobanState state,
       out Vector2Int canonicalPlayerPos) {
+    // Profiler.BeginSample("Scanner.Setup");
+
+    // Ensure Array Capacity
+    int w = state.GridWidth;
+    int h = state.GridHeight;
+    if (_visitedMap == null || _width != w || _height != h) {
+      Reset(w, h);
+    } else {
+      _currentGen++;
+    }
+
     canonicalPlayerPos = state.PlayerPos;
 
-    _visited.Clear();
     _queue.Clear();
     _walkable.Clear();
 
     var start = state.PlayerPos;
     _queue.Enqueue(start);
-    _visited.Add(start);
+
+    // Mark Start Visited
+    _visitedMap![start.y * w + start.x] = _currentGen;
 
     Vector2Int minPos = start;
+    // Profiler.EndSample();
 
     while (_queue.Count > 0) {
       var current = _queue.Dequeue();
       _walkable.Add(current);
 
       // Canonical check: "min x > min y"
-      // We prioritize Smallest X. If X is equal, prioritize Smallest Y.
       if (current.x < minPos.x || (current.x == minPos.x && current.y < minPos.y)) {
         minPos = current;
       }
 
-      foreach (var dir in Vector2IntExtensions.Cardinals) {
+      foreach (var dir in Cardinals) {
+        // Profiler.BeginSample("Scanner.Neighbor");
         var neighbor = current + dir;
 
-        // We can only walk to neighbors that are valid (Floor/Target/FilledHole) and NO CRATE.
-        // CanPlayerWalk handles these checks.
-        if (!_visited.Contains(neighbor) && state.CanPlayerWalk(neighbor.x, neighbor.y)) {
-          _visited.Add(neighbor);
-          _queue.Enqueue(neighbor);
+        // Bounds Check (Implicitly handled by index calc, but safe to verify)
+        // Note: CanPlayerWalk checks bounds too, but for array access we need to be safe.
+        // Or we can rely on CanPlayerWalk returning false for out of bounds,
+        // BUT we need to check visited BEFORE CanPlayerWalk to save time.
+
+        // Inline Bounds Check for speed
+        if (neighbor.x < 0 || neighbor.x >= w || neighbor.y < 0 || neighbor.y >= h) {
+          // Profiler.EndSample();
+          continue;
         }
+
+        // Profiler.BeginSample("Scanner.VisitedCheck");
+        int idx = neighbor.y * _width + neighbor.x;
+        bool visited = _visitedMap[idx] == _currentGen;
+        // Profiler.EndSample();
+
+        if (!visited) {
+          // Profiler.BeginSample("Scanner.CanWalk");
+          bool canWalk = state.CanPlayerWalk(neighbor.x, neighbor.y);
+          // Profiler.EndSample();
+
+          if (canWalk) {
+            _visitedMap[idx] = _currentGen; // Mark Visited
+            _queue.Enqueue(neighbor);
+          }
+        }
+
+        // Profiler.EndSample(); // Scanner.Neighbor
       }
     }
 
