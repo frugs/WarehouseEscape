@@ -13,8 +13,9 @@ public class SokobanSolver {
   }
 
   private struct SolverContext {
-    public SokobanState State;
-    public List<Vector2Int> WalkableArea;
+    public SokobanState CanonicalState { get; set; }
+    public SokobanState RawState { get; set; }
+    public List<Vector2Int> WalkableArea { get; set; }
   }
 
   private DeadSquareMap DeadSquareMap { get; set; }
@@ -55,7 +56,10 @@ public class SokobanSolver {
         initialState.CratePositions,
         initialState.FilledHoles);
 
-    queue.Enqueue(new SolverContext() { State = initialState, WalkableArea = walkable });
+    queue.Enqueue(
+        new SolverContext() {
+            CanonicalState = canonicalStart, RawState = initialState, WalkableArea = walkable
+        });
     visited.Add(canonicalStart);
 
     // Note: The parentMap stores the path of CANONICAL states.
@@ -75,14 +79,34 @@ public class SokobanSolver {
       }
 
       var currentContext = queue.Dequeue();
-      var currentState = currentContext.State;
+      var currentState = currentContext.CanonicalState;
       walkable = currentContext.WalkableArea;
 
       // Check Win on the canonical state (crates are the same)
-      if (currentState.IsWin()) {
-        UnityEngine.Debug.Log(
-            $"Solved - Checked {statesExplored} states in {timer.ElapsedMilliseconds}ms.");
-        return ReconstructPath(parentMap, currentContext.State, initialState);
+      if (currentState.IsSolved(out var exitPos)) {
+        if (exitPos == null || walkable.Contains(exitPos.Value)) {
+          UnityEngine.Debug.Log(
+              $"Solved - Checked {statesExplored} states in {timer.ElapsedMilliseconds}ms.");
+
+          var solution = ReconstructPath(parentMap, currentContext.CanonicalState, initialState);
+          if (exitPos != null) {
+            var rawState = currentContext.RawState;
+            var pathToExit = Pather.FindPath(
+                rawState,
+                rawState.PlayerPos,
+                exitPos.Value);
+            if (pathToExit is { Count: > 0 }) {
+              // Convert raw coords into PlayerMove steps
+              var walkPos = rawState.PlayerPos;
+              foreach (var target in pathToExit) {
+                solution.Add(SokobanMove.PlayerMove(walkPos, target));
+                walkPos = target;
+              }
+            }
+          }
+
+          return solution;
+        }
       }
 
       // 4. Generate Moves (Pushes Only)
@@ -122,7 +146,11 @@ public class SokobanSolver {
                 nextWalkableCopy.AddRange(nextWalkable);
 
                 queue.Enqueue(
-                    new SolverContext() { State = nextCanonical, WalkableArea = nextWalkableCopy });
+                    new SolverContext() {
+                        CanonicalState = nextCanonical, 
+                        RawState = nextRawState,
+                        WalkableArea = nextWalkableCopy
+                    });
                 parentMap[nextCanonical] =
                     new PathNode { ParentState = currentState, Move = pushMove };
                 visited.Add(nextCanonical);

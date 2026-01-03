@@ -123,6 +123,16 @@ public class LevelParser {
         data.targetCount++;
         data.crateCount++;
         break;
+      
+      case '>':
+        terrain = TerrainType.Entrance;
+        data.playerDetected = true;
+        data.playerPos = new Vector2Int(x, y);
+        break;
+      
+      case '<':
+        terrain = TerrainType.Exit;
+        break;
 
       default:
         Debug.LogWarning($"Unknown symbol '{symbol}' at {x},{y}");

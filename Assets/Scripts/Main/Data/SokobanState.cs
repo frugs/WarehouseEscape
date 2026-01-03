@@ -108,35 +108,39 @@ public readonly struct SokobanState : IEquatable<SokobanState> {
     return FilledHoles.Contains(new Vector2Int(x, y));
   }
 
-  /// <summary>
-  /// Does this state represent a Win?
-  /// </summary>
-  public bool IsWin() {
-    // A win requires every Target to be covered by a Crate.
-    // (Note: This logic assumes num_crates >= num_targets. If crates fall in holes,
-    // we need to be careful. Ideally, we check if all TARGETS are satisfied.)
-
+  public bool IsSolved(out Vector2Int? exitPos) {
+    exitPos = null;
     int targetsSatisfied = 0;
-    int totalTargets = 0; // Ideally cache this in the Solver, not calc every frame
+    int totalTargets = 0;
 
     int width = TerrainGrid.GetLength(0);
     int height = TerrainGrid.GetLength(1);
 
     for (int x = 0; x < width; x++) {
       for (int y = 0; y < height; y++) {
-        if (TerrainGrid[x, y].IsTarget()) {
+        var terrain = TerrainGrid[x, y];
+        if (terrain.IsTarget()) {
           totalTargets++;
           if (IsCrateAt(x, y)) {
             targetsSatisfied++;
           }
+        } else if (terrain.IsExit()) {
+          exitPos = new Vector2Int(x, y);
         }
       }
     }
+    
+    return targetsSatisfied == totalTargets;
+  }
 
-    // Win if we satisfied all targets.
-    // (Or if targetsSatisfied == CratePositions.Length if we want "All crates docked")
-    // Let's stick to "All Targets Covered"
-    return totalTargets > 0 && targetsSatisfied == totalTargets;
+  /// <summary>
+  /// Does this state represent a Win?
+  /// </summary>
+  public bool IsWin() {
+    var solved = IsSolved(out var exitPos);
+    if (!solved) return false;
+
+    return exitPos == null || PlayerPos == exitPos;
   }
 
   public bool IsValidPos(int x, int y) {

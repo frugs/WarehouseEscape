@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using NUnit.Framework;
 using UnityEngine;
 
@@ -80,7 +81,7 @@ public class SokobanSolverTests {
     TerrainType[,] grid = CreateEmptyRoom(width, height);
 
     Vector2Int playerPos = new Vector2Int(1, 1);
-    List<Vector2Int> crates = new List<Vector2Int> { new Vector2Int(2, 1) };
+    List<Vector2Int> crates = new List<Vector2Int> { new(2, 1) };
 
     grid[3, 1] = TerrainType.Target;
 
@@ -101,5 +102,127 @@ public class SokobanSolverTests {
     Assert.AreEqual(new Vector2Int(2, 1), move.playerTo);
     Assert.AreEqual(new Vector2Int(2, 1), move.crateFrom);
     Assert.AreEqual(new Vector2Int(3, 1), move.crateTo);
+  }
+
+  [Test]
+  public void Solver_Simple_Entrance_Exit() {
+    // ARRANGE
+    int width = 5;
+    int height = 3;
+    TerrainType[,] grid = CreateEmptyRoom(width, height);
+
+    grid[0, 1] = TerrainType.Entrance;
+    grid[4, 1] = TerrainType.Exit;
+
+    Vector2Int playerPos = new Vector2Int(0, 1);
+
+    SokobanState state = SokobanState.Create(grid, playerPos, Enumerable.Empty<Vector2Int>());
+    SokobanSolver solver = new SokobanSolver();
+
+    // ACT
+    List<SokobanMove> solution = solver.FindSolutionPath(state);
+
+    // ASSERT
+    Assert.IsNotNull(solution, "Solution should not be null.");
+    Assert.AreEqual(4, solution.Count, "Should require exactly 4 moves.");
+
+    // Verify move
+    var iter = solution.GetEnumerator();
+    iter.MoveNext();
+
+    {
+      var move = iter.Current;
+      Assert.AreEqual(MoveType.PlayerMove, move.type);
+      Assert.AreEqual(new Vector2Int(0, 1), move.playerFrom);
+      Assert.AreEqual(new Vector2Int(1, 1), move.playerTo);
+      iter.MoveNext();
+    }
+
+    {
+      var move = iter.Current;
+      Assert.AreEqual(MoveType.PlayerMove, move.type);
+      Assert.AreEqual(new Vector2Int(1, 1), move.playerFrom);
+      Assert.AreEqual(new Vector2Int(2, 1), move.playerTo);
+      iter.MoveNext();
+    }
+
+    {
+      var move = iter.Current;
+      Assert.AreEqual(MoveType.PlayerMove, move.type);
+      Assert.AreEqual(new Vector2Int(2, 1), move.playerFrom);
+      Assert.AreEqual(new Vector2Int(3, 1), move.playerTo);
+      iter.MoveNext();
+    }
+
+    {
+      var move = iter.Current;
+      Assert.AreEqual(MoveType.PlayerMove, move.type);
+      Assert.AreEqual(new Vector2Int(3, 1), move.playerFrom);
+      Assert.AreEqual(new Vector2Int(4, 1), move.playerTo);
+      iter.MoveNext();
+    }
+  }
+
+  [Test]
+  public void Solver_Entrance_Exit_Single_Target() {
+    // ARRANGE
+    int width = 5;
+    int height = 3;
+    TerrainType[,] grid = CreateEmptyRoom(width, height);
+
+    grid[0, 1] = TerrainType.Entrance;
+    grid[3, 0] = TerrainType.Exit;
+    grid[4, 1] = TerrainType.Target;
+
+    Vector2Int playerPos = new Vector2Int(0, 1);
+    List<Vector2Int> crates = new List<Vector2Int> { new(3, 1) };
+
+    SokobanState state = SokobanState.Create(grid, playerPos, crates);
+    SokobanSolver solver = new SokobanSolver();
+
+    // ACT
+    List<SokobanMove> solution = solver.FindSolutionPath(state);
+
+    // ASSERT
+    Assert.IsNotNull(solution, "Solution should not be null.");
+    Assert.AreEqual(4, solution.Count, "Should require exactly 4 moves.");
+
+    // Verify moves
+    var iter = solution.GetEnumerator();
+    iter.MoveNext();
+
+    {
+      var move = iter.Current;
+      Assert.AreEqual(MoveType.PlayerMove, move.type);
+      Assert.AreEqual(new Vector2Int(0, 1), move.playerFrom);
+      Assert.AreEqual(new Vector2Int(1, 1), move.playerTo);
+      iter.MoveNext();
+    }
+
+    {
+      var move = iter.Current;
+      Assert.AreEqual(MoveType.PlayerMove, move.type);
+      Assert.AreEqual(new Vector2Int(1, 1), move.playerFrom);
+      Assert.AreEqual(new Vector2Int(2, 1), move.playerTo);
+      iter.MoveNext();
+    }
+
+    {
+      var move = iter.Current;
+      Assert.AreEqual(MoveType.CratePush, move.type);
+      Assert.AreEqual(new Vector2Int(2, 1), move.playerFrom);
+      Assert.AreEqual(new Vector2Int(3, 1), move.playerTo);
+      Assert.AreEqual(new Vector2Int(3, 1), move.crateFrom);
+      Assert.AreEqual(new Vector2Int(4, 1), move.crateTo);
+      iter.MoveNext();
+    }
+
+    {
+      var move = iter.Current;
+      Assert.AreEqual(MoveType.PlayerMove, move.type);
+      Assert.AreEqual(new Vector2Int(3, 1), move.playerFrom);
+      Assert.AreEqual(new Vector2Int(3, 0), move.playerTo);
+      iter.MoveNext();
+    }
   }
 }
