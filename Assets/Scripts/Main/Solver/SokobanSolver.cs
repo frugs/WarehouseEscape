@@ -5,7 +5,7 @@ using UnityEngine.Pool;
 
 public class SokobanSolver {
   private const int MAX_ITERATIONS = 10_000_000; // Limit total states explored
-  private const long MAX_MS = 30_000; // 60s timeout
+  private const long MAX_MS = 60_000; // 60s timeout
 
   private struct PathNode {
     public SokobanState? ParentState;
