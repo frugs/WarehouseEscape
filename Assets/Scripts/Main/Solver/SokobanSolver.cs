@@ -1,10 +1,11 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using UnityEngine;
+using UnityEngine.Pool;
 
 public class SokobanSolver {
   private const int MAX_ITERATIONS = 10_000_000; // Limit total states explored
-  private const long MAX_MS = 60_000; // 60s timeout
+  private const long MAX_MS = 30_000; // 60s timeout
 
   private struct PathNode {
     public SokobanState? ParentState;
@@ -116,10 +117,12 @@ public class SokobanSolver {
               var nextCanonical = nextRawState.WithPlayerMove(nextCanonicalPos);
 
               if (!visited.Contains(nextCanonical)) {
+                var nextWalkableCopy = ListPool<Vector2Int>.Get();
+                nextWalkableCopy.Capacity = nextWalkable.Count;
+                nextWalkableCopy.AddRange(nextWalkable);
+
                 queue.Enqueue(
-                    new SolverContext() {
-                        State = nextCanonical, WalkableArea = new List<Vector2Int>(nextWalkable)
-                    });
+                    new SolverContext() { State = nextCanonical, WalkableArea = nextWalkableCopy });
                 parentMap[nextCanonical] =
                     new PathNode { ParentState = currentState, Move = pushMove };
                 visited.Add(nextCanonical);
@@ -129,6 +132,8 @@ public class SokobanSolver {
           }
         }
       }
+
+      ListPool<Vector2Int>.Release(walkable);
     }
 
     UnityEngine.Debug.Log(
