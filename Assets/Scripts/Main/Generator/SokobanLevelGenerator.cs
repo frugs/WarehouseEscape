@@ -27,6 +27,8 @@ public class SokobanLevelGenerator {
     }
 
     for (int i = 0; i < AttemptsPerLevel; i++) {
+      var attemptStart = timer.ElapsedMilliseconds;
+
       if (timer.ElapsedMilliseconds > TimeoutMs) {
         UnityEngine.Debug.LogError(
             $"Timeout! {i} attempts in {timer.ElapsedMilliseconds}ms.");
@@ -38,6 +40,10 @@ public class SokobanLevelGenerator {
       int maxHeight = Random.Range(minSize, maxSize);
       var roomLayout = _roomLayoutGenerator.GenerateLayout(maxWidth, maxHeight);
 
+      UnityEngine.Debug.Log($"Generated layout in {timer.ElapsedMilliseconds - attemptStart}ms");
+
+      var placeFeaturesStart = timer.ElapsedMilliseconds;
+
       // 2. Populate (Player, crates, Goals)
       var maybeState = _roomFeaturePlacer.PlaceFeatures(
           roomLayout,
@@ -45,13 +51,18 @@ public class SokobanLevelGenerator {
           holeCount,
           useEntranceExit);
 
+      UnityEngine.Debug.Log(
+          $"Placed features in {timer.ElapsedMilliseconds - placeFeaturesStart}ms");
+
       if (maybeState == null) continue; // Population failed (no space)
-      var state = (SokobanState)maybeState;
 
       // 3. Verify Solvability
       var solver = new SokobanSolver();
+      var state = (SokobanState)maybeState;
+
       if (solver.IsSolvable(state, GeneratorSolverLimit)) {
-        UnityEngine.Debug.Log($"Generated solvable level in {i + 1} attempts.");
+        UnityEngine.Debug.Log(
+            $"Generated solvable level in {i + 1} attempts and {timer.ElapsedMilliseconds}ms.");
 
         // Final Polish Step
         PostProcessPerimeterWalls(state.TerrainGrid);
