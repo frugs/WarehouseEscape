@@ -57,10 +57,10 @@ public class LevelGeneratorWindow : EditorWindow {
   }
 
   private SokobanState? GenerateState() {
-    var generator = new SokobanGenerator();
+    var generator = new SokobanLevelGenerator();
 
     int? seedToUse = UseFixedSeed ? Seed : null;
-    return generator.Generate(MaxSize, MaxSize, TargetCount, HoleCount, UseEntranceExit, seedToUse);
+    return generator.GenerateLevel(MaxSize, MaxSize, TargetCount, HoleCount, UseEntranceExit, seedToUse);
   }
 
   private void GenerateAndLog() {
