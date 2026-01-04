@@ -53,6 +53,7 @@ public class LevelFeaturePlacer {
 
     Vector2Int playerPos;
     bool entrancePlaced = false;
+    Vector2Int? exitPos = null;
 
     // 3. Place Entrance and Exit (Deterministic Min/Max)
     if (useEntranceExit) {
@@ -89,6 +90,7 @@ public class LevelFeaturePlacer {
       grid[bestEnt.x, bestEnt.y] = TerrainType.Entrance;
       grid[bestExit.x, bestExit.y] = TerrainType.Exit;
 
+      exitPos = bestExit;
       playerPos = bestEnt; // Player starts on the Entrance tile
       entrancePlaced = true;
     } else {
@@ -130,11 +132,25 @@ public class LevelFeaturePlacer {
       // 2. Check connectivity
       // totalReachable = (All Floors) - (Candidate) + (Entrance + Exit if exists)
       // Note: 'floors' list still contains 'candidate' at this point
-      const int MIN_ISLAND_SIZE = 2;
       int totalReachableNodes = floors.Count - 1 + extraNodes;
+      int playerSideCount = _floodFillScanner.Count;
+      int behindSideCount = totalReachableNodes - playerSideCount;
+
+      // Is the Exit on the "Behind" side?
+      // (If Exit is NOT reached, it is behind the hole)
+      bool exitIsBehind = exitPos.HasValue &&
+                          !_floodFillScanner.IsReached(exitPos.Value.x, exitPos.Value.y);
+
+      const int MIN_ISLAND_SIZE = 2;
+      // Rule 1: Player Side must be decent size (Don't trap player in a closet)
+      bool validPlayerSide = playerSideCount > MIN_ISLAND_SIZE;
+
+      // Rule 2: Behind Side must be decent size OR it must contain the Exit
+      bool validBehindSide = behindSideCount > MIN_ISLAND_SIZE || exitIsBehind;
       bool isCutVertex =
-          _floodFillScanner.Count > MIN_ISLAND_SIZE &&
-          _floodFillScanner.Count + MIN_ISLAND_SIZE < totalReachableNodes;
+          playerSideCount < totalReachableNodes && // It actually cuts something
+          validPlayerSide &&
+          validBehindSide;
 
       if (isCutVertex) {
         // We found a Cut Vertex!
