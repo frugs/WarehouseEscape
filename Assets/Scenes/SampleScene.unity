@@ -1076,9 +1076,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c76202bea8df2a2479e5a277f7375bff, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GridManager
-  LevelNumber: 0
-  LevelLoader: {fileID: 0}
-  menuManager: {fileID: 0}
+  <LevelNumber>k__BackingField: 1
+  <LevelLoader>k__BackingField: {fileID: 0}
+  <SolutionController>k__BackingField: {fileID: 0}
+  <MenuManager>k__BackingField: {fileID: 0}
 --- !u!4 &1936126207
 Transform:
   m_ObjectHideFlags: 0
@@ -1147,11 +1148,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 165d07ba6aa5cfb4a8fdc86f825cdcb3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Main::SolutionController
-  LevelName: Level0
-  StepDelay: 0.12
-  AutoPlay: 0
-  GameSession: {fileID: 0}
-  MoveScheduler: {fileID: 0}
+  <LevelName>k__BackingField: 
+  <GameSession>k__BackingField: {fileID: 0}
+  <MoveScheduler>k__BackingField: {fileID: 0}
 --- !u!114 &1936126212
 MonoBehaviour:
   m_ObjectHideFlags: 0

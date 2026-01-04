@@ -7,21 +7,23 @@ using UnityEngine;
 [RequireComponent(typeof(GameSession))]
 public class SolutionController : MonoBehaviour {
   [Header("Settings")]
-  [Tooltip("Name of the level solution to play (without .json extension)")]
-  [SerializeField]
-  private string LevelName = "Level1";
+  [Tooltip("Name of the level solution to play")]
+  [field: SerializeField]
+  public string LevelName { get; set; }
 
-  [Tooltip("Time to wait between each move")] [SerializeField]
-  private float StepDelay = 0.12f;
+  [Tooltip("Time to wait between each move")]
+  [field: SerializeField]
+  public float StepDelay { get; } = 0.12f;
 
-  [Tooltip("If true, starts playing automatically when the scene starts")] [SerializeField]
-  private bool AutoPlay = false;
+  [Tooltip("If true, starts playing automatically when the scene starts")]
+  [field: SerializeField]
+  public bool AutoPlay { get; } = false;
 
-  [SerializeField] private GameSession GameSession;
+  [field: SerializeField] private GameSession GameSession { get; set; }
 
-  [SerializeField] private MoveScheduler MoveScheduler;
+  [field: SerializeField] private MoveScheduler MoveScheduler { get; set; }
 
-  private Coroutine PlaybackCoroutine;
+  private Coroutine _playbackCoroutine;
 
   [UsedImplicitly]
   private void Awake() {
@@ -44,18 +46,18 @@ public class SolutionController : MonoBehaviour {
 
   [ContextMenu("Play Solution")]
   public void PlaySolution() {
-    if (PlaybackCoroutine != null) {
-      StopCoroutine(PlaybackCoroutine);
+    if (_playbackCoroutine != null) {
+      StopCoroutine(_playbackCoroutine);
     }
 
-    PlaybackCoroutine = StartCoroutine(PlaybackRoutine());
+    _playbackCoroutine = StartCoroutine(PlaybackRoutine());
   }
 
   [ContextMenu("Stop Playback")]
   public void StopPlayback() {
-    if (PlaybackCoroutine != null) {
-      StopCoroutine(PlaybackCoroutine);
-      PlaybackCoroutine = null;
+    if (_playbackCoroutine != null) {
+      StopCoroutine(_playbackCoroutine);
+      _playbackCoroutine = null;
     }
   }
 
@@ -65,8 +67,9 @@ public class SolutionController : MonoBehaviour {
     string path = Path.Combine(Application.streamingAssetsPath, "Solutions", fileName);
 
     if (!File.Exists(path)) {
-      Debug.LogError($"[SolutionController] Solution file not found: {path}\n" +
-                     "Make sure to run the Solver from the Test Runner or Editor Menu first.");
+      Debug.LogError(
+          $"[SolutionController] Solution file not found: {path}\n" +
+          "Make sure to run the Solver from the Test Runner or Editor Menu first.");
       yield break;
     }
 
@@ -80,7 +83,7 @@ public class SolutionController : MonoBehaviour {
     }
 
     Debug.Log(
-      $"[SolutionController] Playing solution for '{data.LevelName}' ({data.StepCount} moves)...");
+        $"[SolutionController] Playing solution for '{data.LevelName}' ({data.StepCount} moves)...");
 
     // 3. Prepare Game State
     // Disable player input so they don't interfere

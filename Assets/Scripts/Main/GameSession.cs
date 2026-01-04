@@ -2,13 +2,19 @@ using JetBrains.Annotations;
 using UnityEngine;
 
 public class GameSession : MonoBehaviour {
-  [Header("Level Settings")] [SerializeField]
-  private int LevelNumber = 1;
+  [Header("Level Settings")]
+  [field: SerializeField]
+  private int LevelNumber { get; set; } = 1;
 
-  [Header("References")] [SerializeField]
-  private LevelLoader LevelLoader;
+  [Header("References")]
+  [field: SerializeField]
+  private LevelLoader LevelLoader { get; set; }
 
-  [SerializeField] private MenuManager menuManager;
+  [Header("References")]
+  [field: SerializeField]
+  private SolutionController SolutionController { get; set; }
+
+  [field: SerializeField] private MenuManager MenuManager { get; set; }
 
   // ================= STATE =================
   private GameObject[,] VisualGrid;
@@ -18,7 +24,8 @@ public class GameSession : MonoBehaviour {
   [UsedImplicitly]
   private void Awake() {
     if (LevelLoader == null) LevelLoader = GetComponent<LevelLoader>();
-    if (menuManager == null) menuManager = GetComponent<MenuManager>();
+    if (SolutionController == null) SolutionController = GetComponent<SolutionController>();
+    if (MenuManager == null) MenuManager = GetComponent<MenuManager>();
   }
 
   [UsedImplicitly]
@@ -29,12 +36,17 @@ public class GameSession : MonoBehaviour {
   private void LoadLevel() {
     LevelLoader.CleanupLevel(VisualGrid);
 
-    if (LevelLoader.LoadLevel(LevelNumber, out var initialState, out var visualGrid)) {
+    if (LevelLoader.LoadLevel(
+            LevelNumber,
+            out var initialState,
+            out var visualGrid,
+            out var levelName)) {
       CurrentState = initialState;
       VisualGrid = visualGrid;
+      SolutionController.LevelName = levelName;
     }
 
-    menuManager.ResumeGame();
+    MenuManager.ResumeGame();
   }
 
   // ================= CORE UPDATE LOGIC =================
@@ -80,8 +92,8 @@ public class GameSession : MonoBehaviour {
   public void CheckWinCondition() {
     if (CurrentState.IsWin()) {
       Debug.Log("Level Complete!");
-      if (menuManager) {
-        menuManager.WinGame();
+      if (MenuManager) {
+        MenuManager.WinGame();
       }
     }
   }

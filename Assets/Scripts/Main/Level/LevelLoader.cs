@@ -26,16 +26,19 @@ public class LevelLoader : MonoBehaviour {
   public bool LoadLevel(
       int level,
       out SokobanState state,
-      out GameObject[,] visualGrid) {
-    string filePath = Path.Combine(LevelsDirectory, $"Level{level}.txt");
+      out GameObject[,] visualGrid,
+      out string levelName) {
+    state = new SokobanState();
+    visualGrid = null;
+    levelName = $"Level{level}";
+
+    string filePath = Path.Combine(LevelsDirectory, $"{levelName}.txt");
     if (File.Exists(filePath)) {
       return LoadLevelFromFile(filePath, out state, out visualGrid);
-    } else {
-      Debug.LogError($"Level file not found at: {filePath}");
-      state = new SokobanState();
-      visualGrid = null;
-      return false;
     }
+
+    Debug.LogError($"Level file not found at: {filePath}");
+    return false;
   }
 
   public bool LoadLevelFromFile(
