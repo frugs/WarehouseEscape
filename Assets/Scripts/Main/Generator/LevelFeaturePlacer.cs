@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using Random = System.Random;
 
 public class LevelFeaturePlacer {
   private readonly struct FloodFillGridAdapter : IGridGraph {
@@ -28,7 +29,10 @@ public class LevelFeaturePlacer {
       int[,] roomShape,
       int targetCount,
       int holeCount,
-      bool useEntranceExit) {
+      bool useEntranceExit,
+      Random random = null) {
+    random ??= new Random();
+
     int w = roomShape.GetLength(0);
     int h = roomShape.GetLength(1);
     var grid = new TerrainType[w, h];
@@ -95,7 +99,7 @@ public class LevelFeaturePlacer {
       entrancePlaced = true;
     } else {
       // Fallback: Random floor start
-      int pIdx = Random.Range(0, floors.Count);
+      int pIdx = random.Next(0, floors.Count);
       playerPos = floors[pIdx];
       floors.RemoveAt(pIdx);
     }
@@ -112,7 +116,7 @@ public class LevelFeaturePlacer {
     var gridAdapter = new FloodFillGridAdapter(grid);
 
     // Shuffle floors once to randomize candidates
-    floors = floors.OrderBy(_ => Random.value).ToList();
+    floors = floors.OrderBy(_ => random.Next()).ToList();
 
     int attempts = 0;
     int maxAttempts = floors.Count; // Try every floor once
@@ -160,7 +164,7 @@ public class LevelFeaturePlacer {
         // Only if we still need targets
         if (targetsPlaced < targetCount) {
           // Find a floor NOT reachable by the scan (Behind Side)
-          Vector2Int? behindPos = GetUnreachedFloor(floors, candidate);
+          Vector2Int? behindPos = GetUnreachedFloor(floors, candidate, random);
 
           if (behindPos.HasValue) {
             grid[behindPos.Value.x, behindPos.Value.y] = TerrainType.Target;
@@ -174,7 +178,7 @@ public class LevelFeaturePlacer {
         if (crates.Count < totalBoxes) {
           // Find a floor REACHABLE by the scan (Player Side)
           // We can pick directly from the scanner's result list
-          Vector2Int? playerSidePos = GetReachedFloor(floors, candidate);
+          Vector2Int? playerSidePos = GetReachedFloor(floors, candidate, random);
 
           if (playerSidePos.HasValue) {
             crates.Add(playerSidePos.Value);
@@ -204,7 +208,7 @@ public class LevelFeaturePlacer {
 
     // Fill remaining holes (randomly)
     while (holes.Count < holeCount && floors.Count > 0) {
-      int r = Random.Range(0, floors.Count);
+      int r = random.Next(0, floors.Count);
       var hole = floors[r];
       grid[hole.x, hole.y] = TerrainType.Hole;
       holes.Add(hole);
@@ -213,7 +217,7 @@ public class LevelFeaturePlacer {
 
     // Fill remaining targets (randomly)
     while (targetsPlaced < targetCount && floors.Count > 0) {
-      int r = Random.Range(0, floors.Count);
+      int r = random.Next(0, floors.Count);
       grid[floors[r].x, floors[r].y] = TerrainType.Target;
       floors.RemoveAt(r);
       targetsPlaced++;
@@ -221,7 +225,7 @@ public class LevelFeaturePlacer {
 
     // Fill remaining boxes (randomly)
     while (crates.Count < totalBoxes && floors.Count > 0) {
-      int r = Random.Range(0, floors.Count);
+      int r = random.Next(0, floors.Count);
       crates.Add(floors[r]);
       floors.RemoveAt(r);
     }
@@ -240,9 +244,12 @@ public class LevelFeaturePlacer {
   /// Finds a floor in the list that was visited by the last scan.
   /// Uses O(1) lookup via scanner.IsVisited.
   /// </summary>
-  private Vector2Int? GetReachedFloor(List<Vector2Int> availableFloors, Vector2Int excludePos) {
-    // Optimization: Pick a random index and linear scan to avoid re-allocating a list
-    int startIdx = Random.Range(0, availableFloors.Count);
+  // Optimization: Pick a random index and linear scan to avoid re-allocating a list
+  private Vector2Int? GetReachedFloor(
+      List<Vector2Int> availableFloors,
+      Vector2Int excludePos,
+      Random random) {
+    int startIdx = random.Next(0, availableFloors.Count);
     for (int i = 0; i < availableFloors.Count; i++) {
       int idx = (startIdx + i) % availableFloors.Count;
       Vector2Int f = availableFloors[idx];
@@ -258,8 +265,11 @@ public class LevelFeaturePlacer {
   /// <summary>
   /// Finds a floor in the list that was NOT visited by the last scan.
   /// </summary>
-  private Vector2Int? GetUnreachedFloor(List<Vector2Int> availableFloors, Vector2Int excludePos) {
-    int startIdx = Random.Range(0, availableFloors.Count);
+  private Vector2Int? GetUnreachedFloor(
+      List<Vector2Int> availableFloors,
+      Vector2Int excludePos,
+      Random random) {
+    int startIdx = random.Next(0, availableFloors.Count);
     for (int i = 0; i < availableFloors.Count; i++) {
       int idx = (startIdx + i) % availableFloors.Count;
       Vector2Int f = availableFloors[idx];

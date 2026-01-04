@@ -1,8 +1,12 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+using Random = System.Random;
+
 public class LevelLayoutGenerator {
-  public int[,] GenerateLayout(int w, int h) {
+  public int[,] GenerateLayout(int w, int h, Random random = null) {
+    random ??= new Random();
+
     int[,] map = new int[w, h]; // 0 by default (Wall)
 
     // Try to place templates until full or timeout
@@ -12,13 +16,13 @@ public class LevelLayoutGenerator {
     // Stop if density > 40% (example) or failures > 100
     while (failureCount < 100 && placedCount < (w * h) / 3) {
       var templates = GeneratorTemplates.Templates;
-      var template = templates[Random.Range(0, templates.Count)];
-      template = Rotate(template, Random.Range(0, 4));
+      var template = templates[random.Next(0, templates.Count)];
+      template = Rotate(template, random.Next(0, 4));
 
       int tW = template.GetLength(0);
       int tH = template.GetLength(1);
-      int x = Random.Range(0, w - tW);
-      int y = Random.Range(0, h - tH);
+      int x = random.Next(0, w - tW);
+      int y = random.Next(0, h - tH);
 
       if (CanPlace(map, template, x, y)) {
         Place(map, template, x, y);

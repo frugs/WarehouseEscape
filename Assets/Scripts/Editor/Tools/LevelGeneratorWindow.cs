@@ -1,17 +1,24 @@
+using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
 using JetBrains.Annotations;
 using UnityEditor;
 using UnityEngine;
+using Random = UnityEngine.Random;
 
 public class LevelGeneratorWindow : EditorWindow {
   private int MaxSize { get; set; } = 40;
-  private int TargetCount { get; set; } = 3;
+  private int TargetCount { get; set; } = 5;
   private int HoleCount { get; set; } = 2;
   private bool UseEntranceExit { get; set; } = true;
   private string LevelName { get; set; } = "GeneratedLevel";
+  private bool MultiThreading { get; set; } = true;
   private bool UseFixedSeed { get; set; }
   private int Seed { get; set; } = 12345;
+
+  private bool _isGenerating;
 
   [MenuItem("Sokoban/Open Generator")]
   public static void ShowWindow() {
@@ -31,6 +38,8 @@ public class LevelGeneratorWindow : EditorWindow {
     EditorGUILayout.Space();
     GUILayout.Label("Debug Settings", EditorStyles.boldLabel);
 
+    MultiThreading = EditorGUILayout.Toggle("Use multi-threaded generation", MultiThreading);
+
     EditorGUILayout.BeginHorizontal();
     UseFixedSeed = EditorGUILayout.Toggle("Use Fixed Seed", UseFixedSeed);
     if (UseFixedSeed) {
@@ -47,6 +56,8 @@ public class LevelGeneratorWindow : EditorWindow {
 
     EditorGUILayout.Space();
 
+    EditorGUI.BeginDisabledGroup(_isGenerating);
+
     if (GUILayout.Button("Generate & Print to Log")) {
       GenerateAndLog();
     }
@@ -54,43 +65,155 @@ public class LevelGeneratorWindow : EditorWindow {
     if (GUILayout.Button("Generate & Save to File")) {
       GenerateAndSave();
     }
+
+    EditorGUI.EndDisabledGroup();
+
+    // Spinner
+    if (_isGenerating) {
+      EditorGUILayout.Space();
+
+      DrawSpinner();
+    }
   }
 
-  private SokobanState? GenerateState() {
-    var generator = new SokobanLevelGenerator();
+  private async Task<SokobanState?> GenerateState() {
+    try {
+      _isGenerating = true;
 
-    int? seedToUse = UseFixedSeed ? Seed : null;
-    return generator.GenerateLevel(MaxSize, MaxSize, TargetCount, HoleCount, UseEntranceExit, seedToUse);
+      if (MultiThreading) {
+        const int timeOutMs = 65_000;
+        using var cts = new CancellationTokenSource();
+        cts.CancelAfter(timeOutMs);
+
+        var result = await GenerateStateAsync(cts);
+
+        if (result == null && cts.IsCancellationRequested) {
+          Debug.Log($"Cancelled generation after {timeOutMs}ms");
+        }
+
+        return result;
+      } else {
+        var generator = new SokobanLevelGenerator();
+
+        int? seedToUse = UseFixedSeed ? Seed : null;
+        return generator.GenerateLevel(
+            MaxSize,
+            MaxSize,
+            TargetCount,
+            HoleCount,
+            UseEntranceExit,
+            seedToUse);
+      }
+    } finally {
+      _isGenerating = false;
+    }
   }
 
-  private void GenerateAndLog() {
-    var maybeState = GenerateState();
-    if (maybeState == null) return;
+  private async Task<SokobanState?> GenerateStateAsync(CancellationTokenSource cts = null) {
+    var cancellation = cts?.Token ?? CancellationToken.None;
+    int threadCount = Environment.ProcessorCount;
+    int baseSeed = UseFixedSeed ? Seed : Random.Range(0, int.MaxValue);
 
-    var state = (SokobanState)maybeState;
-    var stringWriter = new StringWriter();
-    WriteOutState(state, stringWriter);
+    List<Task<SokobanState?>> tasks = new List<Task<SokobanState?>>();
 
-    Debug.Log(stringWriter.ToString());
-  }
+    Debug.Log($"Starting generation on {threadCount} threads...");
 
-  private void GenerateAndSave() {
-    var maybeState = GenerateState();
-    if (maybeState == null) return;
+    for (int i = 0; i < threadCount; i++) {
+      // Capture loop variable
+      int threadIndex = i;
 
-    var state = (SokobanState)maybeState;
+      tasks.Add(
+          Task.Run(
+              () => {
+                // Create a dedicated generator for this thread
+                var generator = new SokobanLevelGenerator();
+                // Offset seed so threads don't generate identical levels
+                int threadSeed = baseSeed + (threadIndex * 1123);
 
-    string folder = Path.Combine(Application.dataPath, "Levels");
-    if (!Directory.Exists(folder)) Directory.CreateDirectory(folder);
-
-    string path = Path.Combine(folder, LevelName + ".txt");
-
-    using (StreamWriter writer = new StreamWriter(path)) {
-      WriteOutState(state, writer);
+                return generator.GenerateLevel(
+                    MaxSize,
+                    MaxSize, // assuming width=height based on your code
+                    TargetCount,
+                    HoleCount,
+                    UseEntranceExit,
+                    threadSeed,
+                    // ReSharper disable once AccessToDisposedClosure
+                    cancellation
+                );
+              },
+              cancellation));
     }
 
-    AssetDatabase.Refresh();
-    Debug.Log($"Saved level to {path}");
+    // Wait for the first task to return a valid result
+    SokobanState? result = await WaitForFirstSuccess(tasks, cts);
+    return result;
+  }
+
+  private async Task<SokobanState?> WaitForFirstSuccess(
+      List<Task<SokobanState?>> tasks,
+      CancellationTokenSource cts) {
+    var remainingTasks = new List<Task<SokobanState?>>(tasks);
+
+    while (remainingTasks.Count > 0) {
+      // Wait for any task to complete
+      Task<SokobanState?> completedTask = await Task.WhenAny(remainingTasks);
+      remainingTasks.Remove(completedTask);
+
+      // If it completed successfully (didn't crash/cancel)
+      if (completedTask.Status == TaskStatus.RanToCompletion) {
+        var result = completedTask.Result;
+        if (result != null) {
+          // We found a level! Cancel all other threads.
+          cts.Cancel();
+
+          await Task.WhenAll(remainingTasks);
+          return result;
+        }
+      }
+
+      // If we are here, the task either failed, was cancelled,
+      // or returned null (exhausted attempts). We loop and wait for the next one.
+    }
+
+    return null; // All threads failed
+  }
+
+  private async void GenerateAndLog() {
+    try {
+      var maybeState = await GenerateState();
+      if (maybeState == null) return;
+
+      var state = (SokobanState)maybeState;
+      var stringWriter = new StringWriter();
+      WriteOutState(state, stringWriter);
+
+      Debug.Log(stringWriter.ToString());
+    } catch (Exception e) {
+      Debug.LogError(e);
+    }
+  }
+
+  private async void GenerateAndSave() {
+    try {
+      var maybeState = await GenerateState();
+      if (maybeState == null) return;
+
+      var state = (SokobanState)maybeState;
+
+      string folder = Path.Combine(Application.dataPath, "Levels");
+      if (!Directory.Exists(folder)) Directory.CreateDirectory(folder);
+
+      string path = Path.Combine(folder, LevelName + ".txt");
+
+      await using (StreamWriter writer = new StreamWriter(path)) {
+        WriteOutState(state, writer);
+      }
+
+      AssetDatabase.Refresh();
+      Debug.Log($"Saved level to {path}");
+    } catch (Exception e) {
+      Debug.LogError(e);
+    }
   }
 
   private void WriteOutState(SokobanState state, TextWriter writer) {
@@ -131,5 +254,35 @@ public class LevelGeneratorWindow : EditorWindow {
     if (isPlayer) return 'P';
     if (isCrate) return 'B';
     return '.'; // Empty Floor
+  }
+
+  private void DrawSpinner() {
+    // 1. Calculate the frame index (0 to 11) based on time
+    // Adjust '12.0f' to make it faster or slower
+    int frame = (int)(EditorApplication.timeSinceStartup * 12.0f) % 12;
+
+    // 2. Get the internal Unity icon for this frame
+    // "WaitSpin00" through "WaitSpin11" are standard editor assets
+    string iconName = "WaitSpin" + frame.ToString("00");
+    Texture2D icon = EditorGUIUtility.FindTexture(iconName);
+
+    // 3. Center the spinner in the layout
+    GUILayout.BeginHorizontal();
+    GUILayout.FlexibleSpace(); // Push to center
+
+    if (icon != null) {
+      // Draw the texture with a specific size (e.g., 24x24)
+      GUILayout.Label(icon, GUILayout.Width(24), GUILayout.Height(24));
+    }
+
+    // Optional: Add text next to it
+    GUILayout.Label(" Generating Level...", EditorStyles.boldLabel);
+
+    GUILayout.FlexibleSpace(); // Push to center
+    GUILayout.EndHorizontal();
+
+    // CRITICAL: Force the window to redraw immediately so the animation plays
+    // Without this, it will only update when you move the mouse
+    Repaint();
   }
 }

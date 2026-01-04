@@ -1,5 +1,6 @@
 using System.Diagnostics;
-using UnityEngine;
+using System.Threading;
+using Random = System.Random;
 
 public class SokobanLevelGenerator {
   private const int AttemptsPerLevel = 5000;
@@ -14,19 +15,25 @@ public class SokobanLevelGenerator {
   public SokobanState? GenerateLevel(
       int minSize = 6,
       int maxSize = 12,
-      int targetCount = 3,
+      int targetCount = 5,
       int holeCount = 2,
       bool useEntranceExit = true,
-      int? seed = null) {
+      int? seed = null,
+      CancellationToken cancellation = default) {
     const int TimeoutMs = 60_000;
     Stopwatch timer = Stopwatch.StartNew();
 
+    var random = seed.HasValue ? new Random(seed.Value) : new Random();
     if (seed.HasValue) {
-      Random.InitState(seed.Value);
       UnityEngine.Debug.Log($"Generator seeded with: {seed.Value}");
     }
 
     for (int i = 0; i < AttemptsPerLevel; i++) {
+      if (cancellation.IsCancellationRequested) {
+        UnityEngine.Debug.Log($"Cancelled after {i} attempts");
+        return null;
+      }
+
       var attemptStart = timer.ElapsedMilliseconds;
 
       if (timer.ElapsedMilliseconds > TimeoutMs) {
@@ -36,8 +43,8 @@ public class SokobanLevelGenerator {
       }
 
       // 1. Create Room Structure
-      int maxWidth = Random.Range(minSize, maxSize);
-      int maxHeight = Random.Range(minSize, maxSize);
+      int maxWidth = random.Next(minSize, maxSize);
+      int maxHeight = random.Next(minSize, maxSize);
       var roomLayout = _roomLayoutGenerator.GenerateLayout(maxWidth, maxHeight);
 
       UnityEngine.Debug.Log($"Generated layout in {timer.ElapsedMilliseconds - attemptStart}ms");
@@ -60,7 +67,10 @@ public class SokobanLevelGenerator {
       var solver = new SokobanSolver();
       var state = (SokobanState)maybeState;
 
-      if (solver.IsSolvable(state, GeneratorSolverLimit)) {
+      if (solver.IsSolvable(
+              state,
+              maxIterations: GeneratorSolverLimit,
+              cancellation: cancellation)) {
         UnityEngine.Debug.Log(
             $"Generated solvable level in {i + 1} attempts and {timer.ElapsedMilliseconds}ms.");
 

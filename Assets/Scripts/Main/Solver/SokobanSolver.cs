@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Threading;
 using UnityEngine;
 using UnityEngine.Pool;
 
@@ -27,8 +28,9 @@ public class SokobanSolver {
   public bool IsSolvable(
       SokobanState state,
       int maxIterations = MAX_ITERATIONS,
-      long timeoutMs = MAX_MS) {
-    var solution = FindSolutionPath(state, maxIterations, timeoutMs);
+      long timeoutMs = MAX_MS,
+      CancellationToken cancellation = default) {
+    var solution = FindSolutionPath(state, maxIterations, timeoutMs, cancellation);
     return solution != null;
   }
 
@@ -39,7 +41,8 @@ public class SokobanSolver {
   public List<SokobanMove> FindSolutionPath(
       SokobanState initialState,
       int maxIterations = MAX_ITERATIONS,
-      long timeoutMs = MAX_MS) {
+      long timeoutMs = MAX_MS,
+      CancellationToken cancellation = default) {
     // 1. Setup
     var parentMap = new Dictionary<SokobanState, PathNode>();
     var visited = new HashSet<SokobanState>();
@@ -113,9 +116,11 @@ public class SokobanSolver {
 
     // 3. BFS Loop
     while (queue.Count > 0) {
+      if (cancellation.IsCancellationRequested) return null;
+
       if ((maxIterations > 0 && ++iterations > maxIterations) ||
           (timeoutMs > 0 && timer.ElapsedMilliseconds > MAX_MS)) {
-        UnityEngine.Debug.LogError(
+        UnityEngine.Debug.Log(
             $"Solver Timeout! Checked {statesExplored} states in {timer.ElapsedMilliseconds}ms.");
         return null; // Give up
       }
