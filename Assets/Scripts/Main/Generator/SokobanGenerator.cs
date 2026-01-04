@@ -5,7 +5,7 @@ using UnityEngine;
 
 public class SokobanGenerator {
   private const int AttemptsPerLevel = 5000;
-  private const int GeneratorSolverLimit = 25_000;
+  private const int GeneratorSolverLimit = 10_000;
 
   /// <summary>
   /// Generates a valid, solvable Sokoban level.
