@@ -283,7 +283,7 @@ public class TerrainMeshBuilder : MonoBehaviour {
 
     // For holes, if neighbor is NOT a hole, we see the side
     bool isEdge = nx < 0 || nx >= width || ny < 0 || ny >= height;
-    if (isEdge || grid[nx, ny] != TerrainType.Hole) {
+    if (isEdge || !grid[nx, ny].IsHole()) {
       Vector3 center = GridToWorld(x, y, 0);
       Vector3 faceCenter = center + (dirNormal * 0.5f) + (Vector3.down * (HoleDepth / 2));
       // Invert normal because we are looking INTO the hole
