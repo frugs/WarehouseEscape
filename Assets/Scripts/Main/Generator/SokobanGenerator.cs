@@ -15,9 +15,16 @@ public class SokobanGenerator {
       int minSize = 6,
       int maxSize = 12,
       int targetCount = 3,
-      int holeCount = 2) {
+      int holeCount = 2,
+      bool useEntranceExit = true,
+      int? seed = null) {
     const int TimeoutMs = 60_000;
     Stopwatch timer = Stopwatch.StartNew();
+
+    if (seed.HasValue) {
+      Random.InitState(seed.Value);
+      UnityEngine.Debug.Log($"Generator seeded with: {seed.Value}");
+    }
 
     for (int i = 0; i < AttemptsPerLevel; i++) {
       if (timer.ElapsedMilliseconds > TimeoutMs) {
@@ -32,7 +39,7 @@ public class SokobanGenerator {
       var roomShape = GenerateRoomShape(maxWidth, maxHeight);
 
       // 2. Populate (Player, crates, Goals)
-      var maybeState = PopulateLevel(roomShape, targetCount, holeCount);
+      var maybeState = PopulateLevel(roomShape, targetCount, holeCount, useEntranceExit);
 
       if (maybeState == null) continue; // Population failed (no space)
       var state = (SokobanState)maybeState;
@@ -241,11 +248,16 @@ public class SokobanGenerator {
   /// <summary>
   /// Populates a room shape with Player, Holes, Targets, and Boxes using structural heuristics.
   /// </summary>
-  private SokobanState? PopulateLevel(int[,] roomShape, int targetCount, int holeCount) {
+  private SokobanState? PopulateLevel(
+      int[,] roomShape,
+      int targetCount,
+      int holeCount,
+      bool useEntranceExit) {
     int w = roomShape.GetLength(0);
     int h = roomShape.GetLength(1);
     TerrainType[,] grid = new TerrainType[w, h];
     List<Vector2Int> floors = new List<Vector2Int>();
+    List<Vector2Int> entranceExitCandidates = new List<Vector2Int>();
 
     // 1. Initialize Grid & Collect Floor Candidates
     for (int x = 0; x < w; x++) {
@@ -260,21 +272,67 @@ public class SokobanGenerator {
       }
     }
 
+    // 2. Identify valid Entrance & Exit candidates (Walls adjacent to at least one floor)
+    for (int x = 0; x < w; x++) {
+      for (int y = 0; y < h; y++) {
+        if (grid[x, y] == TerrainType.Wall && HasAdjacentFloor(grid, x, y)) {
+          entranceExitCandidates.Add(new Vector2Int(x, y));
+        }
+      }
+    }
+
     int totalBoxes = targetCount + holeCount;
     // Basic capacity check: 1 Player + N Targets + M Holes + (N+M) Boxes
     if (floors.Count < 1 + targetCount + holeCount + totalBoxes) return null;
 
-    // 2. Place Player FIRST (Randomly)
-    // We need the player position to determine "Player Side" vs "Behind Hole"
-    int pIdx = Random.Range(0, floors.Count);
-    Vector2Int playerPos = floors[pIdx];
-    floors.RemoveAt(pIdx);
+    Vector2Int playerPos;
+    bool entrancePlaced = false;
+
+    // 3. Place Entrance and Exit (Deterministic Min/Max)
+    if (useEntranceExit && entranceExitCandidates.Count >= 2) {
+      // Entrance: Min X -> Min Y
+      Vector2Int bestEnt = entranceExitCandidates
+          .OrderBy(v => v.x)
+          .ThenBy(v => v.y)
+          .First();
+
+      // Exit: Max X -> Max Y
+      Vector2Int bestExit = entranceExitCandidates
+          .OrderByDescending(v => v.x)
+          .ThenByDescending(v => v.y)
+          .First();
+
+      // Edge case safety (e.g. tiny 1x2 map): Ensure Exit != Entrance
+      if (bestEnt == bestExit && entranceExitCandidates.Count > 1) {
+        bestExit = entranceExitCandidates
+            .OrderByDescending(v => v.x)
+            .ThenByDescending(v => v.y)
+            .Skip(1) // Pick the second best
+            .First();
+      }
+
+      grid[bestEnt.x, bestEnt.y] = TerrainType.Entrance;
+      grid[bestExit.x, bestExit.y] = TerrainType.Exit;
+
+      playerPos = bestEnt; // Player starts on the Entrance tile
+      entrancePlaced = true;
+    } else {
+      // Fallback: Random floor start
+      int pIdx = Random.Range(0, floors.Count);
+      playerPos = floors[pIdx];
+      floors.RemoveAt(pIdx);
+    }
 
     // 3. Identify Structural Cut Vertices (Hole Candidates)
     // A cut vertex is a floor tile that, if removed, splits the reachable area from the player.
     List<Vector2Int> validCuts = new List<Vector2Int>();
+
+    // Entrance/Exit placed, we have 1 extra reachable node (Exit)
+    // that isn't in the 'floors' list.
+    int extraNodes = entrancePlaced ? 1 : 0;
+
     foreach (var f in floors) {
-      if (IsCutVertexForPlayer(grid, f, playerPos, floors))
+      if (IsCutVertexForPlayer(grid, f, playerPos, floors, extraNodes))
         validCuts.Add(f);
     }
 
@@ -350,6 +408,26 @@ public class SokobanGenerator {
 
   // ---------------- Helper Methods ----------------
 
+  private bool HasAdjacentFloor(TerrainType[,] grid, int x, int y) {
+    int w = grid.GetLength(0);
+    int h = grid.GetLength(1);
+    // Up, Down, Left, Right
+    int[] dx = { 0, 0, 1, -1 };
+    int[] dy = { 1, -1, 0, 0 };
+
+    for (int i = 0; i < 4; i++) {
+      int nx = x + dx[i];
+      int ny = y + dy[i];
+      if (nx >= 0 && nx < w && ny >= 0 && ny < h) {
+        // We only care about base floors, but technically Targets/Holes haven't been placed yet.
+        // At this stage, everything non-wall is just 'Floor'.
+        if (grid[nx, ny] == TerrainType.Floor) return true;
+      }
+    }
+
+    return false;
+  }
+
   /// <summary>
   /// Returns true if removing 'candidate' makes some floors unreachable from 'playerPos'.
   /// </summary>
@@ -357,14 +435,12 @@ public class SokobanGenerator {
       TerrainType[,] grid,
       Vector2Int candidate,
       Vector2Int playerPos,
-      List<Vector2Int> availableFloors) {
+      List<Vector2Int> availableFloors,
+      int extraNodesCount = 0) {
     // availableFloors contains ALL floors currently available (including candidate).
     // If graph is connected, CountReachable should equal (availableFloors.Count - 1).
     // If it's less, removing 'candidate' disconnected something.
-
-    // Note: We +1 to availableFloors count to account for the PlayerPos itself which isn't in 'availableFloors' list
-    // but IS reachable.
-    int totalReachableNodes = availableFloors.Count; // floors list + player
+    int totalReachableNodes = availableFloors.Count + extraNodesCount; // floors list + player
 
     int reachable = CountReachable(grid, playerPos, ignore: candidate);
 

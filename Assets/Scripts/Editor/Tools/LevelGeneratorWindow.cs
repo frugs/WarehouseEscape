@@ -5,10 +5,13 @@ using UnityEditor;
 using UnityEngine;
 
 public class LevelGeneratorWindow : EditorWindow {
-  private int MaxSize = 40;
-  private int TargetCount = 3;
-  private int HoleCount = 2;
-  private string LevelName = "GeneratedLevel";
+  private int MaxSize { get; set; } = 40;
+  private int TargetCount { get; set; } = 3;
+  private int HoleCount { get; set; } = 2;
+  private bool UseEntranceExit { get; set; } = true;
+  private string LevelName { get; set; } = "GeneratedLevel";
+  private bool UseFixedSeed { get; set; } = false;
+  private int Seed { get; set; } = 12345;
 
   [MenuItem("Sokoban/Open Generator")]
   public static void ShowWindow() {
@@ -17,11 +20,24 @@ public class LevelGeneratorWindow : EditorWindow {
 
   [UsedImplicitly]
   private void OnGUI() {
+    LevelName = EditorGUILayout.TextField("Level Name", LevelName);
+
     GUILayout.Label("Level Settings", EditorStyles.boldLabel);
     MaxSize = EditorGUILayout.IntField("Max Size", MaxSize);
     TargetCount = EditorGUILayout.IntField("Target Count", TargetCount);
     HoleCount = EditorGUILayout.IntField("Hole Count", HoleCount);
-    LevelName = EditorGUILayout.TextField("Level Name", LevelName);
+    UseEntranceExit = EditorGUILayout.Toggle("Add Entrance/Exit", UseEntranceExit);
+
+    EditorGUILayout.Space();
+    GUILayout.Label("Debug Settings", EditorStyles.boldLabel);
+
+    EditorGUILayout.BeginHorizontal();
+    UseFixedSeed = EditorGUILayout.Toggle("Use Fixed Seed", UseFixedSeed);
+    if (UseFixedSeed) {
+      Seed = EditorGUILayout.IntField(Seed);
+    }
+
+    EditorGUILayout.EndHorizontal();
 
     EditorGUILayout.Space();
 
@@ -36,7 +52,9 @@ public class LevelGeneratorWindow : EditorWindow {
 
   private SokobanState? GenerateState() {
     var generator = new SokobanGenerator();
-    return generator.Generate(MaxSize, MaxSize, TargetCount, HoleCount);
+
+    int? seedToUse = UseFixedSeed ? Seed : (int?)null;
+    return generator.Generate(MaxSize, MaxSize, TargetCount, HoleCount, UseEntranceExit, seedToUse);
   }
 
   private void GenerateAndLog() {
@@ -91,6 +109,9 @@ public class LevelGeneratorWindow : EditorWindow {
     TerrainType t = state.TerrainGrid[x, y];
     bool isPlayer = state.IsPlayerAt(x, y);
     bool isCrate = state.IsCrateAt(x, y);
+
+    if (t == TerrainType.Entrance) return '>';
+    if (t == TerrainType.Exit) return '<';
 
     if (t == TerrainType.Wall) return '#';
     if (t == TerrainType.Hole) return 'H';
