@@ -3,7 +3,7 @@ using UnityEngine;
 
 public class SokobanLevelGenerator {
   private const int AttemptsPerLevel = 5000;
-  private const int GeneratorSolverLimit = 10_000;
+  private const int GeneratorSolverLimit = 1500;
   private readonly LevelLayoutGenerator _roomLayoutGenerator = new();
   private readonly LevelFeaturePlacer _roomFeaturePlacer = new();
 

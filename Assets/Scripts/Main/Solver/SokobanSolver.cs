@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using UnityEngine;
@@ -42,12 +43,47 @@ public class SokobanSolver {
     // 1. Setup
     var parentMap = new Dictionary<SokobanState, PathNode>();
     var visited = new HashSet<SokobanState>();
-    var queue = new Queue<SolverContext>();
+    var queue = new PriorityQueue<SolverContext, int>();
     var width = initialState.GridWidth;
     var height = initialState.GridHeight;
     int statesExplored = 0;
 
     var walkableAreaScanner = new WalkableAreaScanner();
+
+    var targets = new List<Vector2Int>();
+    var holes = new List<Vector2Int>();
+    for (int x = 0; x < width; x++)
+    for (int y = 0; y < height; y++) {
+      var t = initialState.TerrainGrid[x, y];
+      if (t.IsTarget()) {
+        targets.Add(new Vector2Int(x, y));
+      }
+
+      if (t.IsTrueHole()) {
+        holes.Add(new Vector2Int(x, y));
+      }
+    }
+
+    int GetHeuristic(SokobanState s) {
+      int cost = 0;
+      foreach (var crate in s.CratePositions) {
+        int best = int.MaxValue;
+
+        foreach (var target in targets) {
+          int d = Math.Abs(crate.x - target.x) + Math.Abs(crate.y - target.y);
+          if (d < best) best = d;
+        }
+
+        foreach (var hole in holes) {
+          int d = Math.Abs(crate.x - hole.x) + Math.Abs(crate.y - hole.y);
+          if (d < best) best = d;
+        }
+
+        cost += best;
+      }
+
+      return cost;
+    }
 
     // 2. Canonicalize Start State
     // We convert the initial raw state into a canonical state (player at top-left-most reachable pos)
@@ -63,7 +99,8 @@ public class SokobanSolver {
     queue.Enqueue(
         new SolverContext() {
             CanonicalState = canonicalStart, RawState = initialState, WalkableArea = walkable
-        });
+        },
+        GetHeuristic(canonicalStart));
     visited.Add(canonicalStart);
 
     // Note: The parentMap stores the path of CANONICAL states.
@@ -155,7 +192,8 @@ public class SokobanSolver {
                         CanonicalState = nextCanonical,
                         RawState = nextRawState,
                         WalkableArea = nextWalkableCopy
-                    });
+                    },
+                    GetHeuristic(nextCanonical));
                 parentMap[nextCanonical] =
                     new PathNode { ParentState = currentState, Move = pushMove };
                 visited.Add(nextCanonical);
