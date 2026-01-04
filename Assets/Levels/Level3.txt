@@ -1,10 +1,12 @@
-8 9
-X X X X X X X X
-X h h E E E h X
-> T E B E E h X
-X h h E B T h X
-X T X X B E h X
-X E X E T E h X
-X B E b B B T X
-X E E E T E E <
-X X X X X X X X
+12 11
+# # # # # # # # # # # #
+# . . . . B h h h h h #
+# h . B B h h . . . h #
+> . . . . B H . T . . <
+# h h h h h h H . . h #
+# h h h h h h T . h h #
+# h h h h h . . . T h #
+# h h h h h . . . B h #
+# h h h h h h . . . h #
+# h h h h h h h . h h #
+# # # # # # # # # # # #

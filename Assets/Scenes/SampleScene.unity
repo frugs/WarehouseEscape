@@ -1076,7 +1076,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c76202bea8df2a2479e5a277f7375bff, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GridManager
-  <LevelNumber>k__BackingField: 0
+  <LevelNumber>k__BackingField: 3
   <LevelLoader>k__BackingField: {fileID: 0}
   <SolutionController>k__BackingField: {fileID: 0}
   <MenuManager>k__BackingField: {fileID: 0}

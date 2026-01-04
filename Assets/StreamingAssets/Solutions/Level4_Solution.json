@@ -1,16 +1,16 @@
 {
-    "LevelName": "Level3",
-    "StepCount": 61,
-    "SolveTimeMs": 32,
+    "LevelName": "Level4",
+    "StepCount": 52,
+    "SolveTimeMs": 3393,
     "Moves": [
         {
             "playerFrom": {
                 "x": 0,
-                "y": 3
+                "y": 2
             },
             "playerTo": {
                 "x": 1,
-                "y": 3
+                "y": 2
             },
             "crateFrom": {
                 "x": 0,
@@ -29,11 +29,11 @@
         {
             "playerFrom": {
                 "x": 1,
-                "y": 3
+                "y": 2
             },
             "playerTo": {
                 "x": 2,
-                "y": 3
+                "y": 2
             },
             "crateFrom": {
                 "x": 0,
@@ -52,65 +52,19 @@
         {
             "playerFrom": {
                 "x": 2,
-                "y": 3
+                "y": 2
             },
             "playerTo": {
                 "x": 3,
-                "y": 3
+                "y": 2
             },
             "crateFrom": {
-                "x": 0,
-                "y": 0
-            },
-            "crateTo": {
-                "x": 0,
-                "y": 0
-            },
-            "direction": {
-                "x": 0,
-                "y": 0
-            },
-            "type": 0
-        },
-        {
-            "playerFrom": {
                 "x": 3,
-                "y": 3
-            },
-            "playerTo": {
-                "x": 4,
-                "y": 3
-            },
-            "crateFrom": {
-                "x": 0,
-                "y": 0
+                "y": 2
             },
             "crateTo": {
-                "x": 0,
-                "y": 0
-            },
-            "direction": {
-                "x": 0,
-                "y": 0
-            },
-            "type": 0
-        },
-        {
-            "playerFrom": {
                 "x": 4,
-                "y": 3
-            },
-            "playerTo": {
-                "x": 5,
-                "y": 3
-            },
-            "crateFrom": {
-                "x": 5,
-                "y": 3
-            },
-            "crateTo": {
-                "x": 6,
-                "y": 3
+                "y": 2
             },
             "direction": {
                 "x": 1,
@@ -120,123 +74,8 @@
         },
         {
             "playerFrom": {
-                "x": 5,
-                "y": 3
-            },
-            "playerTo": {
-                "x": 4,
-                "y": 3
-            },
-            "crateFrom": {
-                "x": 0,
-                "y": 0
-            },
-            "crateTo": {
-                "x": 0,
-                "y": 0
-            },
-            "direction": {
-                "x": 0,
-                "y": 0
-            },
-            "type": 0
-        },
-        {
-            "playerFrom": {
-                "x": 4,
-                "y": 3
-            },
-            "playerTo": {
                 "x": 3,
-                "y": 3
-            },
-            "crateFrom": {
-                "x": 0,
-                "y": 0
-            },
-            "crateTo": {
-                "x": 0,
-                "y": 0
-            },
-            "direction": {
-                "x": 0,
-                "y": 0
-            },
-            "type": 0
-        },
-        {
-            "playerFrom": {
-                "x": 3,
-                "y": 3
-            },
-            "playerTo": {
-                "x": 2,
-                "y": 3
-            },
-            "crateFrom": {
-                "x": 0,
-                "y": 0
-            },
-            "crateTo": {
-                "x": 0,
-                "y": 0
-            },
-            "direction": {
-                "x": 0,
-                "y": 0
-            },
-            "type": 0
-        },
-        {
-            "playerFrom": {
-                "x": 2,
-                "y": 3
-            },
-            "playerTo": {
-                "x": 2,
                 "y": 2
-            },
-            "crateFrom": {
-                "x": 0,
-                "y": 0
-            },
-            "crateTo": {
-                "x": 0,
-                "y": 0
-            },
-            "direction": {
-                "x": 0,
-                "y": 0
-            },
-            "type": 0
-        },
-        {
-            "playerFrom": {
-                "x": 2,
-                "y": 2
-            },
-            "playerTo": {
-                "x": 2,
-                "y": 1
-            },
-            "crateFrom": {
-                "x": 0,
-                "y": 0
-            },
-            "crateTo": {
-                "x": 0,
-                "y": 0
-            },
-            "direction": {
-                "x": 0,
-                "y": 0
-            },
-            "type": 0
-        },
-        {
-            "playerFrom": {
-                "x": 2,
-                "y": 1
             },
             "playerTo": {
                 "x": 3,
@@ -262,32 +101,9 @@
                 "y": 1
             },
             "playerTo": {
-                "x": 3,
-                "y": 2
-            },
-            "crateFrom": {
-                "x": 3,
-                "y": 2
-            },
-            "crateTo": {
-                "x": 3,
-                "y": 3
-            },
-            "direction": {
-                "x": 0,
+                "x": 4,
                 "y": 1
             },
-            "type": 1
-        },
-        {
-            "playerFrom": {
-                "x": 3,
-                "y": 2
-            },
-            "playerTo": {
-                "x": 2,
-                "y": 2
-            },
             "crateFrom": {
                 "x": 0,
                 "y": 0
@@ -304,12 +120,12 @@
         },
         {
             "playerFrom": {
-                "x": 2,
-                "y": 2
+                "x": 4,
+                "y": 1
             },
             "playerTo": {
-                "x": 2,
-                "y": 3
+                "x": 5,
+                "y": 1
             },
             "crateFrom": {
                 "x": 0,
@@ -324,129 +140,14 @@
                 "y": 0
             },
             "type": 0
-        },
-        {
-            "playerFrom": {
-                "x": 2,
-                "y": 3
-            },
-            "playerTo": {
-                "x": 3,
-                "y": 3
-            },
-            "crateFrom": {
-                "x": 3,
-                "y": 3
-            },
-            "crateTo": {
-                "x": 4,
-                "y": 3
-            },
-            "direction": {
-                "x": 1,
-                "y": 0
-            },
-            "type": 1
-        },
-        {
-            "playerFrom": {
-                "x": 3,
-                "y": 3
-            },
-            "playerTo": {
-                "x": 4,
-                "y": 3
-            },
-            "crateFrom": {
-                "x": 4,
-                "y": 3
-            },
-            "crateTo": {
-                "x": 5,
-                "y": 3
-            },
-            "direction": {
-                "x": 1,
-                "y": 0
-            },
-            "type": 1
-        },
-        {
-            "playerFrom": {
-                "x": 4,
-                "y": 3
-            },
-            "playerTo": {
-                "x": 5,
-                "y": 3
-            },
-            "crateFrom": {
-                "x": 5,
-                "y": 3
-            },
-            "crateTo": {
-                "x": 6,
-                "y": 3
-            },
-            "direction": {
-                "x": 1,
-                "y": 0
-            },
-            "type": 1
         },
         {
             "playerFrom": {
                 "x": 5,
-                "y": 3
+                "y": 1
             },
             "playerTo": {
-                "x": 6,
-                "y": 3
-            },
-            "crateFrom": {
-                "x": 6,
-                "y": 3
-            },
-            "crateTo": {
-                "x": 7,
-                "y": 3
-            },
-            "direction": {
-                "x": 1,
-                "y": 0
-            },
-            "type": 1
-        },
-        {
-            "playerFrom": {
-                "x": 6,
-                "y": 3
-            },
-            "playerTo": {
-                "x": 7,
-                "y": 3
-            },
-            "crateFrom": {
-                "x": 7,
-                "y": 3
-            },
-            "crateTo": {
-                "x": 8,
-                "y": 3
-            },
-            "direction": {
-                "x": 1,
-                "y": 0
-            },
-            "type": 1
-        },
-        {
-            "playerFrom": {
-                "x": 7,
-                "y": 3
-            },
-            "playerTo": {
-                "x": 7,
+                "x": 5,
                 "y": 2
             },
             "crateFrom": {
@@ -465,273 +166,20 @@
         },
         {
             "playerFrom": {
-                "x": 7,
+                "x": 5,
                 "y": 2
             },
             "playerTo": {
-                "x": 8,
+                "x": 4,
                 "y": 2
             },
             "crateFrom": {
-                "x": 0,
-                "y": 0
-            },
-            "crateTo": {
-                "x": 0,
-                "y": 0
-            },
-            "direction": {
-                "x": 0,
-                "y": 0
-            },
-            "type": 0
-        },
-        {
-            "playerFrom": {
-                "x": 8,
+                "x": 4,
                 "y": 2
             },
-            "playerTo": {
-                "x": 8,
-                "y": 3
-            },
-            "crateFrom": {
-                "x": 8,
-                "y": 3
-            },
             "crateTo": {
-                "x": 8,
-                "y": 4
-            },
-            "direction": {
-                "x": 0,
-                "y": 1
-            },
-            "type": 1
-        },
-        {
-            "playerFrom": {
-                "x": 8,
-                "y": 3
-            },
-            "playerTo": {
-                "x": 8,
-                "y": 4
-            },
-            "crateFrom": {
-                "x": 8,
-                "y": 4
-            },
-            "crateTo": {
-                "x": 8,
-                "y": 5
-            },
-            "direction": {
-                "x": 0,
-                "y": 1
-            },
-            "type": 1
-        },
-        {
-            "playerFrom": {
-                "x": 8,
-                "y": 4
-            },
-            "playerTo": {
-                "x": 8,
-                "y": 5
-            },
-            "crateFrom": {
-                "x": 8,
-                "y": 5
-            },
-            "crateTo": {
-                "x": 8,
-                "y": 6
-            },
-            "direction": {
-                "x": 0,
-                "y": 1
-            },
-            "type": 1
-        },
-        {
-            "playerFrom": {
-                "x": 8,
-                "y": 5
-            },
-            "playerTo": {
-                "x": 8,
-                "y": 6
-            },
-            "crateFrom": {
-                "x": 8,
-                "y": 6
-            },
-            "crateTo": {
-                "x": 8,
-                "y": 7
-            },
-            "direction": {
-                "x": 0,
-                "y": 1
-            },
-            "type": 1
-        },
-        {
-            "playerFrom": {
-                "x": 8,
-                "y": 6
-            },
-            "playerTo": {
-                "x": 7,
-                "y": 6
-            },
-            "crateFrom": {
-                "x": 0,
-                "y": 0
-            },
-            "crateTo": {
-                "x": 0,
-                "y": 0
-            },
-            "direction": {
-                "x": 0,
-                "y": 0
-            },
-            "type": 0
-        },
-        {
-            "playerFrom": {
-                "x": 7,
-                "y": 6
-            },
-            "playerTo": {
-                "x": 7,
-                "y": 7
-            },
-            "crateFrom": {
-                "x": 0,
-                "y": 0
-            },
-            "crateTo": {
-                "x": 0,
-                "y": 0
-            },
-            "direction": {
-                "x": 0,
-                "y": 0
-            },
-            "type": 0
-        },
-        {
-            "playerFrom": {
-                "x": 7,
-                "y": 7
-            },
-            "playerTo": {
-                "x": 7,
-                "y": 8
-            },
-            "crateFrom": {
-                "x": 0,
-                "y": 0
-            },
-            "crateTo": {
-                "x": 0,
-                "y": 0
-            },
-            "direction": {
-                "x": 0,
-                "y": 0
-            },
-            "type": 0
-        },
-        {
-            "playerFrom": {
-                "x": 7,
-                "y": 8
-            },
-            "playerTo": {
-                "x": 8,
-                "y": 8
-            },
-            "crateFrom": {
-                "x": 0,
-                "y": 0
-            },
-            "crateTo": {
-                "x": 0,
-                "y": 0
-            },
-            "direction": {
-                "x": 0,
-                "y": 0
-            },
-            "type": 0
-        },
-        {
-            "playerFrom": {
-                "x": 8,
-                "y": 8
-            },
-            "playerTo": {
-                "x": 9,
-                "y": 8
-            },
-            "crateFrom": {
-                "x": 0,
-                "y": 0
-            },
-            "crateTo": {
-                "x": 0,
-                "y": 0
-            },
-            "direction": {
-                "x": 0,
-                "y": 0
-            },
-            "type": 0
-        },
-        {
-            "playerFrom": {
-                "x": 9,
-                "y": 8
-            },
-            "playerTo": {
-                "x": 9,
-                "y": 7
-            },
-            "crateFrom": {
-                "x": 9,
-                "y": 7
-            },
-            "crateTo": {
-                "x": 9,
-                "y": 6
-            },
-            "direction": {
-                "x": 0,
-                "y": -1
-            },
-            "type": 1
-        },
-        {
-            "playerFrom": {
-                "x": 9,
-                "y": 7
-            },
-            "playerTo": {
-                "x": 8,
-                "y": 7
-            },
-            "crateFrom": {
-                "x": 8,
-                "y": 7
-            },
-            "crateTo": {
-                "x": 7,
-                "y": 7
+                "x": 3,
+                "y": 2
             },
             "direction": {
                 "x": -1,
@@ -741,104 +189,58 @@
         },
         {
             "playerFrom": {
-                "x": 8,
-                "y": 7
+                "x": 4,
+                "y": 2
             },
             "playerTo": {
-                "x": 8,
-                "y": 8
+                "x": 3,
+                "y": 2
             },
             "crateFrom": {
-                "x": 0,
-                "y": 0
+                "x": 3,
+                "y": 2
             },
             "crateTo": {
-                "x": 0,
-                "y": 0
+                "x": 2,
+                "y": 2
             },
             "direction": {
-                "x": 0,
+                "x": -1,
                 "y": 0
-            },
-            "type": 0
-        },
-        {
-            "playerFrom": {
-                "x": 8,
-                "y": 8
-            },
-            "playerTo": {
-                "x": 7,
-                "y": 8
-            },
-            "crateFrom": {
-                "x": 0,
-                "y": 0
-            },
-            "crateTo": {
-                "x": 0,
-                "y": 0
-            },
-            "direction": {
-                "x": 0,
-                "y": 0
-            },
-            "type": 0
-        },
-        {
-            "playerFrom": {
-                "x": 7,
-                "y": 8
-            },
-            "playerTo": {
-                "x": 7,
-                "y": 7
-            },
-            "crateFrom": {
-                "x": 7,
-                "y": 7
-            },
-            "crateTo": {
-                "x": 7,
-                "y": 6
-            },
-            "direction": {
-                "x": 0,
-                "y": -1
             },
             "type": 1
         },
         {
             "playerFrom": {
-                "x": 7,
-                "y": 7
+                "x": 3,
+                "y": 2
             },
             "playerTo": {
-                "x": 7,
-                "y": 6
+                "x": 2,
+                "y": 2
             },
             "crateFrom": {
-                "x": 7,
-                "y": 6
+                "x": 2,
+                "y": 2
             },
             "crateTo": {
-                "x": 7,
-                "y": 5
+                "x": 1,
+                "y": 2
             },
             "direction": {
-                "x": 0,
-                "y": -1
+                "x": -1,
+                "y": 0
             },
             "type": 1
         },
         {
             "playerFrom": {
-                "x": 7,
-                "y": 6
+                "x": 2,
+                "y": 2
             },
             "playerTo": {
-                "x": 8,
-                "y": 6
+                "x": 3,
+                "y": 2
             },
             "crateFrom": {
                 "x": 0,
@@ -856,12 +258,12 @@
         },
         {
             "playerFrom": {
-                "x": 8,
-                "y": 6
+                "x": 3,
+                "y": 2
             },
             "playerTo": {
-                "x": 8,
-                "y": 5
+                "x": 4,
+                "y": 2
             },
             "crateFrom": {
                 "x": 0,
@@ -879,11 +281,57 @@
         },
         {
             "playerFrom": {
-                "x": 8,
-                "y": 5
+                "x": 4,
+                "y": 2
             },
             "playerTo": {
-                "x": 8,
+                "x": 5,
+                "y": 2
+            },
+            "crateFrom": {
+                "x": 0,
+                "y": 0
+            },
+            "crateTo": {
+                "x": 0,
+                "y": 0
+            },
+            "direction": {
+                "x": 0,
+                "y": 0
+            },
+            "type": 0
+        },
+        {
+            "playerFrom": {
+                "x": 5,
+                "y": 2
+            },
+            "playerTo": {
+                "x": 5,
+                "y": 3
+            },
+            "crateFrom": {
+                "x": 0,
+                "y": 0
+            },
+            "crateTo": {
+                "x": 0,
+                "y": 0
+            },
+            "direction": {
+                "x": 0,
+                "y": 0
+            },
+            "type": 0
+        },
+        {
+            "playerFrom": {
+                "x": 5,
+                "y": 3
+            },
+            "playerTo": {
+                "x": 5,
                 "y": 4
             },
             "crateFrom": {
@@ -902,81 +350,12 @@
         },
         {
             "playerFrom": {
-                "x": 8,
+                "x": 5,
                 "y": 4
             },
             "playerTo": {
-                "x": 8,
-                "y": 3
-            },
-            "crateFrom": {
-                "x": 0,
-                "y": 0
-            },
-            "crateTo": {
-                "x": 0,
-                "y": 0
-            },
-            "direction": {
-                "x": 0,
-                "y": 0
-            },
-            "type": 0
-        },
-        {
-            "playerFrom": {
-                "x": 8,
-                "y": 3
-            },
-            "playerTo": {
-                "x": 7,
-                "y": 3
-            },
-            "crateFrom": {
-                "x": 0,
-                "y": 0
-            },
-            "crateTo": {
-                "x": 0,
-                "y": 0
-            },
-            "direction": {
-                "x": 0,
-                "y": 0
-            },
-            "type": 0
-        },
-        {
-            "playerFrom": {
-                "x": 7,
-                "y": 3
-            },
-            "playerTo": {
-                "x": 6,
-                "y": 3
-            },
-            "crateFrom": {
-                "x": 0,
-                "y": 0
-            },
-            "crateTo": {
-                "x": 0,
-                "y": 0
-            },
-            "direction": {
-                "x": 0,
-                "y": 0
-            },
-            "type": 0
-        },
-        {
-            "playerFrom": {
-                "x": 6,
-                "y": 3
-            },
-            "playerTo": {
                 "x": 5,
-                "y": 3
+                "y": 5
             },
             "crateFrom": {
                 "x": 0,
@@ -995,11 +374,11 @@
         {
             "playerFrom": {
                 "x": 5,
-                "y": 3
+                "y": 5
             },
             "playerTo": {
                 "x": 4,
-                "y": 3
+                "y": 5
             },
             "crateFrom": {
                 "x": 0,
@@ -1018,117 +397,577 @@
         {
             "playerFrom": {
                 "x": 4,
-                "y": 3
-            },
-            "playerTo": {
-                "x": 3,
-                "y": 3
-            },
-            "crateFrom": {
-                "x": 0,
-                "y": 0
-            },
-            "crateTo": {
-                "x": 0,
-                "y": 0
-            },
-            "direction": {
-                "x": 0,
-                "y": 0
-            },
-            "type": 0
-        },
-        {
-            "playerFrom": {
-                "x": 3,
-                "y": 3
-            },
-            "playerTo": {
-                "x": 3,
-                "y": 2
-            },
-            "crateFrom": {
-                "x": 0,
-                "y": 0
-            },
-            "crateTo": {
-                "x": 0,
-                "y": 0
-            },
-            "direction": {
-                "x": 0,
-                "y": 0
-            },
-            "type": 0
-        },
-        {
-            "playerFrom": {
-                "x": 3,
-                "y": 2
-            },
-            "playerTo": {
-                "x": 3,
-                "y": 1
-            },
-            "crateFrom": {
-                "x": 0,
-                "y": 0
-            },
-            "crateTo": {
-                "x": 0,
-                "y": 0
-            },
-            "direction": {
-                "x": 0,
-                "y": 0
-            },
-            "type": 0
-        },
-        {
-            "playerFrom": {
-                "x": 3,
-                "y": 1
+                "y": 5
             },
             "playerTo": {
                 "x": 4,
-                "y": 1
-            },
-            "crateFrom": {
-                "x": 0,
-                "y": 0
-            },
-            "crateTo": {
-                "x": 0,
-                "y": 0
-            },
-            "direction": {
-                "x": 0,
-                "y": 0
-            },
-            "type": 0
-        },
-        {
-            "playerFrom": {
-                "x": 4,
-                "y": 1
-            },
-            "playerTo": {
-                "x": 4,
-                "y": 2
+                "y": 6
             },
             "crateFrom": {
                 "x": 4,
-                "y": 2
+                "y": 6
             },
             "crateTo": {
                 "x": 4,
-                "y": 3
+                "y": 7
             },
             "direction": {
                 "x": 0,
                 "y": 1
             },
             "type": 1
+        },
+        {
+            "playerFrom": {
+                "x": 4,
+                "y": 6
+            },
+            "playerTo": {
+                "x": 3,
+                "y": 6
+            },
+            "crateFrom": {
+                "x": 3,
+                "y": 6
+            },
+            "crateTo": {
+                "x": 2,
+                "y": 6
+            },
+            "direction": {
+                "x": -1,
+                "y": 0
+            },
+            "type": 1
+        },
+        {
+            "playerFrom": {
+                "x": 3,
+                "y": 6
+            },
+            "playerTo": {
+                "x": 4,
+                "y": 6
+            },
+            "crateFrom": {
+                "x": 0,
+                "y": 0
+            },
+            "crateTo": {
+                "x": 0,
+                "y": 0
+            },
+            "direction": {
+                "x": 0,
+                "y": 0
+            },
+            "type": 0
+        },
+        {
+            "playerFrom": {
+                "x": 4,
+                "y": 6
+            },
+            "playerTo": {
+                "x": 5,
+                "y": 6
+            },
+            "crateFrom": {
+                "x": 5,
+                "y": 6
+            },
+            "crateTo": {
+                "x": 6,
+                "y": 6
+            },
+            "direction": {
+                "x": 1,
+                "y": 0
+            },
+            "type": 1
+        },
+        {
+            "playerFrom": {
+                "x": 5,
+                "y": 6
+            },
+            "playerTo": {
+                "x": 4,
+                "y": 6
+            },
+            "crateFrom": {
+                "x": 0,
+                "y": 0
+            },
+            "crateTo": {
+                "x": 0,
+                "y": 0
+            },
+            "direction": {
+                "x": 0,
+                "y": 0
+            },
+            "type": 0
+        },
+        {
+            "playerFrom": {
+                "x": 4,
+                "y": 6
+            },
+            "playerTo": {
+                "x": 3,
+                "y": 6
+            },
+            "crateFrom": {
+                "x": 0,
+                "y": 0
+            },
+            "crateTo": {
+                "x": 0,
+                "y": 0
+            },
+            "direction": {
+                "x": 0,
+                "y": 0
+            },
+            "type": 0
+        },
+        {
+            "playerFrom": {
+                "x": 3,
+                "y": 6
+            },
+            "playerTo": {
+                "x": 3,
+                "y": 7
+            },
+            "crateFrom": {
+                "x": 0,
+                "y": 0
+            },
+            "crateTo": {
+                "x": 0,
+                "y": 0
+            },
+            "direction": {
+                "x": 0,
+                "y": 0
+            },
+            "type": 0
+        },
+        {
+            "playerFrom": {
+                "x": 3,
+                "y": 7
+            },
+            "playerTo": {
+                "x": 2,
+                "y": 7
+            },
+            "crateFrom": {
+                "x": 0,
+                "y": 0
+            },
+            "crateTo": {
+                "x": 0,
+                "y": 0
+            },
+            "direction": {
+                "x": 0,
+                "y": 0
+            },
+            "type": 0
+        },
+        {
+            "playerFrom": {
+                "x": 2,
+                "y": 7
+            },
+            "playerTo": {
+                "x": 1,
+                "y": 7
+            },
+            "crateFrom": {
+                "x": 0,
+                "y": 0
+            },
+            "crateTo": {
+                "x": 0,
+                "y": 0
+            },
+            "direction": {
+                "x": 0,
+                "y": 0
+            },
+            "type": 0
+        },
+        {
+            "playerFrom": {
+                "x": 1,
+                "y": 7
+            },
+            "playerTo": {
+                "x": 1,
+                "y": 6
+            },
+            "crateFrom": {
+                "x": 1,
+                "y": 6
+            },
+            "crateTo": {
+                "x": 1,
+                "y": 5
+            },
+            "direction": {
+                "x": 0,
+                "y": -1
+            },
+            "type": 1
+        },
+        {
+            "playerFrom": {
+                "x": 1,
+                "y": 6
+            },
+            "playerTo": {
+                "x": 1,
+                "y": 5
+            },
+            "crateFrom": {
+                "x": 1,
+                "y": 5
+            },
+            "crateTo": {
+                "x": 1,
+                "y": 4
+            },
+            "direction": {
+                "x": 0,
+                "y": -1
+            },
+            "type": 1
+        },
+        {
+            "playerFrom": {
+                "x": 1,
+                "y": 5
+            },
+            "playerTo": {
+                "x": 1,
+                "y": 6
+            },
+            "crateFrom": {
+                "x": 0,
+                "y": 0
+            },
+            "crateTo": {
+                "x": 0,
+                "y": 0
+            },
+            "direction": {
+                "x": 0,
+                "y": 0
+            },
+            "type": 0
+        },
+        {
+            "playerFrom": {
+                "x": 1,
+                "y": 6
+            },
+            "playerTo": {
+                "x": 2,
+                "y": 6
+            },
+            "crateFrom": {
+                "x": 2,
+                "y": 6
+            },
+            "crateTo": {
+                "x": 3,
+                "y": 6
+            },
+            "direction": {
+                "x": 1,
+                "y": 0
+            },
+            "type": 1
+        },
+        {
+            "playerFrom": {
+                "x": 2,
+                "y": 6
+            },
+            "playerTo": {
+                "x": 3,
+                "y": 6
+            },
+            "crateFrom": {
+                "x": 3,
+                "y": 6
+            },
+            "crateTo": {
+                "x": 4,
+                "y": 6
+            },
+            "direction": {
+                "x": 1,
+                "y": 0
+            },
+            "type": 1
+        },
+        {
+            "playerFrom": {
+                "x": 3,
+                "y": 6
+            },
+            "playerTo": {
+                "x": 3,
+                "y": 5
+            },
+            "crateFrom": {
+                "x": 0,
+                "y": 0
+            },
+            "crateTo": {
+                "x": 0,
+                "y": 0
+            },
+            "direction": {
+                "x": 0,
+                "y": 0
+            },
+            "type": 0
+        },
+        {
+            "playerFrom": {
+                "x": 3,
+                "y": 5
+            },
+            "playerTo": {
+                "x": 4,
+                "y": 5
+            },
+            "crateFrom": {
+                "x": 0,
+                "y": 0
+            },
+            "crateTo": {
+                "x": 0,
+                "y": 0
+            },
+            "direction": {
+                "x": 0,
+                "y": 0
+            },
+            "type": 0
+        },
+        {
+            "playerFrom": {
+                "x": 4,
+                "y": 5
+            },
+            "playerTo": {
+                "x": 5,
+                "y": 5
+            },
+            "crateFrom": {
+                "x": 0,
+                "y": 0
+            },
+            "crateTo": {
+                "x": 0,
+                "y": 0
+            },
+            "direction": {
+                "x": 0,
+                "y": 0
+            },
+            "type": 0
+        },
+        {
+            "playerFrom": {
+                "x": 5,
+                "y": 5
+            },
+            "playerTo": {
+                "x": 5,
+                "y": 6
+            },
+            "crateFrom": {
+                "x": 0,
+                "y": 0
+            },
+            "crateTo": {
+                "x": 0,
+                "y": 0
+            },
+            "direction": {
+                "x": 0,
+                "y": 0
+            },
+            "type": 0
+        },
+        {
+            "playerFrom": {
+                "x": 5,
+                "y": 6
+            },
+            "playerTo": {
+                "x": 4,
+                "y": 6
+            },
+            "crateFrom": {
+                "x": 4,
+                "y": 6
+            },
+            "crateTo": {
+                "x": 3,
+                "y": 6
+            },
+            "direction": {
+                "x": -1,
+                "y": 0
+            },
+            "type": 1
+        },
+        {
+            "playerFrom": {
+                "x": 4,
+                "y": 6
+            },
+            "playerTo": {
+                "x": 4,
+                "y": 5
+            },
+            "crateFrom": {
+                "x": 0,
+                "y": 0
+            },
+            "crateTo": {
+                "x": 0,
+                "y": 0
+            },
+            "direction": {
+                "x": 0,
+                "y": 0
+            },
+            "type": 0
+        },
+        {
+            "playerFrom": {
+                "x": 4,
+                "y": 5
+            },
+            "playerTo": {
+                "x": 5,
+                "y": 5
+            },
+            "crateFrom": {
+                "x": 0,
+                "y": 0
+            },
+            "crateTo": {
+                "x": 0,
+                "y": 0
+            },
+            "direction": {
+                "x": 0,
+                "y": 0
+            },
+            "type": 0
+        },
+        {
+            "playerFrom": {
+                "x": 5,
+                "y": 5
+            },
+            "playerTo": {
+                "x": 5,
+                "y": 4
+            },
+            "crateFrom": {
+                "x": 0,
+                "y": 0
+            },
+            "crateTo": {
+                "x": 0,
+                "y": 0
+            },
+            "direction": {
+                "x": 0,
+                "y": 0
+            },
+            "type": 0
+        },
+        {
+            "playerFrom": {
+                "x": 5,
+                "y": 4
+            },
+            "playerTo": {
+                "x": 5,
+                "y": 3
+            },
+            "crateFrom": {
+                "x": 0,
+                "y": 0
+            },
+            "crateTo": {
+                "x": 0,
+                "y": 0
+            },
+            "direction": {
+                "x": 0,
+                "y": 0
+            },
+            "type": 0
+        },
+        {
+            "playerFrom": {
+                "x": 5,
+                "y": 3
+            },
+            "playerTo": {
+                "x": 5,
+                "y": 2
+            },
+            "crateFrom": {
+                "x": 0,
+                "y": 0
+            },
+            "crateTo": {
+                "x": 0,
+                "y": 0
+            },
+            "direction": {
+                "x": 0,
+                "y": 0
+            },
+            "type": 0
+        },
+        {
+            "playerFrom": {
+                "x": 5,
+                "y": 2
+            },
+            "playerTo": {
+                "x": 4,
+                "y": 2
+            },
+            "crateFrom": {
+                "x": 0,
+                "y": 0
+            },
+            "crateTo": {
+                "x": 0,
+                "y": 0
+            },
+            "direction": {
+                "x": 0,
+                "y": 0
+            },
+            "type": 0
         },
         {
             "playerFrom": {
@@ -1205,192 +1044,146 @@
                 "y": 3
             },
             "playerTo": {
-                "x": 5,
-                "y": 3
+                "x": 4,
+                "y": 4
             },
             "crateFrom": {
-                "x": 5,
-                "y": 3
+                "x": 4,
+                "y": 4
             },
             "crateTo": {
-                "x": 6,
-                "y": 3
+                "x": 4,
+                "y": 5
             },
             "direction": {
-                "x": 1,
-                "y": 0
+                "x": 0,
+                "y": 1
             },
             "type": 1
         },
         {
             "playerFrom": {
+                "x": 4,
+                "y": 4
+            },
+            "playerTo": {
                 "x": 5,
-                "y": 3
+                "y": 4
+            },
+            "crateFrom": {
+                "x": 0,
+                "y": 0
+            },
+            "crateTo": {
+                "x": 0,
+                "y": 0
+            },
+            "direction": {
+                "x": 0,
+                "y": 0
+            },
+            "type": 0
+        },
+        {
+            "playerFrom": {
+                "x": 5,
+                "y": 4
+            },
+            "playerTo": {
+                "x": 5,
+                "y": 5
+            },
+            "crateFrom": {
+                "x": 0,
+                "y": 0
+            },
+            "crateTo": {
+                "x": 0,
+                "y": 0
+            },
+            "direction": {
+                "x": 0,
+                "y": 0
+            },
+            "type": 0
+        },
+        {
+            "playerFrom": {
+                "x": 5,
+                "y": 5
+            },
+            "playerTo": {
+                "x": 5,
+                "y": 6
+            },
+            "crateFrom": {
+                "x": 0,
+                "y": 0
+            },
+            "crateTo": {
+                "x": 0,
+                "y": 0
+            },
+            "direction": {
+                "x": 0,
+                "y": 0
+            },
+            "type": 0
+        },
+        {
+            "playerFrom": {
+                "x": 5,
+                "y": 6
+            },
+            "playerTo": {
+                "x": 5,
+                "y": 7
+            },
+            "crateFrom": {
+                "x": 0,
+                "y": 0
+            },
+            "crateTo": {
+                "x": 0,
+                "y": 0
+            },
+            "direction": {
+                "x": 0,
+                "y": 0
+            },
+            "type": 0
+        },
+        {
+            "playerFrom": {
+                "x": 5,
+                "y": 7
             },
             "playerTo": {
                 "x": 6,
-                "y": 3
+                "y": 7
             },
             "crateFrom": {
+                "x": 0,
+                "y": 0
+            },
+            "crateTo": {
+                "x": 0,
+                "y": 0
+            },
+            "direction": {
+                "x": 0,
+                "y": 0
+            },
+            "type": 0
+        },
+        {
+            "playerFrom": {
                 "x": 6,
-                "y": 3
-            },
-            "crateTo": {
-                "x": 7,
-                "y": 3
-            },
-            "direction": {
-                "x": 1,
-                "y": 0
-            },
-            "type": 1
-        },
-        {
-            "playerFrom": {
-                "x": 6,
-                "y": 3
+                "y": 7
             },
             "playerTo": {
                 "x": 7,
-                "y": 3
-            },
-            "crateFrom": {
-                "x": 7,
-                "y": 3
-            },
-            "crateTo": {
-                "x": 8,
-                "y": 3
-            },
-            "direction": {
-                "x": 1,
-                "y": 0
-            },
-            "type": 1
-        },
-        {
-            "playerFrom": {
-                "x": 7,
-                "y": 3
-            },
-            "playerTo": {
-                "x": 7,
-                "y": 2
-            },
-            "crateFrom": {
-                "x": 0,
-                "y": 0
-            },
-            "crateTo": {
-                "x": 0,
-                "y": 0
-            },
-            "direction": {
-                "x": 0,
-                "y": 0
-            },
-            "type": 0
-        },
-        {
-            "playerFrom": {
-                "x": 7,
-                "y": 2
-            },
-            "playerTo": {
-                "x": 8,
-                "y": 2
-            },
-            "crateFrom": {
-                "x": 0,
-                "y": 0
-            },
-            "crateTo": {
-                "x": 0,
-                "y": 0
-            },
-            "direction": {
-                "x": 0,
-                "y": 0
-            },
-            "type": 0
-        },
-        {
-            "playerFrom": {
-                "x": 8,
-                "y": 2
-            },
-            "playerTo": {
-                "x": 9,
-                "y": 2
-            },
-            "crateFrom": {
-                "x": 0,
-                "y": 0
-            },
-            "crateTo": {
-                "x": 0,
-                "y": 0
-            },
-            "direction": {
-                "x": 0,
-                "y": 0
-            },
-            "type": 0
-        },
-        {
-            "playerFrom": {
-                "x": 9,
-                "y": 2
-            },
-            "playerTo": {
-                "x": 9,
-                "y": 3
-            },
-            "crateFrom": {
-                "x": 0,
-                "y": 0
-            },
-            "crateTo": {
-                "x": 0,
-                "y": 0
-            },
-            "direction": {
-                "x": 0,
-                "y": 0
-            },
-            "type": 0
-        },
-        {
-            "playerFrom": {
-                "x": 9,
-                "y": 3
-            },
-            "playerTo": {
-                "x": 10,
-                "y": 3
-            },
-            "crateFrom": {
-                "x": 0,
-                "y": 0
-            },
-            "crateTo": {
-                "x": 0,
-                "y": 0
-            },
-            "direction": {
-                "x": 0,
-                "y": 0
-            },
-            "type": 0
-        },
-        {
-            "playerFrom": {
-                "x": 10,
-                "y": 3
-            },
-            "playerTo": {
-                "x": 11,
-                "y": 3
+                "y": 7
             },
             "crateFrom": {
                 "x": 0,

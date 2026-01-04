@@ -103,7 +103,7 @@ public class LevelFeaturePlacer {
     int extraNodes = entrancePlaced ? 2 : 0;
 
     var holes = new List<Vector2Int>();
-    var boxes = new List<Vector2Int>();
+    var crates = new List<Vector2Int>();
     int targetsPlaced = 0;
 
     // Optimization: Create the adapter once
@@ -121,14 +121,20 @@ public class LevelFeaturePlacer {
       Vector2Int candidate = floors[idx];
 
       // --- OPTIMIZED CUT CHECK ---
-      // 1. Run the scan IGNORING the candidate
-      _floodFillScanner.Scan(gridAdapter, start: playerPos, obstacle: candidate);
+      // 1. Run the scan IGNORING the candidate and also any placed crates and holes
+      _floodFillScanner.Scan(
+          gridAdapter,
+          start: playerPos,
+          obstacles: holes.Union(crates).Append(candidate));
 
       // 2. Check connectivity
       // totalReachable = (All Floors) - (Candidate) + (Entrance + Exit if exists)
       // Note: 'floors' list still contains 'candidate' at this point
+      const int MIN_ISLAND_SIZE = 2;
       int totalReachableNodes = floors.Count - 1 + extraNodes;
-      bool isCutVertex = _floodFillScanner.Count < totalReachableNodes;
+      bool isCutVertex =
+          _floodFillScanner.Count > MIN_ISLAND_SIZE &&
+          _floodFillScanner.Count + MIN_ISLAND_SIZE < totalReachableNodes;
 
       if (isCutVertex) {
         // We found a Cut Vertex!
@@ -149,13 +155,13 @@ public class LevelFeaturePlacer {
 
         // B. Force a Box on PLAYER SIDE (The "Key")
         // Only if we still need boxes
-        if (boxes.Count < totalBoxes) {
+        if (crates.Count < totalBoxes) {
           // Find a floor REACHABLE by the scan (Player Side)
           // We can pick directly from the scanner's result list
           Vector2Int? playerSidePos = GetReachedFloor(floors, candidate);
 
           if (playerSidePos.HasValue) {
-            boxes.Add(playerSidePos.Value);
+            crates.Add(playerSidePos.Value);
             floors.Remove(playerSidePos.Value);
           }
         }
@@ -198,18 +204,18 @@ public class LevelFeaturePlacer {
     }
 
     // Fill remaining boxes (randomly)
-    while (boxes.Count < totalBoxes && floors.Count > 0) {
+    while (crates.Count < totalBoxes && floors.Count > 0) {
       int r = Random.Range(0, floors.Count);
-      boxes.Add(floors[r]);
+      crates.Add(floors[r]);
       floors.RemoveAt(r);
     }
 
     // Ensure all boxes are on floors
-    foreach (var box in boxes) {
+    foreach (var box in crates) {
       grid[box.x, box.y] = TerrainType.Floor;
     }
 
-    return SokobanState.Create(grid, playerPos, boxes);
+    return SokobanState.Create(grid, playerPos, crates);
   }
 
   // --- OPTIMIZED HELPERS ---
