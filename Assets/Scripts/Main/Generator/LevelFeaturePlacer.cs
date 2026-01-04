@@ -14,7 +14,6 @@ public class LevelFeaturePlacer {
     }
 
     public bool IsValid(int x, int y) {
-      // In generation, Holes are Walls logic
       var t = _grid[x, y];
       return !t.IsWall() && !t.IsHole();
     }
@@ -32,28 +31,23 @@ public class LevelFeaturePlacer {
       bool useEntranceExit) {
     int w = roomShape.GetLength(0);
     int h = roomShape.GetLength(1);
-    TerrainType[,] grid = new TerrainType[w, h];
-    List<Vector2Int> floors = new List<Vector2Int>();
-    List<Vector2Int> entranceExitCandidates = new List<Vector2Int>();
+    var grid = new TerrainType[w, h];
+    var floors = new List<Vector2Int>();
+    var entranceExitCandidates = new List<Vector2Int>();
 
     // 1. Initialize Grid & Collect Floor Candidates
     for (int x = 0; x < w; x++) {
       for (int y = 0; y < h; y++) {
-        if (roomShape[x, y] == 1) // 1 = Floor
-        {
+        if (roomShape[x, y] == 1) {
+          // 1 = Floor
           grid[x, y] = TerrainType.Floor;
           floors.Add(new Vector2Int(x, y));
         } else {
           grid[x, y] = TerrainType.Wall;
-        }
-      }
-    }
-
-    // 2. Identify valid Entrance & Exit candidates (Walls adjacent to at least one floor)
-    for (int x = 0; x < w; x++) {
-      for (int y = 0; y < h; y++) {
-        if (grid[x, y] == TerrainType.Wall && HasAdjacentFloor(grid, x, y)) {
-          entranceExitCandidates.Add(new Vector2Int(x, y));
+          // 2. Identify valid Entrance/Exit candidates (Walls adjacent to at least one floor)
+          if (HasAdjacentFloor(grid, x, y)) {
+            entranceExitCandidates.Add(new Vector2Int(x, y));
+          }
         }
       }
     }
@@ -67,17 +61,15 @@ public class LevelFeaturePlacer {
 
     // 3. Place Entrance and Exit (Deterministic Min/Max)
     if (useEntranceExit && entranceExitCandidates.Count >= 2) {
-      // Entrance: Min X -> Min Y
-      Vector2Int bestEnt = entranceExitCandidates
+      var bestEnt = entranceExitCandidates
           .OrderBy(v => v.x)
           .ThenBy(v => v.y)
-          .First();
+          .First(); // Entrance: Min X -> Min Y
 
-      // Exit: Max X -> Max Y
-      Vector2Int bestExit = entranceExitCandidates
+      var bestExit = entranceExitCandidates
           .OrderByDescending(v => v.x)
           .ThenByDescending(v => v.y)
-          .First();
+          .First(); // Exit: Max X -> Max Y
 
       // Edge case safety (e.g. tiny 1x2 map): Ensure Exit != Entrance
       if (bestEnt == bestExit && entranceExitCandidates.Count > 1) {
@@ -100,62 +92,78 @@ public class LevelFeaturePlacer {
       floors.RemoveAt(pIdx);
     }
 
-    // 3. Identify Structural Cut Vertices (Hole Candidates)
-    // A cut vertex is a floor tile that, if removed, splits the reachable area from the player.
-    List<Vector2Int> validCuts = new List<Vector2Int>();
+    // 4. Identify Structural Cut Vertices (Hole Candidates) & Place Logic
+    // Entrance & Exit placed = we have 2 extra reachable nodes that aren't in the floors list.
+    int extraNodes = entrancePlaced ? 2 : 0;
 
-    // Entrance/Exit placed, we have 1 extra reachable node (Exit)
-    // that isn't in the 'floors' list.
-    int extraNodes = entrancePlaced ? 1 : 0;
-
-    foreach (var f in floors) {
-      if (IsCutVertexForPlayer(grid, f, playerPos, floors, extraNodes))
-        validCuts.Add(f);
-    }
-
-    // Shuffle cuts for variety
-    validCuts = validCuts.OrderBy(_ => Random.value).ToList();
-
-    List<Vector2Int> holes = new List<Vector2Int>();
-    List<Vector2Int> boxes = new List<Vector2Int>();
+    var holes = new List<Vector2Int>();
+    var boxes = new List<Vector2Int>();
     int targetsPlaced = 0;
 
-    // 4. Place Holes using "Lock and Key" heuristic
-    for (int i = 0; i < holeCount; i++) {
-      if (i < validCuts.Count) {
-        // --- SMART HOLE PLACEMENT ---
-        Vector2Int holePos = validCuts[i];
-        holes.Add(holePos);
-        floors.Remove(holePos);
+    // Optimization: Create the adapter once
+    var gridAdapter = new FloodFillGridAdapter(grid);
+
+    // Shuffle floors once to randomize candidates
+    floors = floors.OrderBy(_ => Random.value).ToList();
+
+    int attempts = 0;
+    int maxAttempts = floors.Count; // Try every floor once
+
+    while (holes.Count < holeCount && attempts < maxAttempts && floors.Count > 0) {
+      // Pick a candidate
+      int idx = attempts % floors.Count; // Simple iteration since we shuffled
+      Vector2Int candidate = floors[idx];
+
+      // --- OPTIMIZED CUT CHECK ---
+      // 1. Run the scan IGNORING the candidate
+      _floodFillScanner.Scan(gridAdapter, start: playerPos, obstacle: candidate);
+
+      // 2. Check connectivity
+      // totalReachable = (All Floors) - (Candidate) + (Entrance + Exit if exists)
+      // Note: 'floors' list still contains 'candidate' at this point
+      int totalReachableNodes = floors.Count - 1 + extraNodes;
+      bool isCutVertex = _floodFillScanner.Count < totalReachableNodes;
+
+      if (isCutVertex) {
+        // We found a Cut Vertex!
+        // The scanner state currently represents the "Player Side".
 
         // A. Force a Target BEHIND the hole (The "Lock")
-        // This forces the player to fill the hole to solve the level.
+        // Only if we still need targets
         if (targetsPlaced < targetCount) {
-          Vector2Int? behindPos = GetPositionBehindHole(grid, holePos, playerPos, floors);
+          // Find a floor NOT reachable by the scan (Behind Side)
+          Vector2Int? behindPos = GetUnreachedFloor(floors, candidate);
+
           if (behindPos.HasValue) {
             grid[behindPos.Value.x, behindPos.Value.y] = TerrainType.Target;
             floors.Remove(behindPos.Value);
             targetsPlaced++;
-
-            // B. Force a Box on PLAYER SIDE (The "Key")
-            // Ensures the player has access to a box to fill the hole.
-            if (boxes.Count < totalBoxes) {
-              Vector2Int? playerSidePos = GetPositionOnPlayerSide(grid, holePos, playerPos, floors);
-              if (playerSidePos.HasValue) {
-                boxes.Add(playerSidePos.Value);
-                floors.Remove(playerSidePos.Value);
-              }
-            }
           }
         }
-      } else {
-        // --- FALLBACK: RANDOM HOLE ---
-        // If we run out of smart cuts, just pick a random floor.
-        if (floors.Count == 0) break;
-        int r = Random.Range(0, floors.Count);
-        holes.Add(floors[r]);
-        floors.RemoveAt(r);
+
+        // B. Force a Box on PLAYER SIDE (The "Key")
+        // Only if we still need boxes
+        if (boxes.Count < totalBoxes) {
+          // Find a floor REACHABLE by the scan (Player Side)
+          // We can pick directly from the scanner's result list
+          Vector2Int? playerSidePos = GetReachedFloor(floors, candidate);
+
+          if (playerSidePos.HasValue) {
+            boxes.Add(playerSidePos.Value);
+            floors.Remove(playerSidePos.Value);
+          }
+        }
+
+        // Place the Hole
+        holes.Add(candidate);
+        floors.Remove(candidate); // Remove from available floors
+
+        // Since we modified the grid/floors, we should restart/reset our loop logic slightly
+        // or just continue. The graph topology changed, so previous assumptions might be invalid.
+        // For a generator, just continuing is usually acceptable entropy.
       }
+
+      attempts++;
     }
 
     // 5. Apply Holes to Grid
@@ -163,18 +171,28 @@ public class LevelFeaturePlacer {
       grid[hole.x, hole.y] = TerrainType.Hole;
     }
 
-    // 6. Place Remaining Targets (Randomly)
-    while (targetsPlaced < targetCount) {
-      if (floors.Count == 0) break;
+    // --- FALLBACK FILLING ---
+    // If we failed to place smart holes/targets/boxes, fill the rest randomly.
+
+    // Fill remaining holes (randomly)
+    while (holes.Count < holeCount && floors.Count > 0) {
+      int r = Random.Range(0, floors.Count);
+      var hole = floors[r];
+      grid[hole.x, hole.y] = TerrainType.Hole;
+      holes.Add(hole);
+      floors.RemoveAt(r);
+    }
+
+    // Fill remaining targets (randomly)
+    while (targetsPlaced < targetCount && floors.Count > 0) {
       int r = Random.Range(0, floors.Count);
       grid[floors[r].x, floors[r].y] = TerrainType.Target;
       floors.RemoveAt(r);
       targetsPlaced++;
     }
 
-    // 7. Place Remaining Boxes (Randomly)
-    while (boxes.Count < totalBoxes) {
-      if (floors.Count == 0) break;
+    // Fill remaining boxes (randomly)
+    while (boxes.Count < totalBoxes && floors.Count > 0) {
       int r = Random.Range(0, floors.Count);
       boxes.Add(floors[r]);
       floors.RemoveAt(r);
@@ -188,6 +206,43 @@ public class LevelFeaturePlacer {
     return SokobanState.Create(grid, playerPos, boxes);
   }
 
+  // --- OPTIMIZED HELPERS ---
+
+  /// <summary>
+  /// Finds a floor in the list that was visited by the last scan.
+  /// Uses O(1) lookup via scanner.IsVisited.
+  /// </summary>
+  private Vector2Int? GetReachedFloor(List<Vector2Int> availableFloors, Vector2Int excludePos) {
+    // Optimization: Pick a random index and linear scan to avoid re-allocating a list
+    int startIdx = Random.Range(0, availableFloors.Count);
+    for (int i = 0; i < availableFloors.Count; i++) {
+      int idx = (startIdx + i) % availableFloors.Count;
+      Vector2Int f = availableFloors[idx];
+
+      if (f != excludePos && _floodFillScanner.IsReached(f.x, f.y)) {
+        return f;
+      }
+    }
+
+    return null;
+  }
+
+  /// <summary>
+  /// Finds a floor in the list that was NOT visited by the last scan.
+  /// </summary>
+  private Vector2Int? GetUnreachedFloor(List<Vector2Int> availableFloors, Vector2Int excludePos) {
+    int startIdx = Random.Range(0, availableFloors.Count);
+    for (int i = 0; i < availableFloors.Count; i++) {
+      int idx = (startIdx + i) % availableFloors.Count;
+      Vector2Int f = availableFloors[idx];
+
+      if (f != excludePos && !_floodFillScanner.IsReached(f.x, f.y)) {
+        return f;
+      }
+    }
+
+    return null;
+  }
 
   private bool HasAdjacentFloor(TerrainType[,] grid, int x, int y) {
     int w = grid.GetLength(0);
@@ -199,68 +254,12 @@ public class LevelFeaturePlacer {
     for (int i = 0; i < 4; i++) {
       int nx = x + dx[i];
       int ny = y + dy[i];
+
       if (nx >= 0 && nx < w && ny >= 0 && ny < h) {
-        // We only care about base floors, but technically Targets/Holes haven't been placed yet.
-        // At this stage, everything non-wall is just 'Floor'.
         if (grid[nx, ny] == TerrainType.Floor) return true;
       }
     }
 
     return false;
-  }
-
-  /// <summary>
-  /// Returns true if removing 'candidate' makes some floors unreachable from 'playerPos'.
-  /// </summary>
-  private bool IsCutVertexForPlayer(
-      TerrainType[,] grid,
-      Vector2Int candidate,
-      Vector2Int playerPos,
-      List<Vector2Int> availableFloors,
-      int extraNodesCount = 0) {
-    // availableFloors contains ALL floors currently available (including candidate).
-    // If graph is connected, CountReachable should equal (availableFloors.Count - 1).
-    // If it's less, removing 'candidate' disconnected something.
-    int totalReachableNodes = availableFloors.Count + extraNodesCount; // floors list + player
-
-    _floodFillScanner.Scan(new FloodFillGridAdapter(grid), start: playerPos, obstacle: candidate);
-
-    // If reachable nodes < total nodes (minus the one we ignored), we have a cut.
-    return _floodFillScanner.Count < totalReachableNodes;
-  }
-
-  private Vector2Int? GetPositionBehindHole(
-      TerrainType[,] grid,
-      Vector2Int hole,
-      Vector2Int playerPos,
-      List<Vector2Int> availableFloors) {
-    // 1. Get reachable set ignoring the hole
-    _floodFillScanner.Scan(new FloodFillGridAdapter(grid), start: playerPos, obstacle: hole);
-
-    // 2. Find floors NOT in reachable set (The "Behind" side)
-    var candidates =
-        availableFloors.Where(f => f != hole && !_floodFillScanner.IsReached(f)).ToList();
-
-    if (candidates.Count > 0) return candidates[Random.Range(0, candidates.Count)];
-
-    return null;
-  }
-
-  private Vector2Int? GetPositionOnPlayerSide(
-      TerrainType[,] grid,
-      Vector2Int hole,
-      Vector2Int playerPos,
-      List<Vector2Int> availableFloors) {
-    // 1. Get reachable set ignoring the hole
-    _floodFillScanner.Scan(new FloodFillGridAdapter(grid), start: playerPos, obstacle: hole);
-
-    // 2. Find floors IN the reachable set (The "Player" side)
-    var candidates =
-        availableFloors.Where(f => f != hole && _floodFillScanner.IsReached(f)).ToList();
-
-    if (candidates.Count > 0)
-      return candidates[Random.Range(0, candidates.Count)];
-
-    return null;
   }
 }
