@@ -33,7 +33,6 @@ public class LevelFeaturePlacer {
     int h = roomShape.GetLength(1);
     var grid = new TerrainType[w, h];
     var floors = new List<Vector2Int>();
-    var entranceExitCandidates = new List<Vector2Int>();
 
     // 1. Initialize Grid & Collect Floor Candidates
     for (int x = 0; x < w; x++) {
@@ -44,10 +43,6 @@ public class LevelFeaturePlacer {
           floors.Add(new Vector2Int(x, y));
         } else {
           grid[x, y] = TerrainType.Wall;
-          // 2. Identify valid Entrance/Exit candidates (Walls adjacent to at least one floor)
-          if (HasAdjacentFloor(grid, x, y)) {
-            entranceExitCandidates.Add(new Vector2Int(x, y));
-          }
         }
       }
     }
@@ -60,7 +55,18 @@ public class LevelFeaturePlacer {
     bool entrancePlaced = false;
 
     // 3. Place Entrance and Exit (Deterministic Min/Max)
-    if (useEntranceExit && entranceExitCandidates.Count >= 2) {
+    if (useEntranceExit) {
+      var entranceExitCandidates = new List<Vector2Int>();
+
+      for (int x = 0; x < w; x++) {
+        for (int y = 0; y < h; y++) {
+          // 2. Identify valid Entrance/Exit candidates (Walls adjacent to at least one floor)
+          if (HasAdjacentFloor(grid, x, y)) {
+            entranceExitCandidates.Add(new Vector2Int(x, y));
+          }
+        }
+      }
+
       var bestEnt = entranceExitCandidates
           .OrderBy(v => v.x)
           .ThenBy(v => v.y)
