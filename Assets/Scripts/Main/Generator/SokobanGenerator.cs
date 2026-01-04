@@ -4,8 +4,8 @@ using System.Linq;
 using UnityEngine;
 
 public class SokobanGenerator {
-  private const int AttemptsPerLevel = 500;
-  private const int GeneratorSolverLimit = 1_000_000;
+  private const int AttemptsPerLevel = 5000;
+  private const int GeneratorSolverLimit = 25_000;
 
   /// <summary>
   /// Generates a valid, solvable Sokoban level.
@@ -48,6 +48,10 @@ public class SokobanGenerator {
       var solver = new SokobanSolver();
       if (solver.IsSolvable(state, GeneratorSolverLimit)) {
         UnityEngine.Debug.Log($"Generated solvable level in {i + 1} attempts.");
+
+        // Final Polish Step
+        PostProcessPerimeterWalls(state.TerrainGrid);
+
         return state;
       }
     }
@@ -403,7 +407,38 @@ public class SokobanGenerator {
       floors.RemoveAt(r);
     }
 
+    // Ensure all boxes are on floors
+    foreach (var box in boxes) {
+      grid[box.x, box.y] = TerrainType.Floor;
+    }
+
     return SokobanState.Create(grid, playerPos, boxes);
+  }
+
+
+  private void PostProcessPerimeterWalls(TerrainType[,] grid) {
+    int w = grid.GetLength(0);
+    int h = grid.GetLength(1);
+
+    for (int x = 0; x < w; x++) {
+      for (int y = 0; y < h; y++) {
+        // Check if on the outermost edge
+        bool isEdge = (x == 0 || x == w - 1 || y == 0 || y == h - 1);
+
+        if (isEdge) {
+          // Force edge to be Wall (unless it is Entrance/Exit)
+          // Note: Entrance/Exit are critical, do not overwrite them with Wall.
+          if (grid[x, y] != TerrainType.Entrance && grid[x, y] != TerrainType.Exit) {
+            grid[x, y] = TerrainType.Wall;
+          }
+        } else {
+          // Inner tile: If it is currently a Wall, convert to Hole.
+          if (grid[x, y] == TerrainType.Wall) {
+            grid[x, y] = TerrainType.Hole;
+          }
+        }
+      }
+    }
   }
 
   // ---------------- Helper Methods ----------------
@@ -513,8 +548,8 @@ public class SokobanGenerator {
         // Ignore the candidate hole/blocker
         if (n == ignore) continue;
 
-        // Wall Check
-        if (grid[n.x, n.y] == TerrainType.Wall) continue;
+        // Wall/Hole Check
+        if (grid[n.x, n.y].IsWall() || grid[n.x, n.y].IsHole()) continue;
 
         // Note: We treat existing Targets/Floors as walkable.
         // Since we haven't placed Targets yet in the grid (mostly), this primarily checks walls.

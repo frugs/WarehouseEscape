@@ -10,7 +10,7 @@ public class LevelGeneratorWindow : EditorWindow {
   private int HoleCount { get; set; } = 2;
   private bool UseEntranceExit { get; set; } = true;
   private string LevelName { get; set; } = "GeneratedLevel";
-  private bool UseFixedSeed { get; set; } = false;
+  private bool UseFixedSeed { get; set; }
   private int Seed { get; set; } = 12345;
 
   [MenuItem("Sokoban/Open Generator")]
@@ -34,6 +34,12 @@ public class LevelGeneratorWindow : EditorWindow {
     EditorGUILayout.BeginHorizontal();
     UseFixedSeed = EditorGUILayout.Toggle("Use Fixed Seed", UseFixedSeed);
     if (UseFixedSeed) {
+      if (GUILayout.Button("Pick Random", GUILayout.Width(100))) {
+        Seed = Random.Range(0, 999999999);
+        // Defocus controls to update the UI immediately if the field was focused
+        GUI.FocusControl(null);
+      }
+
       Seed = EditorGUILayout.IntField(Seed);
     }
 
@@ -53,7 +59,7 @@ public class LevelGeneratorWindow : EditorWindow {
   private SokobanState? GenerateState() {
     var generator = new SokobanGenerator();
 
-    int? seedToUse = UseFixedSeed ? Seed : (int?)null;
+    int? seedToUse = UseFixedSeed ? Seed : null;
     return generator.Generate(MaxSize, MaxSize, TargetCount, HoleCount, UseEntranceExit, seedToUse);
   }
 
