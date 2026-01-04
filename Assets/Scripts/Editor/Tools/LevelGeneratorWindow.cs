@@ -121,6 +121,7 @@ public class LevelGeneratorWindow : EditorWindow {
 
     if (t == TerrainType.Wall) return '#';
     if (t == TerrainType.Hole) return 'H';
+    if (t == TerrainType.FakeHole) return 'h';
     if (t == TerrainType.Target) {
       if (isPlayer) return 'p';
       if (isCrate) return 'b';

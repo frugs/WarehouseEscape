@@ -170,8 +170,7 @@ public class SokobanGenerator {
       var p = queue.Dequeue();
       region.Add(p);
 
-      foreach (
-          var dir in new[] { Vector2Int.up, Vector2Int.down, Vector2Int.left, Vector2Int.right }) {
+      foreach (var dir in Vector2IntExtensions.Cardinals) {
         Vector2Int n = p + dir;
         if (n.x >= 0 && n.y >= 0 && n.x < w && n.y < h) {
           if (map[n.x, n.y] == 1 && visited[n.x, n.y] == 0) {
@@ -432,9 +431,9 @@ public class SokobanGenerator {
             grid[x, y] = TerrainType.Wall;
           }
         } else {
-          // Inner tile: If it is currently a Wall, convert to Hole.
+          // Inner tile: If it is currently a Wall, convert to FakeHole.
           if (grid[x, y] == TerrainType.Wall) {
-            grid[x, y] = TerrainType.Hole;
+            grid[x, y] = TerrainType.FakeHole;
           }
         }
       }
@@ -537,9 +536,7 @@ public class SokobanGenerator {
 
     while (q.Count > 0) {
       var p = q.Dequeue();
-      foreach (var dir in new[] {
-                   Vector2Int.up, Vector2Int.down, Vector2Int.left, Vector2Int.right
-               }) {
+      foreach (var dir in Vector2IntExtensions.Cardinals) {
         Vector2Int n = p + dir;
 
         // Bounds Check

@@ -36,7 +36,8 @@ public class DeadSquareMap {
     for (int x = 0; x < Width; x++) {
       for (int y = 0; y < Height; y++) {
         var terrain = state.TerrainGrid[x, y];
-        if (terrain.IsTarget() || terrain.IsHole()) {
+        // Crates only need to go into targets and true holes
+        if (terrain.IsTarget() || terrain.IsTrueHole()) {
           SetSafe(x, y, safeQueue);
         }
       }
@@ -76,6 +77,6 @@ public class DeadSquareMap {
   private bool IsValidFloor(SokobanState state, Vector2Int pos) {
     if (pos.x < 0 || pos.x >= Width || pos.y < 0 || pos.y >= Height) return false;
     var t = state.TerrainGrid[pos.x, pos.y];
-    return t != TerrainType.Wall; // Any non-wall is potentially valid for pushing/standing
+    return t.CanReceiveCrate() && !t.IsFakeHole();
   }
 }

@@ -1,7 +1,7 @@
 {
     "LevelName": "Level2",
     "StepCount": 53,
-    "SolveTimeMs": 111,
+    "SolveTimeMs": 131,
     "Moves": [
         {
             "playerFrom": {

@@ -85,6 +85,10 @@ public class LevelParser {
         terrain = TerrainType.Hole;
         break;
 
+      case 'h':
+        terrain = TerrainType.FakeHole;
+        break;
+
       case 'T':
         terrain = TerrainType.Target;
         data.targetCount++;
@@ -123,13 +127,13 @@ public class LevelParser {
         data.targetCount++;
         data.crateCount++;
         break;
-      
+
       case '>':
         terrain = TerrainType.Entrance;
         data.playerDetected = true;
         data.playerPos = new Vector2Int(x, y);
         break;
-      
+
       case '<':
         terrain = TerrainType.Exit;
         break;
