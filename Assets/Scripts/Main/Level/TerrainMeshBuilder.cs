@@ -36,7 +36,7 @@ public class TerrainMeshBuilder : MonoBehaviour {
 
     for (int x = 0; x < gridWidth; x++) {
       for (int y = 0; y < gridHeight; y++) {
-        if (grid[x, y] == TerrainType.Floor) {
+        if (grid[x, y].PlayerCanWalk()) {
           AddHorizontalQuad(
               GridToWorld(x, y, 0f),
               verts,
