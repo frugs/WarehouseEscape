@@ -15,7 +15,7 @@ public class WalkableAreaScanner {
     public bool IsValid(int x, int y) {
       var terrain = _state.TerrainGrid[x, y];
       return terrain.PlayerCanWalk() ||
-             (terrain.IsHole() && _state.IsFilledHoleAt(x, y));
+             (terrain.IsTrueHole() && _state.IsFilledHoleAt(x, y));
     }
   }
 

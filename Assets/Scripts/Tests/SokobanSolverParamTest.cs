@@ -68,11 +68,11 @@ public class SokobanTestCases {
     {
       string level =
           "8 9\n" +
-          "E E H H H H H E\n" +
-          "X X X E E E H E\n" +
-          "X T P B E E H E\n" +
-          "X X X E B T H E\n" +
-          "X T X X B E H E\n" +
+          "E E h h h h h E\n" +
+          "X X X E E E h E\n" +
+          "X T P B E E h E\n" +
+          "X X X E B T h E\n" +
+          "X T X X B E h E\n" +
           "X E X E T E X X\n" +
           "X B E b B B T X\n" +
           "X E E E T E E X\n" +
