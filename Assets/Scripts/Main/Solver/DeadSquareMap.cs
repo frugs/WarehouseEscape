@@ -32,10 +32,11 @@ public class DeadSquareMap {
 
     Queue<Vector2Int> safeQueue = new Queue<Vector2Int>();
 
-    // 2. Seed with Targets (Targets are always safe destinations)
+    // 2. Seed with targets and holes
     for (int x = 0; x < Width; x++) {
       for (int y = 0; y < Height; y++) {
-        if (state.TerrainGrid[x, y].IsTarget()) {
+        var terrain = state.TerrainGrid[x, y];
+        if (terrain.IsTarget() || terrain.IsHole()) {
           SetSafe(x, y, safeQueue);
         }
       }

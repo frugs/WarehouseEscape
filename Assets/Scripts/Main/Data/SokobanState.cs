@@ -18,7 +18,7 @@ public readonly struct SokobanState : IEquatable<SokobanState> {
   // Array is slightly faster/lighter than List for fixed counts
   public Vector2Int[] CratePositions { get; }
 
-  public CowHashSet<Vector2Int> FilledHoles { get; } // Tracks holes that have been filled
+  public CowHashSet<Vector2Int> FilledHoles { get; }
 
   public static SokobanState Create(
       TerrainType[,] terrainGrid,

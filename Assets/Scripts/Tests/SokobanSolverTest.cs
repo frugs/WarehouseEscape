@@ -225,4 +225,58 @@ public class SokobanSolverTests {
       iter.MoveNext();
     }
   }
+
+  [Test]
+  public void Solver_Entrance_Crate_Hole_Exit() {
+    // ARRANGE
+    int width = 4;
+    int height = 3;
+    TerrainType[,] grid = CreateEmptyRoom(width, height);
+
+    grid[0, 1] = TerrainType.Entrance;
+    grid[2, 1] = TerrainType.Hole;
+    grid[3, 1] = TerrainType.Exit;
+
+    Vector2Int playerPos = new Vector2Int(0, 1);
+    Vector2Int[] crates = { new(1, 1) };
+    SokobanState state = SokobanState.Create(grid, playerPos, crates);
+    SokobanSolver solver = new SokobanSolver();
+
+    // ACT
+    List<SokobanMove> solution = solver.FindSolutionPath(state);
+
+    // ASSERT
+    Assert.IsNotNull(solution, "Solution should not be null.");
+    Assert.AreEqual(3, solution.Count, "Should require exactly 3 moves.");
+
+    // Verify move
+    var iter = solution.GetEnumerator();
+    iter.MoveNext();
+
+    {
+      var move = iter.Current;
+      Assert.AreEqual(MoveType.CratePush, move.type);
+      Assert.AreEqual(new Vector2Int(0, 1), move.playerFrom);
+      Assert.AreEqual(new Vector2Int(1, 1), move.playerTo);
+      Assert.AreEqual(new Vector2Int(1, 1), move.crateFrom);
+      Assert.AreEqual(new Vector2Int(2, 1), move.crateTo);
+      iter.MoveNext();
+    }
+
+    {
+      var move = iter.Current;
+      Assert.AreEqual(MoveType.PlayerMove, move.type);
+      Assert.AreEqual(new Vector2Int(1, 1), move.playerFrom);
+      Assert.AreEqual(new Vector2Int(2, 1), move.playerTo);
+      iter.MoveNext();
+    }
+
+    {
+      var move = iter.Current;
+      Assert.AreEqual(MoveType.PlayerMove, move.type);
+      Assert.AreEqual(new Vector2Int(2, 1), move.playerFrom);
+      Assert.AreEqual(new Vector2Int(3, 1), move.playerTo);
+      iter.MoveNext();
+    }
+  }
 }

@@ -79,6 +79,63 @@ public class SokobanTestCases {
           "X X X X X X X X";
       yield return new TestCaseData(level, true).SetName("Original_Level_1");
     }
+
+    // CASE: Exit unreachable (unsolvable)
+    {
+      // 5x3:
+      // Row 2: X X X X X
+      // Row 1: > B T X X
+      // Row 0: . . . X <  (exit enclosed by walls above/left)
+      //
+      // Player can solve crates, but cannot reach the exit.
+      string level = @"
+5 3
+X X X X X
+> B T X X
+. . . X <
+";
+      yield return new TestCaseData(level, false)
+          .SetName("Exit_Unreachable_Unsolvable");
+    }
+
+    // CASE: Two targets, one exit, solvable
+    {
+      // Room is open; both crates can reach targets and player can walk to exit.
+      string level = @"
+7 4
+> X X X X X X
+. B T B T . .
+. . . . . . .
+X X X X X X <
+";
+      yield return new TestCaseData(level, true)
+          .SetName("TwoTargets_OneExit_Solvable");
+    }
+
+    // CASE: One targets, one exit, unsolvable
+    {
+      string level = @"
+7 3
+X X X X X X X
+> B T . . . <
+X X X X X X X
+";
+      yield return new TestCaseData(level, false)
+          .SetName("OneTarget_OneExit_BoxBlocksExit_Unsolvable");
+    }
+
+    {
+      string level = @"
+9 5
+X > X . . X X X X
+X . . B . . . . X
+X . X X H X X B X
+X . B T . B T H X
+X X X X X X X < X
+";
+      yield return new TestCaseData(level, true)
+          .SetName("EntranceExit_HoleBridge_4Boxes2Targets_Solvable");
+    }
   }
 }
 
@@ -113,6 +170,6 @@ public class SokobanParamTests {
         expectedSolvable,
         solvable,
         $"Expected level to be {(expectedSolvable ? "Solvable" : "Unsolvable")}, " +
-        "but Solver returned {solution}.");
+        $"but Solver returned {solution}.");
   }
 }

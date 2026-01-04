@@ -15,7 +15,7 @@ public class LevelParser {
 
   public static LevelData ParseLevelFromText(string levelText, bool validate = true) {
     // Split by newlines (handling varied line endings)
-    string[] lines = levelText.Split(
+    string[] lines = levelText.Trim().Split(
         new[] { "\r\n", "\r", "\n" },
         System.StringSplitOptions.None);
     return ParseLevelLines(lines, validate);
