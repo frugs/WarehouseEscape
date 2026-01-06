@@ -111,29 +111,53 @@ public class LevelLoader : MonoBehaviour {
   }
 
   private void SetupCamera(int gridWidth, int gridHeight) {
-    const float cameraAngle = 70.0f;
     if (CameraTransform == null) return;
 
-    // Position camera to look at centre of grid
+    // Isometric camera angles
+    // Yaw: 45° (looking diagonally across the grid)
+    // Pitch: 50° (steeper than a classic isometric angle to prioritise grid visibility)
+    const float yaw = 45.0f;
+    const float pitch = 50f;
+
+    // Calculate grid center in world space
+    float centerX = gridWidth / 2.0f;
+    float centerZ = gridHeight / 2.0f;
+
+    // Calculate camera distance from center
+    // This ensures the entire level is visible
+    float diagonal = Mathf.Sqrt(gridWidth * gridWidth + gridHeight * gridHeight);
+    float distance = diagonal * 1.2f; // 1.2 = padding factor
+
+    // Position camera at isometric angle
+    // Convert spherical coordinates to Cartesian
+    float pitchRad = pitch * Mathf.Deg2Rad;
+    float yawRad = yaw * Mathf.Deg2Rad;
+
     CameraTransform.position = new Vector3(
-        gridWidth / 2.0f,
-        Mathf.Tan(Mathf.Deg2Rad * cameraAngle) * gridHeight / 2.0f,
-        0.0f);
-    CameraTransform.rotation = Quaternion.Euler(cameraAngle, 0f, 0f);
+        centerX - distance * Mathf.Cos(pitchRad) * Mathf.Sin(yawRad),
+        distance * Mathf.Sin(pitchRad),
+        centerZ - distance * Mathf.Cos(pitchRad) * Mathf.Cos(yawRad)
+    );
+
+    // Rotate camera to look at grid center
+    CameraTransform.rotation = Quaternion.Euler(pitch, yaw, 0f);
 
     Camera cam = CameraTransform.GetComponent<Camera>();
 
-    // Set Orthographic Size based on Grid Size & Aspect Ratio
     if (cam != null) {
       cam.orthographic = true;
 
+      // Calculate orthographic size for isometric view
+      // We need to fit the diagonal of the grid
       float padding = 2f;
-      float sizeForHeight = (gridHeight + padding) * 0.5f;
+      float isometricWidth = (gridWidth + gridHeight) / 2.0f;
+      float sizeForLevel = (isometricWidth + padding) * 0.5f;
 
+      // Account for aspect ratio
       float currentAspect = cam.aspect;
-      float sizeForWidth = ((gridWidth + padding) * 0.5f) / currentAspect;
+      float sizeForAspect = sizeForLevel / currentAspect;
 
-      cam.orthographicSize = Mathf.Max(sizeForHeight, sizeForWidth);
+      cam.orthographicSize = Mathf.Max(sizeForLevel, sizeForAspect);
     }
   }
 }
