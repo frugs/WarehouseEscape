@@ -1124,7 +1124,8 @@ MonoBehaviour:
   <WallMaterial>k__BackingField: {fileID: 2100000, guid: 279de127cd56be5489f50e95e9c82827, type: 2}
   <HoleMaterial>k__BackingField: {fileID: 2100000, guid: e2666e08cf354684f89cad204815ddca, type: 2}
   <SkirtMaterial>k__BackingField: {fileID: 2100000, guid: 4a42f4b25a7791345b06f837e2892772, type: 2}
-  <WallHeight>k__BackingField: 6
+  <WallHeight>k__BackingField: 2
+  <BevelSize>k__BackingField: 0.05
   <HoleDepth>k__BackingField: 1
   <SkirtDepth>k__BackingField: 6
 --- !u!114 &1936126210

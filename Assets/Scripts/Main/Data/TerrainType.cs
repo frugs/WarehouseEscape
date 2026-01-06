@@ -29,6 +29,8 @@ public static class TerrainTypeExtensions {
       terrain == TerrainType.Hole ||
       terrain == TerrainType.FakeHole;
 
+  public static bool IsFloor(this TerrainType terrain) => terrain == TerrainType.Floor;
+
   public static bool IsWall(this TerrainType terrain) => terrain == TerrainType.Wall;
 
   public static bool IsHole(this TerrainType terrain) =>

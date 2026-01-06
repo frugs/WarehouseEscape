@@ -294,7 +294,7 @@ public class LevelFeaturePlacer {
       int ny = y + dy[i];
 
       if (nx >= 0 && nx < w && ny >= 0 && ny < h) {
-        if (grid[nx, ny] == TerrainType.Floor) return true;
+        if (grid[nx, ny].IsFloor()) return true;
       }
     }
 
