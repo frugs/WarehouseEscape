@@ -46,28 +46,33 @@ public class LevelLoader : MonoBehaviour {
       int level,
       out SokobanState state,
       out GameObject[,] visualGrid,
+      out GameObject entrance,
       out string levelName) {
     state = new SokobanState();
     visualGrid = null;
+    entrance = null;
     levelName = $"Level{level}";
 
     string filePath = Path.Combine(LevelsDirectory, $"{levelName}.txt");
     if (File.Exists(filePath)) {
-      return LoadLevelFromFile(filePath, out state, out visualGrid);
+      return LoadLevelFromFile(filePath, out state, out visualGrid, out entrance);
     }
 
     Debug.LogError($"Level file not found at: {filePath}");
+
     return false;
   }
 
   public bool LoadLevelFromFile(
       string filePath,
       out SokobanState state,
-      out GameObject[,] visualGrid) {
+      out GameObject[,] visualGrid,
+      out GameObject entrance) {
     LevelData data = LevelParser.ParseLevelFile(filePath);
     if (data == null) {
       state = new SokobanState();
       visualGrid = null;
+      entrance = null;
       return false;
     }
 
@@ -78,13 +83,17 @@ public class LevelLoader : MonoBehaviour {
       TerrainBuilder.BuildTerrain(data.grid);
     }
 
-    SpawnDynamicObjects(state, visualGrid);
+    SpawnDynamicObjects(state, visualGrid, out entrance);
     SetupCamera(data.width, data.height);
 
     return true;
   }
 
-  public void CleanupLevel(GameObject[,] visualGrid) {
+  public void CleanupLevel(GameObject[,] visualGrid, GameObject entrance) {
+    if (entrance != null) {
+      Destroy(entrance);
+    }
+
     if (visualGrid != null) {
       foreach (var obj in visualGrid) {
         if (obj != null) {
@@ -101,7 +110,12 @@ public class LevelLoader : MonoBehaviour {
     }
   }
 
-  private void SpawnDynamicObjects(SokobanState initialState, GameObject[,] visualGrid) {
+  private void SpawnDynamicObjects(
+      SokobanState initialState,
+      GameObject[,] visualGrid,
+      out GameObject entrance) {
+    entrance = null;
+
     var terrainGrid = initialState.TerrainGrid;
     var width = terrainGrid.GetLength(0);
     var height = terrainGrid.GetLength(1);
@@ -117,8 +131,9 @@ public class LevelLoader : MonoBehaviour {
         }
 
         if (terrain.IsEntrance()) {
-          GameObject t = Instantiate(EntrancePrefab, pos, Quaternion.identity);
-          t.name = "Entrance";
+          GameObject ent = Instantiate(EntrancePrefab, pos, Quaternion.identity);
+          ent.name = "Entrance";
+          entrance = ent;
         }
 
         if (initialState.IsPlayerAt(x, y)) {

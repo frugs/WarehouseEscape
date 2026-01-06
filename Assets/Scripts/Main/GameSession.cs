@@ -1,3 +1,4 @@
+using System;
 using JetBrains.Annotations;
 using UnityEngine;
 
@@ -17,9 +18,11 @@ public class GameSession : MonoBehaviour {
   [field: SerializeField] private MenuManager MenuManager { get; set; }
 
   // ================= STATE =================
-  private GameObject[,] VisualGrid;
+  private GameObject[,] _visualGrid;
+  private GameObject _entrance;
+  private SokobanState _currentState;
 
-  public SokobanState CurrentState { get; private set; }
+  public SokobanState CurrentState => _currentState;
 
   [UsedImplicitly]
   private void Awake() {
@@ -34,15 +37,17 @@ public class GameSession : MonoBehaviour {
   }
 
   private void LoadLevel() {
-    LevelLoader.CleanupLevel(VisualGrid);
+    LevelLoader.CleanupLevel(_visualGrid, _entrance);
 
     if (LevelLoader.LoadLevel(
             LevelNumber,
             out var initialState,
             out var visualGrid,
+            out var entrance,
             out var levelName)) {
-      CurrentState = initialState;
-      VisualGrid = visualGrid;
+      _currentState = initialState;
+      _visualGrid = visualGrid;
+      _entrance = entrance;
       SolutionController.LevelName = levelName;
     }
 
@@ -59,38 +64,49 @@ public class GameSession : MonoBehaviour {
       SokobanMove move,
       out GameObject playerObj,
       out GameObject crateObj) {
+    RemoveEntranceIfFirstMove(move);
+
     playerObj = null;
     crateObj = null;
 
     // 1. Capture Objects (before we clear the grid cells)
-    if (CurrentState.IsValidPos(move.playerFrom)) {
-      playerObj = VisualGrid[move.playerFrom.x, move.playerFrom.y];
+    if (_currentState.IsValidPos(move.playerFrom)) {
+      playerObj = _visualGrid[move.playerFrom.x, move.playerFrom.y];
     }
 
-    if (move.type == MoveType.CratePush && CurrentState.IsValidPos(move.crateFrom)) {
-      crateObj = VisualGrid[move.crateFrom.x, move.crateFrom.y];
+    if (move.type == MoveType.CratePush && _currentState.IsValidPos(move.crateFrom)) {
+      crateObj = _visualGrid[move.crateFrom.x, move.crateFrom.y];
     }
 
     // 2. Update Data Model (The Truth)
-    CurrentState = MoveRules.ApplyMove(CurrentState, move);
+    _currentState = MoveRules.ApplyMove(_currentState, move);
 
     // 3. Update Visual Grid Pointers (The References)
-    VisualGrid[move.playerFrom.x, move.playerFrom.y] = null;
-    if (move.type == MoveType.CratePush)
-      VisualGrid[move.crateFrom.x, move.crateFrom.y] = null;
-
-    if (playerObj != null)
-      VisualGrid[move.playerTo.x, move.playerTo.y] = playerObj;
-
-    if (crateObj != null) {
-      // We keep tracking the visual object even if it "falls in a hole"
-      // so we don't lose the reference until we destroy/change it.
-      VisualGrid[move.crateTo.x, move.crateTo.y] = crateObj;
+    _visualGrid[move.playerFrom.x, move.playerFrom.y] = null;
+    if (move.type == MoveType.CratePush) {
+      _visualGrid[move.crateFrom.x, move.crateFrom.y] = null;
+      _visualGrid[move.crateTo.x, move.crateTo.y] = crateObj;
     }
+
+    _visualGrid[move.playerTo.x, move.playerTo.y] = playerObj;
+  }
+
+  private void RemoveEntranceIfFirstMove(SokobanMove move) {
+    if (_entrance == null) return;
+
+    var playerFrom = move.playerFrom;
+
+    if (!_currentState.IsValidPos(playerFrom)) return;
+    if (!_currentState.TerrainGrid[playerFrom.x, playerFrom.y].IsEntrance()) return;
+
+    var entranceBehaviour = _entrance.GetComponent<EntranceBehaviour>();
+    if (entranceBehaviour == null) return;
+
+    entranceBehaviour.RemoveEntrance();
   }
 
   public void CheckWinCondition() {
-    if (CurrentState.IsWin()) {
+    if (_currentState.IsWin()) {
       Debug.Log("Level Complete!");
       if (MenuManager) {
         MenuManager.WinGame();
