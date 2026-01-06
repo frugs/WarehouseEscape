@@ -1,15 +1,39 @@
 using System.Collections.Generic;
+using JetBrains.Annotations;
 using UnityEngine;
 
 public class TerrainMeshBuilder : MonoBehaviour {
-  [Header("Materials")] [SerializeField] private Material FloorMaterial = null;
-  [SerializeField] private Material WallMaterial = null;
-  [SerializeField] private Material HoleMaterial = null;
+  [Header("Materials")]
+  [field: SerializeField]
+  [UsedImplicitly]
+  private Material FloorMaterial { get; set; }
 
-  [Header("Settings")] [SerializeField] private readonly float WallHeight = 3f;
-  [SerializeField] private readonly float HoleDepth = 1.0f;
+  [field: SerializeField]
+  [UsedImplicitly]
+  private Material WallMaterial { get; set; }
 
-  private Transform LevelParent, WallsParent, HolesParent;
+  [field: SerializeField]
+  [UsedImplicitly]
+  private Material HoleMaterial { get; set; }
+
+  [field: SerializeField]
+  [UsedImplicitly]
+  private Material SkirtMaterial { get; set; }
+
+  [Header("Settings")]
+  [field: SerializeField]
+  [UsedImplicitly]
+  private float WallHeight { get; set; } = 6f;
+
+  [field: SerializeField]
+  [UsedImplicitly]
+  private float HoleDepth { get; set; } = 1.0f;
+
+  [field: SerializeField]
+  [UsedImplicitly]
+  private float SkirtDepth { get; set; } = 6f;
+
+  private Transform _levelParent, _wallsParent, _holesParent;
 
   public void BuildTerrain(TerrainType[,] grid) {
     var w = grid.GetLength(0);
@@ -20,10 +44,11 @@ public class TerrainMeshBuilder : MonoBehaviour {
     CreateFloor(grid, w, h);
     CreateWalls(grid, w, h);
     CreateHoles(grid, w, h);
+    CreatePlatformSides(grid, w, h);
   }
 
   public void ClearPreviousLevel() {
-    if (LevelParent) DestroyImmediate(LevelParent.gameObject);
+    if (_levelParent) DestroyImmediate(_levelParent.gameObject);
   }
 
   // ========== CORE MESH GENERATION ==========
@@ -48,7 +73,7 @@ public class TerrainMeshBuilder : MonoBehaviour {
       }
     }
 
-    CreateGameObjectFromMeshData("Floor", verts, tris, uvs, colors, FloorMaterial, LevelParent);
+    CreateGameObjectFromMeshData("Floor", verts, tris, uvs, colors, FloorMaterial, _levelParent);
   }
 
   private void CreateWalls(TerrainType[,] grid, int gridWidth, int gridHeight) {
@@ -107,7 +132,7 @@ public class TerrainMeshBuilder : MonoBehaviour {
         uvs,
         colors,
         WallMaterial,
-        WallsParent);
+        _wallsParent);
   }
 
   private void CreateHoles(TerrainType[,] grid, int gridWidth, int gridHeight) {
@@ -188,7 +213,81 @@ public class TerrainMeshBuilder : MonoBehaviour {
         uvs,
         colors,
         HoleMaterial,
-        HolesParent);
+        _holesParent);
+  }
+
+  private void CreatePlatformSides(TerrainType[,] grid, int w, int h) {
+    var vertices = new List<Vector3>();
+    var triangles = new List<int>();
+    var uvs = new List<Vector2>();
+    var colors = new List<Color>();
+    // 1. SOUTH EDGE (y=1) - Draw faces looking South (Vector3.back)
+    for (int x = 0; x < w; x++) {
+      var y = 1;
+      var terrain = grid[x, y];
+      // A hole at the edge starts drawing the skirt from the bottom of the hole
+      var offset = terrain.IsHole() ? HoleDepth : 0f;
+      var offsetSkirtHeight = SkirtDepth - offset;
+
+      // Draw skirt for every tile type at the edge
+      Vector3 center = GridUtils.GridToWorld(x, y);
+
+      // Center of the face is effectively at y = -skirtHeight/2
+      Vector3 faceCenter = center +
+                           (Vector3.back * 0.5f) +
+                           (Vector3.down * (offset + offsetSkirtHeight / 2));
+
+      AddVerticalQuad(
+          faceCenter,
+          Vector3.back, // Face Normal
+          offsetSkirtHeight,
+          vertices,
+          triangles,
+          uvs,
+          colors,
+          Color.white, // Bottom Vertex Color
+          Color.white // Top Vertex Color
+      );
+    }
+
+    // 2. WEST EDGE (x=1) - Draw faces looking West (Vector3.left)
+    for (int y = 0; y < h; y++) {
+      var x = 1;
+      var terrain = grid[x, y];
+      // A hole at the edge starts drawing the skirt from the bottom of the hole
+      var offset = terrain.IsHole() ? HoleDepth : 0f;
+      var offsetSkirtHeight = SkirtDepth - offset;
+
+      // Draw skirt for every tile type at the edge
+      Vector3 center = GridUtils.GridToWorld(x, y);
+
+      // Center of the face is effectively at y = -skirtHeight/2
+      Vector3 faceCenter = center +
+                           (Vector3.left * 0.5f) +
+                           (Vector3.down * (offset + offsetSkirtHeight / 2));
+
+      AddVerticalQuad(
+          faceCenter,
+          Vector3.left, // Face Normal
+          offsetSkirtHeight,
+          vertices,
+          triangles,
+          uvs,
+          colors,
+          Color.white,
+          Color.white
+      );
+    }
+
+    // Create the mesh object
+    CreateGameObjectFromMeshData(
+        "PlatformSkirt",
+        vertices,
+        triangles,
+        uvs,
+        colors,
+        SkirtMaterial,
+        _levelParent);
   }
 
   private void CheckAndAddWallSide(
@@ -378,10 +477,10 @@ public class TerrainMeshBuilder : MonoBehaviour {
 
   private void SetupHierarchy() {
     ClearPreviousLevel();
-    LevelParent = new GameObject("LevelTerrain").transform;
-    WallsParent = new GameObject("Walls").transform;
-    WallsParent.parent = LevelParent;
-    HolesParent = new GameObject("Holes").transform;
-    HolesParent.parent = LevelParent;
+    _levelParent = new GameObject("LevelTerrain").transform;
+    _wallsParent = new GameObject("Walls").transform;
+    _wallsParent.parent = _levelParent;
+    _holesParent = new GameObject("Holes").transform;
+    _holesParent.parent = _levelParent;
   }
 }

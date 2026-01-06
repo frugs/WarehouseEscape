@@ -1120,11 +1120,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 522d3eceaa00cfa4b8f634e54c82b7c0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TerrainMeshBuilder
-  FloorMaterial: {fileID: 2100000, guid: a6d02710f16f38a46822929b6d26b1f0, type: 2}
-  WallMaterial: {fileID: 2100000, guid: 279de127cd56be5489f50e95e9c82827, type: 2}
-  HoleMaterial: {fileID: 2100000, guid: e2666e08cf354684f89cad204815ddca, type: 2}
-  FadeStartHeight: 0.5
-  FadeEndHeight: 2
+  <FloorMaterial>k__BackingField: {fileID: 2100000, guid: a6d02710f16f38a46822929b6d26b1f0, type: 2}
+  <WallMaterial>k__BackingField: {fileID: 2100000, guid: 279de127cd56be5489f50e95e9c82827, type: 2}
+  <HoleMaterial>k__BackingField: {fileID: 2100000, guid: e2666e08cf354684f89cad204815ddca, type: 2}
+  <SkirtMaterial>k__BackingField: {fileID: 2100000, guid: 4a42f4b25a7791345b06f837e2892772, type: 2}
+  <WallHeight>k__BackingField: 6
+  <HoleDepth>k__BackingField: 1
+  <SkirtDepth>k__BackingField: 6
 --- !u!114 &1936126210
 MonoBehaviour:
   m_ObjectHideFlags: 0
