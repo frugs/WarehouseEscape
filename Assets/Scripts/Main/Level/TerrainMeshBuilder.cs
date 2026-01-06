@@ -7,7 +7,10 @@ public class TerrainMeshBuilder : MonoBehaviour {
   [SerializeField] private Material HoleMaterial = null;
 
   [Header("Settings")] [SerializeField] private readonly float WallHeight = 0.5f;
+
   [SerializeField] private readonly float HoleDepth = 1.0f;
+
+  [SerializeField] private readonly float BevelSize = 0.05f; // Width/Height of the chamfer
 
   private Transform LevelParent, WallsParent, HolesParent;
 
@@ -38,7 +41,7 @@ public class TerrainMeshBuilder : MonoBehaviour {
       for (int y = 0; y < gridHeight; y++) {
         if (grid[x, y].PlayerCanWalk()) {
           AddHorizontalQuad(
-              GridToWorld(x, y, 0f),
+              GridUtils.GridToWorld(x, y),
               verts,
               tris,
               uvs,
@@ -57,22 +60,38 @@ public class TerrainMeshBuilder : MonoBehaviour {
     var uvs = new List<Vector2>();
     var colors = new List<Color>();
 
+    // Height where the vertical wall stops and the bevel begins
+    float baseWallHeight = WallHeight - BevelSize;
+
     for (int x = 0; x < gridWidth; x++) {
       for (int y = 0; y < gridHeight; y++) {
         if (grid[x, y] != TerrainType.Wall) continue;
 
-        Vector3 basePos = GridToWorld(x, y, 0);
+        Vector3 basePos = GridUtils.GridToWorld(x, y);
 
-        // 1. TOP FACE (Y = wallHeight)
+        // 1. TOP CAP FACE (Inset by BevelSize)
+        // We create a smaller quad on top
         AddHorizontalQuad(
             basePos + Vector3.up * WallHeight,
             vertices,
             triangles,
             uvs,
             colors,
-            Color.white);
+            new Color(0.9f, 0.9f, 0.9f),
+            0.5f - BevelSize); // Shrink the quad by the bevel amount);
 
-        // 2. SIDE FACES (Check 4 neighbors)
+        // 2. BEVEL FACES (4 angled sides connecting top to sides)
+        AddBevelFaces(
+            basePos,
+            baseWallHeight,
+            WallHeight,
+            BevelSize,
+            vertices,
+            triangles,
+            uvs,
+            colors);
+
+        // 3. VERTICAL SIDE FACES
         // North (Z+1)
         CheckAndAddWallSide(
             x,
@@ -83,6 +102,7 @@ public class TerrainMeshBuilder : MonoBehaviour {
             grid,
             gridWidth,
             gridHeight,
+            baseWallHeight,
             vertices,
             triangles,
             uvs,
@@ -97,6 +117,7 @@ public class TerrainMeshBuilder : MonoBehaviour {
             grid,
             gridWidth,
             gridHeight,
+            baseWallHeight,
             vertices,
             triangles,
             uvs,
@@ -111,6 +132,7 @@ public class TerrainMeshBuilder : MonoBehaviour {
             grid,
             gridWidth,
             gridHeight,
+            baseWallHeight,
             vertices,
             triangles,
             uvs,
@@ -125,6 +147,7 @@ public class TerrainMeshBuilder : MonoBehaviour {
             grid,
             gridWidth,
             gridHeight,
+            baseWallHeight,
             vertices,
             triangles,
             uvs,
@@ -152,7 +175,7 @@ public class TerrainMeshBuilder : MonoBehaviour {
       for (int y = 0; y < gridHeight; y++) {
         if (!grid[x, y].IsHole()) continue;
 
-        Vector3 center = GridToWorld(x, y, 0);
+        Vector3 center = GridUtils.GridToWorld(x, y);
 
         // 1. BOTTOM FACE (Y = -holeDepth)
         AddHorizontalQuad(
@@ -163,7 +186,7 @@ public class TerrainMeshBuilder : MonoBehaviour {
             colors,
             Color.black);
 
-        // 2. INNER WALLS (Check 4 neighbors)
+        // 2. INNER WALLS
         CheckAndAddHoleSide(
             x,
             y,
@@ -231,6 +254,83 @@ public class TerrainMeshBuilder : MonoBehaviour {
 
   // ========== FACE GENERATION HELPERS ==========
 
+  private void AddBevelFaces(
+      Vector3 center,
+      float bottomY,
+      float topY,
+      float inset,
+      List<Vector3> verts,
+      List<int> tris,
+      List<Vector2> uvs,
+      List<Color> colors) {
+    float outerS = 0.5f; // Outer edge (connects to vertical wall)
+    float innerS = 0.5f - inset; // Inner edge (connects to top cap)
+
+    // Corners
+    // SW ( -1, -1 )
+    Vector3 outSW = center + new Vector3(-outerS, bottomY, -outerS);
+    Vector3 inSW = center + new Vector3(-innerS, topY, -innerS);
+
+    // SE ( +1, -1 )
+    Vector3 outSE = center + new Vector3(outerS, bottomY, -outerS);
+    Vector3 inSE = center + new Vector3(innerS, topY, -innerS);
+
+    // NE ( +1, +1 )
+    Vector3 outNE = center + new Vector3(outerS, bottomY, outerS);
+    Vector3 inNE = center + new Vector3(innerS, topY, innerS);
+
+    // NW ( -1, +1 )
+    Vector3 outNW = center + new Vector3(-outerS, bottomY, outerS);
+    Vector3 inNW = center + new Vector3(-innerS, topY, innerS);
+
+    Color bevelColor = new Color(0.8f, 0.8f, 0.8f);
+
+    // South Bevel
+    AddQuadFromPoints(outSW, outSE, inSE, inSW, verts, tris, uvs, colors, bevelColor);
+    // North Bevel
+    AddQuadFromPoints(outNE, outNW, inNW, inNE, verts, tris, uvs, colors, bevelColor);
+    // East Bevel
+    AddQuadFromPoints(outSE, outNE, inNE, inSE, verts, tris, uvs, colors, bevelColor);
+    // West Bevel
+    AddQuadFromPoints(outNW, outSW, inSW, inNW, verts, tris, uvs, colors, bevelColor);
+  }
+
+  private void AddQuadFromPoints(
+      Vector3 p0,
+      Vector3 p1,
+      Vector3 p2,
+      Vector3 p3,
+      List<Vector3> verts,
+      List<int> tris,
+      List<Vector2> uvs,
+      List<Color> colors,
+      Color c) {
+    int i = verts.Count;
+    verts.Add(p0);
+    verts.Add(p1);
+    verts.Add(p2);
+    verts.Add(p3);
+
+    // Tris 0-2-1, 0-3-2 (Standard Quad winding)
+    tris.Add(i);
+    tris.Add(i + 2);
+    tris.Add(i + 1);
+    tris.Add(i);
+    tris.Add(i + 3);
+    tris.Add(i + 2);
+
+    // Simple UVs (stretched)
+    uvs.Add(new Vector2(0, 0));
+    uvs.Add(new Vector2(1, 0));
+    uvs.Add(new Vector2(1, 1));
+    uvs.Add(new Vector2(0, 1));
+
+    colors.Add(c);
+    colors.Add(c);
+    colors.Add(c);
+    colors.Add(c);
+  }
+
   private void CheckAndAddWallSide(
       int x,
       int y,
@@ -240,28 +340,33 @@ public class TerrainMeshBuilder : MonoBehaviour {
       TerrainType[,] grid,
       int width,
       int height,
+      float sideHeight,
       List<Vector3> verts,
       List<int> tris,
       List<Vector2> uvs,
       List<Color> colors) {
+    var wallBodyColor = new Color(0.6f, 0.6f, 0.6f);
+
     int nx = x + dx;
     int ny = y + dy;
 
     // If neighbor is out of bounds OR not a wall, we need a face here
-    bool isEdge = (nx < 0 || nx >= width || ny < 0 || ny >= height);
+    bool isEdge = nx < 0 || nx >= width || ny < 0 || ny >= height;
     if (isEdge || grid[nx, ny] != TerrainType.Wall) {
-      Vector3 center = GridToWorld(x, y, 0);
-      Vector3 faceCenter = center + (dirNormal * 0.5f) + (Vector3.up * (WallHeight / 2));
+      Vector3 center = GridUtils.GridToWorld(x, y);
+      // Move center up to half the height of this specific side segment
+      Vector3 faceCenter = center + (dirNormal * 0.5f) + (Vector3.up * (sideHeight / 2));
+
       AddVerticalQuad(
           faceCenter,
           dirNormal,
-          WallHeight,
+          sideHeight,
           verts,
           tris,
           uvs,
           colors,
-          Color.white,
-          Color.white);
+          wallBodyColor,
+          wallBodyColor);
     }
   }
 
@@ -284,12 +389,12 @@ public class TerrainMeshBuilder : MonoBehaviour {
     // For holes, if neighbor is NOT a hole, we see the side
     bool isEdge = nx < 0 || nx >= width || ny < 0 || ny >= height;
     if (isEdge || !grid[nx, ny].IsHole()) {
-      Vector3 center = GridToWorld(x, y, 0);
+      Vector3 center = GridUtils.GridToWorld(x, y);
       Vector3 faceCenter = center + (dirNormal * 0.5f) + (Vector3.down * (HoleDepth / 2));
-      // Invert normal because we are looking INTO the hole
+
       AddVerticalQuad(
           faceCenter,
-          -dirNormal,
+          -dirNormal, // Invert normal because we are looking INTO the hole
           HoleDepth,
           verts,
           tris,
@@ -306,32 +411,23 @@ public class TerrainMeshBuilder : MonoBehaviour {
       List<int> tris,
       List<Vector2> uvs,
       List<Color> colors,
-      Color c) {
+      Color c,
+      float size = 0.5f) {
     int i = verts.Count;
-    float s = 0.5f;
+    float s = size;
 
-    // Vertices
-    // 0: Bottom-Left (SW)
-    // 1: Bottom-Right (SE)
-    // 2: Top-Right (NE)
-    // 3: Top-Left (NW)
-    verts.Add(center + new Vector3(-s, 0, -s));
-    verts.Add(center + new Vector3(s, 0, -s));
-    verts.Add(center + new Vector3(s, 0, s));
-    verts.Add(center + new Vector3(-s, 0, s));
+    verts.Add(center + new Vector3(-s, 0, -s)); // SW
+    verts.Add(center + new Vector3(s, 0, -s)); // SE
+    verts.Add(center + new Vector3(s, 0, s)); // NE
+    verts.Add(center + new Vector3(-s, 0, s)); // NW
 
-    // Triangles (Clockwise Winding: 0->2->1, 0->3->2)
-    // This ensures the face points UP
-
-    // Triangle 1 (Bottom-Left -> Top-Right -> Bottom-Right)
+    // Correct Winding for Top Face (Up Normal)
     tris.Add(i);
-    tris.Add(i + 3); // Changed from 1
-    tris.Add(i + 2); // Changed from 2
-
-    // Triangle 2 (Bottom-Left -> Top-Left -> Top-Right)
+    tris.Add(i + 2);
+    tris.Add(i + 1); // 0-2-1
     tris.Add(i);
-    tris.Add(i + 2); // Changed from 2
-    tris.Add(i + 1); // Changed from 3
+    tris.Add(i + 3);
+    tris.Add(i + 2); // 0-3-2
 
     uvs.Add(new Vector2(0, 0));
     uvs.Add(new Vector2(1, 0));
@@ -354,7 +450,6 @@ public class TerrainMeshBuilder : MonoBehaviour {
       List<Color> colors,
       Color bottomColor,
       Color topColor) {
-    // Calculate tangent vectors
     Vector3 right = Vector3.Cross(Vector3.up, normal).normalized;
     Vector3 halfRight = right * 0.5f;
     Vector3 halfUp = Vector3.up * (height * 0.5f);
@@ -366,13 +461,10 @@ public class TerrainMeshBuilder : MonoBehaviour {
     verts.Add(center + halfRight + halfUp); // 2: Top-Right
     verts.Add(center - halfRight + halfUp); // 3: Top-Left
 
-    // Triangles (Clockwise Winding)
-    // 0 -> 1 -> 2
+    // Tris
     tris.Add(i);
     tris.Add(i + 1);
     tris.Add(i + 2);
-
-    // 0 -> 2 -> 3
     tris.Add(i);
     tris.Add(i + 2);
     tris.Add(i + 3);
@@ -382,17 +474,13 @@ public class TerrainMeshBuilder : MonoBehaviour {
     uvs.Add(new Vector2(1, 1));
     uvs.Add(new Vector2(0, 1));
 
-    colors.Add(bottomColor); // 0
-    colors.Add(bottomColor); // 1
-    colors.Add(topColor); // 2
-    colors.Add(topColor); // 3
+    colors.Add(bottomColor);
+    colors.Add(bottomColor);
+    colors.Add(topColor);
+    colors.Add(topColor);
   }
 
   // ========== UTILS ==========
-
-  private Vector3 GridToWorld(int x, int y, float yPos) {
-    return new Vector3(x + 0.5f, yPos, y + 0.5f);
-  }
 
   private void CreateGameObjectFromMeshData(
       string meshName,
