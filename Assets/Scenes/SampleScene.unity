@@ -1124,7 +1124,7 @@ MonoBehaviour:
   <WallMaterial>k__BackingField: {fileID: 2100000, guid: 279de127cd56be5489f50e95e9c82827, type: 2}
   <HoleMaterial>k__BackingField: {fileID: 2100000, guid: e2666e08cf354684f89cad204815ddca, type: 2}
   <SkirtMaterial>k__BackingField: {fileID: 2100000, guid: 4a42f4b25a7791345b06f837e2892772, type: 2}
-  <WallHeight>k__BackingField: 2
+  <WallHeight>k__BackingField: 1.5
   <BevelSize>k__BackingField: 0.05
   <HoleDepth>k__BackingField: 1
   <SkirtDepth>k__BackingField: 6
@@ -1182,11 +1182,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 200603a0c89d305468c0c112f32cc421, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Main::LevelLoader
-  TerrainBuilder: {fileID: 0}
-  CameraTransform: {fileID: 0}
-  PlayerPrefab: {fileID: 721129335946948922, guid: 081bf8a76a88e34408793b404f24af5d, type: 3}
-  CratePrefab: {fileID: 4699907650127345005, guid: 4fc469b1f980a6b429697cc87278a555, type: 3}
-  TargetPrefab: {fileID: 5504698377664096694, guid: f5ee4a16c1e9af04ca27e6740c476264, type: 3}
+  <TerrainBuilder>k__BackingField: {fileID: 0}
+  <PlayerPrefab>k__BackingField: {fileID: 721129335946948922, guid: 081bf8a76a88e34408793b404f24af5d, type: 3}
+  <CratePrefab>k__BackingField: {fileID: 4699907650127345005, guid: 4fc469b1f980a6b429697cc87278a555, type: 3}
+  <TargetPrefab>k__BackingField: {fileID: 5504698377664096694, guid: f5ee4a16c1e9af04ca27e6740c476264, type: 3}
+  <EntrancePrefab>k__BackingField: {fileID: 721129335946948922, guid: 59c226d1fcb4c4d47bbafc33ff64506f, type: 3}
+  <LevelsDirectoryName>k__BackingField: Levels
 --- !u!114 &1936126214
 MonoBehaviour:
   m_ObjectHideFlags: 0

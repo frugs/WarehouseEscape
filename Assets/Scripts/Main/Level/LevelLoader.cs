@@ -3,23 +3,42 @@ using JetBrains.Annotations;
 using UnityEngine;
 
 public class LevelLoader : MonoBehaviour {
-  [Header("References")] [SerializeField]
-  private TerrainMeshBuilder TerrainBuilder;
+  private Transform _cameraTransform;
 
-  [SerializeField] private Transform CameraTransform;
+  [Header("References")]
+  [field: SerializeField]
+  [UsedImplicitly]
+  private TerrainMeshBuilder TerrainBuilder { get; set; }
 
-  [Header("Prefabs")] [SerializeField] private GameObject PlayerPrefab = null;
-  [SerializeField] private GameObject CratePrefab = null;
-  [SerializeField] private GameObject TargetPrefab = null;
 
-  [Header("Settings")] [SerializeField] private readonly string LevelsDirectoryName = "Levels";
+  [Header("Prefabs")]
+  [field: SerializeField]
+  [UsedImplicitly]
+  private GameObject PlayerPrefab { get; set; }
+
+  [field: SerializeField]
+  [UsedImplicitly]
+  private GameObject CratePrefab { get; set; }
+
+  [field: SerializeField]
+  [UsedImplicitly]
+  private GameObject TargetPrefab { get; set; }
+
+  [field: SerializeField]
+  [UsedImplicitly]
+  private GameObject EntrancePrefab { get; set; }
+
+  [Header("Settings")]
+  [field: SerializeField]
+  [UsedImplicitly]
+  private string LevelsDirectoryName { get; set; } = "Levels";
 
   private string LevelsDirectory => Path.Combine(Application.dataPath, LevelsDirectoryName);
 
   [UsedImplicitly]
   private void Awake() {
     if (TerrainBuilder == null) TerrainBuilder = GetComponent<TerrainMeshBuilder>();
-    if (CameraTransform == null && Camera.main != null) CameraTransform = Camera.main.transform;
+    if (_cameraTransform == null && Camera.main != null) _cameraTransform = Camera.main.transform;
   }
 
   // ================= LEVEL LOADING =================
@@ -97,6 +116,11 @@ public class LevelLoader : MonoBehaviour {
           t.name = $"Target_{x}_{y}";
         }
 
+        if (terrain.IsEntrance()) {
+          GameObject t = Instantiate(EntrancePrefab, pos, Quaternion.identity);
+          t.name = "Entrance";
+        }
+
         if (initialState.IsPlayerAt(x, y)) {
           GameObject p = Instantiate(PlayerPrefab, pos, Quaternion.identity);
           p.name = "Player";
@@ -111,7 +135,7 @@ public class LevelLoader : MonoBehaviour {
   }
 
   private void SetupCamera(int gridWidth, int gridHeight) {
-    if (CameraTransform == null) return;
+    if (_cameraTransform == null) return;
 
     // Isometric camera angles
     // Yaw: 45° (looking diagonally across the grid)
@@ -133,16 +157,16 @@ public class LevelLoader : MonoBehaviour {
     float pitchRad = pitch * Mathf.Deg2Rad;
     float yawRad = yaw * Mathf.Deg2Rad;
 
-    CameraTransform.position = new Vector3(
+    _cameraTransform.position = new Vector3(
         centerX - distance * Mathf.Cos(pitchRad) * Mathf.Sin(yawRad),
         distance * Mathf.Sin(pitchRad),
         centerZ - distance * Mathf.Cos(pitchRad) * Mathf.Cos(yawRad)
     );
 
     // Rotate camera to look at grid center
-    CameraTransform.rotation = Quaternion.Euler(pitch, yaw, 0f);
+    _cameraTransform.rotation = Quaternion.Euler(pitch, yaw, 0f);
 
-    Camera cam = CameraTransform.GetComponent<Camera>();
+    Camera cam = _cameraTransform.GetComponent<Camera>();
 
     if (cam != null) {
       cam.orthographic = true;

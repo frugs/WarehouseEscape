@@ -317,7 +317,7 @@ public class TerrainMeshBuilder : MonoBehaviour {
     var uvs = new List<Vector2>();
     var colors = new List<Color>();
     // 1. SOUTH EDGE (y=1) - Draw faces looking South (Vector3.back)
-    for (int x = 0; x < w; x++) {
+    for (int x = 1; x < w; x++) {
       var y = 1;
       var terrain = grid[x, y];
       // A hole at the edge starts drawing the skirt from the bottom of the hole
@@ -346,7 +346,7 @@ public class TerrainMeshBuilder : MonoBehaviour {
     }
 
     // 2. WEST EDGE (x=1) - Draw faces looking West (Vector3.left)
-    for (int y = 0; y < h; y++) {
+    for (int y = 1; y < h; y++) {
       var x = 1;
       var terrain = grid[x, y];
       // A hole at the edge starts drawing the skirt from the bottom of the hole
