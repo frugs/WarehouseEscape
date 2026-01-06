@@ -664,7 +664,7 @@ Camera:
   m_Enabled: 1
   serializedVersion: 2
   m_ClearFlags: 2
-  m_BackGroundColor: {r: 0.9921569, g: 0.9607844, b: 0.9019608, a: 1}
+  m_BackGroundColor: {r: 1, g: 0.9851548, b: 0.9415095, a: 1}
   m_projectionMatrixMode: 1
   m_GateFitMode: 2
   m_FOVAxisMode: 0
@@ -1123,6 +1123,8 @@ MonoBehaviour:
   FloorMaterial: {fileID: 2100000, guid: a6d02710f16f38a46822929b6d26b1f0, type: 2}
   WallMaterial: {fileID: 2100000, guid: 279de127cd56be5489f50e95e9c82827, type: 2}
   HoleMaterial: {fileID: 2100000, guid: e2666e08cf354684f89cad204815ddca, type: 2}
+  FadeStartHeight: 0.5
+  FadeEndHeight: 2
 --- !u!114 &1936126210
 MonoBehaviour:
   m_ObjectHideFlags: 0
