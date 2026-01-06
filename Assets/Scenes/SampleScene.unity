@@ -1120,7 +1120,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 522d3eceaa00cfa4b8f634e54c82b7c0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TerrainMeshBuilder
-  FloorMaterial: {fileID: 2100000, guid: e544726a9e892284bb46ee1cda49de38, type: 2}
+  FloorMaterial: {fileID: 2100000, guid: a6d02710f16f38a46822929b6d26b1f0, type: 2}
   WallMaterial: {fileID: 2100000, guid: e544726a9e892284bb46ee1cda49de38, type: 2}
   HoleMaterial: {fileID: 2100000, guid: e2666e08cf354684f89cad204815ddca, type: 2}
 --- !u!114 &1936126210
