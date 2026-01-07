@@ -130,7 +130,7 @@ public class LevelLoader : MonoBehaviour {
           t.name = $"Target_{x}_{y}";
         }
 
-        if (terrain.IsEntrance()) {
+        if (terrain.IsEntrance() && EntrancePrefab != null) {
           GameObject ent = Instantiate(EntrancePrefab, pos, Quaternion.identity);
           ent.name = "Entrance";
           entrance = ent;

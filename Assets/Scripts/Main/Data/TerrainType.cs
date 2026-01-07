@@ -19,6 +19,7 @@ public static class TerrainTypeExtensions {
   public static bool PlayerCanWalk(this TerrainType terrain) =>
       terrain == TerrainType.Floor ||
       terrain == TerrainType.Target ||
+      terrain == TerrainType.Entrance ||
       terrain == TerrainType.Exit;
 
   /// <summary>Can a crate be pushed here? (Floor or fillable Hole)</summary>
