@@ -1,4 +1,3 @@
-using System;
 using JetBrains.Annotations;
 using UnityEngine;
 
@@ -64,8 +63,6 @@ public class GameSession : MonoBehaviour {
       SokobanMove move,
       out GameObject playerObj,
       out GameObject crateObj) {
-    RemoveEntranceIfFirstMove(move);
-
     playerObj = null;
     crateObj = null;
 
@@ -89,20 +86,6 @@ public class GameSession : MonoBehaviour {
     }
 
     _visualGrid[move.playerTo.x, move.playerTo.y] = playerObj;
-  }
-
-  private void RemoveEntranceIfFirstMove(SokobanMove move) {
-    if (_entrance == null) return;
-
-    var playerFrom = move.playerFrom;
-
-    if (!_currentState.IsValidPos(playerFrom)) return;
-    if (!_currentState.TerrainGrid[playerFrom.x, playerFrom.y].IsEntrance()) return;
-
-    var entranceBehaviour = _entrance.GetComponent<EntranceBehaviour>();
-    if (entranceBehaviour == null) return;
-
-    entranceBehaviour.RemoveEntrance();
   }
 
   public void CheckWinCondition() {
