@@ -55,18 +55,20 @@ public readonly struct SokobanState : IEquatable<SokobanState> {
 
     var terrain = TerrainGrid[x, y];
 
-    // 1. Check basic terrain walkability (Floor/FilledHole checks)
-    // If it's a Wall, this returns false immediately.
+    // Check walkability
     if (!terrain.PlayerCanWalk()) {
-      // 2. Exception: It IS a Hole, but it is currently FILLED.
-      // If it's a Hole and FilledHoles DOES NOT contain it, we return false.
-      // If it contains it, we proceed (it acts like a Floor).
-      if (!terrain.IsHole() || !IsFilledHoleAt(x, y)) {
+      var dynamicTerrainCheck = (IsHole: terrain.IsHole(), IsExit: terrain.IsExit()) switch {
+          { IsHole: true } => IsFilledHoleAt(x, y),
+          { IsExit: true } => IsSolved(),
+          _ => false,
+      };
+
+      if (!dynamicTerrainCheck) {
         return false;
       }
     }
 
-    // 3. Crate Check (Blocked if occupied by a crate)
+    // Crate Check (Blocked if occupied by a crate)
     if (IsCrateAt(x, y)) return false;
 
     return true;
@@ -108,6 +110,8 @@ public readonly struct SokobanState : IEquatable<SokobanState> {
     return FilledHoles.Contains(new Vector2Int(x, y));
   }
 
+  public bool IsSolved() => IsSolved(out _);
+
   public bool IsSolved(out Vector2Int? exitPos) {
     exitPos = null;
     int targetsSatisfied = 0;
@@ -129,7 +133,7 @@ public readonly struct SokobanState : IEquatable<SokobanState> {
         }
       }
     }
-    
+
     return targetsSatisfied == totalTargets;
   }
 
