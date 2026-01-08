@@ -1,3 +1,4 @@
+using System;
 using JetBrains.Annotations;
 using UnityEngine;
 
@@ -23,6 +24,8 @@ public class GameSession : MonoBehaviour {
   private SokobanState _currentState;
 
   public SokobanState CurrentState => _currentState;
+
+  public event Action StateChanged;
 
   [UsedImplicitly]
   private void Awake() {
@@ -69,7 +72,7 @@ public class GameSession : MonoBehaviour {
     playerObj = null;
     crateObj = null;
 
-    // 1. Capture Objects (before we clear the grid cells)
+    // Capture Objects (before we clear the grid cells)
     if (_currentState.IsValidPos(move.playerFrom)) {
       playerObj = _visualGrid[move.playerFrom.x, move.playerFrom.y];
     }
@@ -78,10 +81,10 @@ public class GameSession : MonoBehaviour {
       crateObj = _visualGrid[move.crateFrom.x, move.crateFrom.y];
     }
 
-    // 2. Update Data Model (The Truth)
+    // Update Data Model (The Truth)
     _currentState = MoveRules.ApplyMove(_currentState, move);
 
-    // 3. Update Visual Grid Pointers (The References)
+    // Update Visual Grid Pointers (The References)
     _visualGrid[move.playerFrom.x, move.playerFrom.y] = null;
     if (move.type == MoveType.CratePush) {
       _visualGrid[move.crateFrom.x, move.crateFrom.y] = null;
@@ -89,6 +92,11 @@ public class GameSession : MonoBehaviour {
     }
 
     _visualGrid[move.playerTo.x, move.playerTo.y] = playerObj;
+
+    // Run callbacks
+    if (StateChanged != null) {
+      StateChanged();
+    }
   }
 
   public void CheckWinCondition() {

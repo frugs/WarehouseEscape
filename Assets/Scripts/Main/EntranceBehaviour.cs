@@ -18,10 +18,16 @@ public class EntranceBehaviour : MonoBehaviour {
   [UsedImplicitly]
   private void Awake() {
     _gameSession = FindAnyObjectByType<GameSession>();
+    _gameSession.StateChanged += OnStateChanged;
   }
 
   [UsedImplicitly]
-  private void Update() {
+  private void OnDestroy() {
+    _gameSession.StateChanged -= OnStateChanged;
+  }
+
+  [UsedImplicitly]
+  private void OnStateChanged() {
     if (_gameSession == null || _isRemoved) return;
 
     var pos = transform.position.WorldToGrid();
