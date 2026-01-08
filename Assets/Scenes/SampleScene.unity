@@ -1218,6 +1218,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Main::PlayerController
   GameSession: {fileID: 0}
   MoveScheduler: {fileID: 0}
+  WalkIndicatorMesh: {fileID: 10207, guid: 0000000000000000e000000000000000, type: 0}
+  PushIndicatorPrefab: {fileID: 6514692909629603639, guid: b022b842adc49714bac9c2db37f26daf, type: 3}
 --- !u!114 &1936126216
 MonoBehaviour:
   m_ObjectHideFlags: 0
