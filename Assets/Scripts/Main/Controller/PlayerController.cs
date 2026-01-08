@@ -7,18 +7,30 @@ using UnityEngine;
 /// Supports walking to accessible tiles and pushing crates with directional indicators.
 /// </summary>
 public class PlayerController : MonoBehaviour {
-  [Header("Dependencies")]
+  private const string PUSH_INDICATOR_LAYER = "PushIndicator";
+
+  [field: Header("Dependencies")]
   [field: SerializeField]
   private GameSession GameSession { get; set; }
 
-  [SerializeField] private MoveScheduler MoveScheduler;
+  [field: SerializeField] private MoveScheduler MoveScheduler { get; set; }
 
-  [Header("UI References")] [SerializeField] [UsedImplicitly]
-  private GameObject WalkIndicatorPrefab;
+  [field: Header("UI References")]
+  [field: SerializeField]
+  [UsedImplicitly]
+  private GameObject WalkIndicatorPrefab { get; set; }
 
-  [SerializeField] [UsedImplicitly] private GameObject PushIndicatorPrefab;
+  [field: SerializeField] [UsedImplicitly]
+  private GameObject PushIndicatorPrefab;
 
-  private GameInput InputActions;
+  [field: Header("Push Indicator Animation")]
+  [field: SerializeField]
+  [UsedImplicitly]
+  private float IndicatorBobDistance { get; set; } = 0.075f;
+
+  [field: SerializeField]
+  [UsedImplicitly]
+  private float IndicatorBobSpeed { get; set; } = 5f;
 
   // State machine
   private enum InteractionState {
@@ -26,35 +38,42 @@ public class PlayerController : MonoBehaviour {
     ShowingCratePushIndicators
   }
 
+  private GameInput _inputActions;
   private InteractionState _currentState = InteractionState.Idle;
   private Vector2Int _currentCratePos = Vector2Int.zero;
   private GameObject _walkIndicator;
   private Vector2? _pointerLastPos;
+  private int _pushIndicatorLayerMask;
 
-  private List<CrateIndicator> _pushIndicators = new List<CrateIndicator>();
-
-  // Data structure for crate push indicators
-  private class CrateIndicator {
+  // Data structure for crate push indicators with animation tracking
+  private class CratePushIndicator {
     public Vector2Int Direction { get; set; }
     public GameObject Visual { get; set; }
+    public Vector3 BasePosition { get; set; }
     public bool IsHovered { get; set; }
+    public float AnimationTime { get; set; }
   }
+
+  private List<CratePushIndicator> _pushIndicators = new List<CratePushIndicator>();
+  private CratePushIndicator _previouslyHoveredIndicator;
 
   [UsedImplicitly]
   private void Awake() {
     GameSession = GetComponent<GameSession>();
     MoveScheduler = GetComponent<MoveScheduler>();
-    InputActions = new GameInput();
+
+    _inputActions = new GameInput();
+    _pushIndicatorLayerMask = LayerMask.GetMask(PUSH_INDICATOR_LAYER);
   }
 
   [UsedImplicitly]
   private void OnEnable() {
-    InputActions.Player.Enable();
+    _inputActions.Player.Enable();
   }
 
   [UsedImplicitly]
   private void OnDisable() {
-    InputActions.Player.Disable();
+    _inputActions.Player.Disable();
     RemoveWalkIndicator();
     DismissPushIndicators();
   }
@@ -73,9 +92,17 @@ public class PlayerController : MonoBehaviour {
     HandlePointerInput();
   }
 
+  [UsedImplicitly]
+  private void LateUpdate() {
+    // Update animations for hovered push indicators
+    if (_currentState == InteractionState.ShowingCratePushIndicators) {
+      UpdatePushIndicatorAnimations();
+    }
+  }
+
   private bool HandleRestartInput() {
-    if (InputActions.Player.Restart.WasPerformedThisFrame()) {
-      if (InputActions.Player.Restart.IsPressed()) {
+    if (_inputActions.Player.Restart.WasPerformedThisFrame()) {
+      if (_inputActions.Player.Restart.IsPressed()) {
         MoveScheduler.ClearInterrupt();
         DismissPushIndicators();
         GameSession.ResetLevel();
@@ -87,10 +114,10 @@ public class PlayerController : MonoBehaviour {
   }
 
   private bool HandleDirectionInput() {
-    if (InputActions.Player.Move.WasPerformedThisFrame()) {
+    if (_inputActions.Player.Move.WasPerformedThisFrame()) {
       if (GameSession.CurrentState.IsWin()) return true;
 
-      Vector2 raw = InputActions.Player.Move.ReadValue<Vector2>();
+      Vector2 raw = _inputActions.Player.Move.ReadValue<Vector2>();
       Vector2Int dir = Vector2Int.zero;
       if (Mathf.Abs(raw.x) > 0.5f) {
         dir.x = (int)Mathf.Sign(raw.x);
@@ -116,24 +143,35 @@ public class PlayerController : MonoBehaviour {
 
   private void HandlePointerInput() {
     // Update mouse position for hover feedback
-    var mousePos = InputActions.Player.MousePosition.ReadValue<Vector2>();
+    var mousePos = _inputActions.Player.MousePosition.ReadValue<Vector2>();
 
-    Vector2Int? maybeGridPos = GetGridPosFromMousePos(mousePos);
+    // Only update hover feedback when mouse position actually changes
+    if (_pointerLastPos == null || !_pointerLastPos.Value.EqualsWithThreshold(mousePos, 1f)) {
+      Vector2Int? maybeGridPos = GetGridPosFromMousePos(mousePos);
 
-    // Handle hover feedback when NOT showing indicators
-    if (_currentState == InteractionState.Idle &&
-        (_pointerLastPos == null || (_pointerLastPos.Value - mousePos).sqrMagnitude > 100f)) {
-      UpdateHoverFeedback(maybeGridPos);
+      // Handle hover feedback when NOT showing indicators
+      if (_currentState == InteractionState.Idle) {
+        UpdateHoverFeedback(maybeGridPos);
+      }
+
       _pointerLastPos = mousePos;
+
+      // Handle hover over indicators (raycast only on mouse move, not every frame)
+      if (_currentState == InteractionState.ShowingCratePushIndicators) {
+        UpdatePushIndicatorHoverOnMouseMove(mousePos);
+      }
     }
 
     // Handle click/tap input
-    if (InputActions.Player.Click.WasPerformedThisFrame()) {
+    if (_inputActions.Player.Click.WasPerformedThisFrame()) {
       if (GameSession.CurrentState.IsWin()) return;
+
+      Vector2Int? maybeGridPos =
+          GetGridPosFromMousePos(_inputActions.Player.MousePosition.ReadValue<Vector2>());
 
       if (_currentState == InteractionState.ShowingCratePushIndicators) {
         // We're showing indicators - check if player clicked on one
-        if (TryHandleIndicatorClick(mousePos)) {
+        if (TryHandleIndicatorClick()) {
           return;
         }
 
@@ -146,11 +184,6 @@ public class PlayerController : MonoBehaviour {
       if (maybeGridPos.HasValue) {
         HandleClick(maybeGridPos.Value);
       }
-    }
-
-    // Handle hover over indicators
-    if (_currentState == InteractionState.ShowingCratePushIndicators) {
-      UpdateIndicatorHover(mousePos);
     }
   }
 
@@ -198,7 +231,7 @@ public class PlayerController : MonoBehaviour {
     if (state.CanPlayerWalk(tile.x, tile.y)) {
       List<Vector2Int> path = Pather.FindPath(state, state.PlayerPos, tile);
 
-      if (path != null && path.Count > 0) {
+      if (path is { Count: > 0 }) {
         RemoveWalkIndicator();
         List<SokobanMove> moveList = ConvertPathToMoves(state.PlayerPos, path);
 
@@ -215,6 +248,7 @@ public class PlayerController : MonoBehaviour {
     _currentState = InteractionState.ShowingCratePushIndicators;
     _currentCratePos = cratePos;
     _pushIndicators.Clear();
+    _previouslyHoveredIndicator = null;
 
     var state = GameSession.CurrentState;
 
@@ -249,62 +283,76 @@ public class PlayerController : MonoBehaviour {
     var indicator = Instantiate(PushIndicatorPrefab);
 
     indicator.gameObject.name = $"PushIndicator_{direction}";
-    indicator.transform.position = (cratePos + direction).GridToWorld(0.5f);
+    var basePosition = (cratePos + direction).GridToWorld(0.5f);
+    indicator.transform.position = basePosition;
     indicator.transform.LookAt((cratePos + direction * 2).GridToWorld(0.5f));
 
-    var crateIndicator = new CrateIndicator {
-        Direction = direction, Visual = indicator, IsHovered = false
+    var crateIndicator = new CratePushIndicator {
+        Direction = direction,
+        Visual = indicator,
+        BasePosition = basePosition,
+        IsHovered = false,
+        AnimationTime = 0f
     };
 
     _pushIndicators.Add(crateIndicator);
   }
 
-  private bool TryHandleIndicatorClick(Vector2 mousePos) {
-    foreach (var indicator in _pushIndicators) {
-      if (IsMouseOverIndicator(indicator, mousePos)) {
-        ExecuteCratePush(indicator.Direction);
-        DismissPushIndicators();
-        return true;
-      }
+  private bool TryHandleIndicatorClick() {
+    // Get the hovered indicator from the last mouse move check
+    // If we have a previously hovered indicator, that's the one that was clicked
+    if (_previouslyHoveredIndicator != null) {
+      ExecuteCratePush(_previouslyHoveredIndicator.Direction);
+      DismissPushIndicators();
+      return true;
     }
 
     return false;
   }
 
-  private void UpdateIndicatorHover(Vector2 mousePos) {
-    foreach (var indicator in _pushIndicators) {
-      bool wasHovered = indicator.IsHovered;
-      indicator.IsHovered = IsMouseOverIndicator(indicator, mousePos);
+  private void UpdatePushIndicatorHoverOnMouseMove(Vector2 mousePos) {
+    if (Camera.main == null) return;
 
-      // Update visual when hover state changes
-      if (indicator.IsHovered != wasHovered) {
-        var indicatorRenderer = indicator.Visual.GetComponent<MeshRenderer>();
-        var indicatorPrefabRenderer = PushIndicatorPrefab.GetComponent<MeshRenderer>();
-        if (indicatorRenderer != null && indicatorPrefabRenderer != null) {
-          if (indicator.IsHovered) {
-            var mat = new Material(indicatorPrefabRenderer.sharedMaterial);
-            mat.color = new Color(0.8f, 1f, 0.2f, 0.9f); // Bright yellow on hover
-            indicatorRenderer.material = mat;
-          } else {
-            indicatorRenderer.material = indicatorPrefabRenderer.sharedMaterial;
-          }
+    // Clear previous hover state
+    if (_previouslyHoveredIndicator != null) {
+      _previouslyHoveredIndicator.IsHovered = false;
+      _previouslyHoveredIndicator = null;
+    }
+
+    Ray ray = Camera.main.ScreenPointToRay(new Vector3(mousePos.x, mousePos.y, 0f));
+    if (Physics.Raycast(ray, out RaycastHit hit, 100f, _pushIndicatorLayerMask)) {
+      // Found a hit - look up which indicator this is
+      GameObject hitObject = hit.collider.gameObject;
+
+      // Find the corresponding CratePushIndicator
+      foreach (var indicator in _pushIndicators) {
+        if (indicator.Visual == hitObject) {
+          indicator.IsHovered = true;
+          _previouslyHoveredIndicator = indicator;
+          break;
         }
       }
     }
   }
 
-  private bool IsMouseOverIndicator(CrateIndicator indicator, Vector2 mousePos) {
-    if (Camera.main == null) return false;
+  private void UpdatePushIndicatorAnimations() {
+    foreach (var indicator in _pushIndicators) {
+      if (indicator.IsHovered) {
+        // Update animation time
+        indicator.AnimationTime += Time.deltaTime * IndicatorBobSpeed;
 
-    Ray ray = Camera.main.ScreenPointToRay(new Vector3(mousePos.x, mousePos.y));
-    var indicatorCollider = indicator.Visual.GetComponent<Collider>();
+        // Calculate bob offset using sine wave
+        float bobOffset = Mathf.Sin(indicator.AnimationTime) * IndicatorBobDistance;
 
-    // Add collider if not present
-    if (indicatorCollider == null) {
-      indicatorCollider = indicator.Visual.AddComponent<BoxCollider>();
+        // Apply bob in the direction the indicator is facing
+        Vector3 directionVector =
+            new Vector3(indicator.Direction.x, 0, indicator.Direction.y).normalized;
+        indicator.Visual.transform.position = indicator.BasePosition + directionVector * bobOffset;
+      } else {
+        indicator.Visual.transform.position = indicator.BasePosition;
+        indicator.AnimationTime = 0;
+      }
     }
-
-    return indicatorCollider.Raycast(ray, out _, 100f);
   }
 
   private void ExecuteCratePush(Vector2Int pushDirection) {
@@ -347,6 +395,7 @@ public class PlayerController : MonoBehaviour {
     }
 
     _pushIndicators.Clear();
+    _previouslyHoveredIndicator = null;
     _currentState = InteractionState.Idle;
   }
 
