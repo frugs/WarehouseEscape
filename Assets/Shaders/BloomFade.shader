@@ -10,10 +10,10 @@ Shader "Sokoban/BloomFade"
 
     SubShader
     {
-        Tags { "RenderType"="Transparent" "Queue"="Transparent" }
+        Tags { "RenderType"="Transparent" "Queue"="Transparent+50" }
         Blend SrcAlpha OneMinusSrcAlpha
         ZWrite Off
-        Cull Back
+        Cull Off
 
         Pass
         {
