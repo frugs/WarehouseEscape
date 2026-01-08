@@ -218,10 +218,7 @@ public class PlayerController : MonoBehaviour {
 
     var state = GameSession.CurrentState;
 
-    // Determine which directions the crate can be pushed
-    Vector2Int[] directions = { Vector2Int.up, Vector2Int.down, Vector2Int.left, Vector2Int.right };
-
-    foreach (var dir in directions) {
+    foreach (var dir in Vector2IntExtensions.Cardinals) {
       var pushTarget = cratePos + dir;
       var pushStandPos = cratePos - dir;
 
@@ -249,10 +246,9 @@ public class PlayerController : MonoBehaviour {
   private void CreatePushIndicator(Vector2Int direction, Vector2Int cratePos) {
     var indicator = Instantiate(PushIndicatorPrefab);
 
-    // Position indicator slightly elevated
-    var indicatorPos = (cratePos + direction).GridToWorld(0.5f);
     indicator.gameObject.name = $"PushIndicator_{direction}";
-    indicator.transform.position = indicatorPos;
+    indicator.transform.position = cratePos.GridToWorld(0.5f);
+    indicator.transform.LookAt((cratePos + direction * 2).GridToWorld(0.5f));
 
     var crateIndicator = new CrateIndicator {
         Direction = direction, Visual = indicator, IsHovered = false
