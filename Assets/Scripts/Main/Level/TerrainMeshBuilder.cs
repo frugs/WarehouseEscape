@@ -434,7 +434,7 @@ public class TerrainMeshBuilder : MonoBehaviour {
           tris,
           uvs,
           colors,
-          Color.black,
+          new Color(0.2f, 0.2f, 0.2f),
           Color.white);
     }
   }
