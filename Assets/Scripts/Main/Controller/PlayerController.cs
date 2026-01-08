@@ -7,15 +7,15 @@ using UnityEngine;
 /// Supports walking to accessible tiles and pushing crates with directional indicators.
 /// </summary>
 public class PlayerController : MonoBehaviour {
-  [Header("Dependencies")] [SerializeField]
-  private GameSession GameSession;
+  [Header("Dependencies")] [field: SerializeField]
+  private GameSession GameSession { get; set; }
 
   [SerializeField] private MoveScheduler MoveScheduler;
 
-  [Header("UI References")] [SerializeField]
-  private Mesh WalkIndicatorMesh;
+  [Header("UI References")] [SerializeField][UsedImplicitly]
+  private GameObject WalkIndicatorPrefab;
 
-  [SerializeField][UsedImplicitly] private GameObject PushIndicatorPrefab;
+  [SerializeField] [UsedImplicitly] private GameObject PushIndicatorPrefab;
 
   private GameInput InputActions;
 
@@ -27,7 +27,8 @@ public class PlayerController : MonoBehaviour {
 
   private InteractionState _currentState = InteractionState.Idle;
   private Vector2Int _currentCratePos = Vector2Int.zero;
-  private GameObject _ghostPlayer; // Visual feedback when hovering over accessible tiles
+  private GameObject _walkIndicator; // Glowing floor effect for walkable tiles
+  private Material _glowMaterial; // Cached glow material
   private List<CrateIndicator> _crateIndicators = new List<CrateIndicator>();
 
   // Data structure for crate push indicators
@@ -41,7 +42,6 @@ public class PlayerController : MonoBehaviour {
   private void Awake() {
     GameSession = GetComponent<GameSession>();
     MoveScheduler = GetComponent<MoveScheduler>();
-
     InputActions = new GameInput();
   }
 
@@ -53,7 +53,7 @@ public class PlayerController : MonoBehaviour {
   [UsedImplicitly]
   private void OnDisable() {
     InputActions.Player.Disable();
-    CleanupGhostPlayer();
+    CleanupGlowingFloor();
     DismissIndicators();
   }
 
@@ -150,7 +150,7 @@ public class PlayerController : MonoBehaviour {
 
   private void UpdateHoverFeedback(Vector2Int? tile) {
     if (!tile.HasValue) {
-      CleanupGhostPlayer();
+      CleanupGlowingFloor();
       return;
     }
 
@@ -158,29 +158,23 @@ public class PlayerController : MonoBehaviour {
 
     // Check if tile is accessible (walkable)
     if (state.CanPlayerWalk(tile.Value.x, tile.Value.y)) {
-      // Show ghost player
-      if (_ghostPlayer == null) {
-        _ghostPlayer = new GameObject("GhostPlayer");
-        var _ghostPlayerRenderer = _ghostPlayer.AddComponent<MeshRenderer>();
-        var filter = _ghostPlayer.AddComponent<MeshFilter>();
+      // Create or update glowing floor indicator
+      if (_walkIndicator == null) {
+        _walkIndicator = Instantiate(WalkIndicatorPrefab);
 
-        filter.mesh = WalkIndicatorMesh;
-
-        var mat = new Material(Shader.Find("Standard"));
-        mat.SetFloat("_Mode", 3); // Transparent mode
-        mat.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.SrcAlpha);
-        mat.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
-        mat.SetInt("_ZWrite", 0);
-        mat.renderQueue = 3000;
-        mat.color = new Color(1, 1, 1, 0.3f);
-        _ghostPlayerRenderer.material = mat;
+        // Add collider to prevent raycast issues
+        var indicatorCollider = _walkIndicator.AddComponent<BoxCollider>();
+        indicatorCollider.isTrigger = true;
       }
 
-      _ghostPlayer.transform.position = tile.Value.GridToWorld();
-      _ghostPlayer.SetActive(true);
+      // Position at floor tile, slightly above ground
+      var floorPos = tile.Value.GridToWorld(0.02f);
+      _walkIndicator.transform.position = floorPos;
+
+      _walkIndicator.SetActive(true);
     } else {
-      // Inaccessible tile - don't show ghost
-      CleanupGhostPlayer();
+      // Inaccessible tile - don't show glow
+      CleanupGlowingFloor();
     }
   }
 
@@ -198,7 +192,7 @@ public class PlayerController : MonoBehaviour {
       List<Vector2Int> path = Pather.FindPath(state, state.PlayerPos, tile);
 
       if (path != null && path.Count > 0) {
-        CleanupGhostPlayer();
+        CleanupGlowingFloor();
         List<SokobanMove> moveList = ConvertPathToMoves(state.PlayerPos, path);
 
         if (moveList.Count > 0) {
@@ -218,10 +212,6 @@ public class PlayerController : MonoBehaviour {
     var state = GameSession.CurrentState;
 
     // Determine which directions the crate can be pushed
-    // A crate can be pushed in direction D if:
-    // 1. The tile at (crate + D) is valid for the crate to move to
-    // 2. The player can reach the tile at (crate - D) to push from that direction
-
     Vector2Int[] directions = { Vector2Int.up, Vector2Int.down, Vector2Int.left, Vector2Int.right };
 
     foreach (var dir in directions) {
@@ -239,8 +229,6 @@ public class PlayerController : MonoBehaviour {
       // Can player actually reach this position?
       List<Vector2Int> walkPath = Pather.FindPath(state, state.PlayerPos, pushStandPos);
       if (walkPath == null || walkPath.Count < 0) {
-        // Can't reach - don't show this indicator
-        // Note: FindPath returns non-null even if already at destination
         if (!(state.PlayerPos == pushStandPos)) continue;
       }
 
@@ -248,7 +236,7 @@ public class PlayerController : MonoBehaviour {
       CreatePushIndicator(dir, cratePos);
     }
 
-    CleanupGhostPlayer();
+    CleanupGlowingFloor();
   }
 
   private void CreatePushIndicator(Vector2Int direction, Vector2Int cratePos) {
@@ -258,12 +246,6 @@ public class PlayerController : MonoBehaviour {
     var indicatorPos = (cratePos + direction).GridToWorld(0.5f);
     indicator.gameObject.name = $"PushIndicator_{direction}";
     indicator.transform.position = indicatorPos;
-
-    // Rotate to point in the direction
-    // if (direction.x != 0 || direction.y != 0) {
-    //   float angle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg;
-    //   indicator.transform.rotation = Quaternion.Euler(0, angle, 0);
-    // }
 
     var crateIndicator = new CrateIndicator {
         Direction = direction, Visual = indicator, IsHovered = false
@@ -341,12 +323,7 @@ public class PlayerController : MonoBehaviour {
     }
 
     // Add the push move itself
-    var pushMove = SokobanMove.CratePush(
-        pushStandPos,
-        cratePos,
-        cratePos,
-        pushTarget);
-
+    var pushMove = SokobanMove.CratePush(pushStandPos, cratePos, cratePos, pushTarget);
     moveList.Add(pushMove);
 
     // Execute
@@ -368,10 +345,10 @@ public class PlayerController : MonoBehaviour {
     _currentState = InteractionState.Idle;
   }
 
-  private void CleanupGhostPlayer() {
-    if (_ghostPlayer != null) {
-      Destroy(_ghostPlayer);
-      _ghostPlayer = null;
+  private void CleanupGlowingFloor() {
+    if (_walkIndicator != null) {
+      Destroy(_walkIndicator);
+      _walkIndicator = null;
     }
   }
 

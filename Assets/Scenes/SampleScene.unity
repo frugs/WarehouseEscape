@@ -1216,9 +1216,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c73203c3ad52f85429503d246e51b186, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Main::PlayerController
-  GameSession: {fileID: 0}
+  <GameSession>k__BackingField: {fileID: 0}
   MoveScheduler: {fileID: 0}
-  WalkIndicatorMesh: {fileID: 10207, guid: 0000000000000000e000000000000000, type: 0}
+  WalkIndicatorPrefab: {fileID: 4252397978430404935, guid: 419be7bbbc8d1434480ecf48055eb0ec, type: 3}
   PushIndicatorPrefab: {fileID: 6514692909629603639, guid: b022b842adc49714bac9c2db37f26daf, type: 3}
 --- !u!114 &1936126216
 MonoBehaviour:

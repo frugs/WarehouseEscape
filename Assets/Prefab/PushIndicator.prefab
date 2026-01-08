@@ -12,7 +12,7 @@ GameObject:
   - component: {fileID: 782397638304999520}
   - component: {fileID: 1114968571266873143}
   m_Layer: 0
-  m_Name: CratePushIndicator
+  m_Name: PushIndicator
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
