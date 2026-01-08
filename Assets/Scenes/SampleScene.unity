@@ -1057,6 +1057,7 @@ GameObject:
   - component: {fileID: 1936126214}
   - component: {fileID: 1936126215}
   - component: {fileID: 1936126216}
+  - component: {fileID: 1936126217}
   m_Layer: 0
   m_Name: GameController
   m_TagString: Untagged
@@ -1218,10 +1219,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Main::PlayerController
   <GameSession>k__BackingField: {fileID: 0}
   <MoveScheduler>k__BackingField: {fileID: 0}
+  <PushIndicatorManager>k__BackingField: {fileID: 0}
   <WalkIndicatorPrefab>k__BackingField: {fileID: 4252397978430404935, guid: 419be7bbbc8d1434480ecf48055eb0ec, type: 3}
-  PushIndicatorPrefab: {fileID: 6514692909629603639, guid: b022b842adc49714bac9c2db37f26daf, type: 3}
-  <IndicatorBobDistance>k__BackingField: 0.075
-  <IndicatorBobSpeed>k__BackingField: 5
 --- !u!114 &1936126216
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1236,6 +1235,19 @@ MonoBehaviour:
   m_EditorClassIdentifier: Main::MenuController
   GameSession: {fileID: 0}
   MoveScheduler: {fileID: 0}
+--- !u!114 &1936126217
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1936126205}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 37c52a1ecf769d941ba5c304a32fcb86, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Main::PushIndicatorManager
+  <PushIndicatorPrefab>k__BackingField: {fileID: 6514692909629603639, guid: b022b842adc49714bac9c2db37f26daf, type: 3}
 --- !u!1 &1967644723
 GameObject:
   m_ObjectHideFlags: 0
