@@ -19,6 +19,7 @@ public class GameSession : MonoBehaviour {
   // ================= STATE =================
   private GameObject[,] _visualGrid;
   private GameObject _entrance;
+  private GameObject _exit;
   private SokobanState _currentState;
 
   public SokobanState CurrentState => _currentState;
@@ -36,17 +37,19 @@ public class GameSession : MonoBehaviour {
   }
 
   private void LoadLevel() {
-    LevelLoader.CleanupLevel(_visualGrid, _entrance);
+    LevelLoader.CleanupLevel(_visualGrid, _entrance, _exit);
 
     if (LevelLoader.LoadLevel(
             LevelNumber,
             out var initialState,
             out var visualGrid,
             out var entrance,
+            out var exit,
             out var levelName)) {
       _currentState = initialState;
       _visualGrid = visualGrid;
       _entrance = entrance;
+      _exit = exit;
       SolutionController.LevelName = levelName;
     }
 

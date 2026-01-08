@@ -1188,6 +1188,7 @@ MonoBehaviour:
   <CratePrefab>k__BackingField: {fileID: 4699907650127345005, guid: 4fc469b1f980a6b429697cc87278a555, type: 3}
   <TargetPrefab>k__BackingField: {fileID: 5504698377664096694, guid: f5ee4a16c1e9af04ca27e6740c476264, type: 3}
   <EntrancePrefab>k__BackingField: {fileID: 0}
+  <ExitPrefab>k__BackingField: {fileID: 6041455645285936546, guid: 37a2dbc88e66daa4aa3be5310899c30a, type: 3}
   <LevelsDirectoryName>k__BackingField: Levels
 --- !u!114 &1936126214
 MonoBehaviour:

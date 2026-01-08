@@ -1,3 +1,4 @@
+using System;
 using System.IO;
 using JetBrains.Annotations;
 using UnityEngine;
@@ -28,6 +29,10 @@ public class LevelLoader : MonoBehaviour {
   [UsedImplicitly]
   private GameObject EntrancePrefab { get; set; }
 
+  [field: SerializeField]
+  [UsedImplicitly]
+  private GameObject ExitPrefab { get; set; }
+
   [Header("Settings")]
   [field: SerializeField]
   [UsedImplicitly]
@@ -47,15 +52,17 @@ public class LevelLoader : MonoBehaviour {
       out SokobanState state,
       out GameObject[,] visualGrid,
       out GameObject entrance,
+      out GameObject exit,
       out string levelName) {
     state = new SokobanState();
     visualGrid = null;
     entrance = null;
+    exit = null;
     levelName = $"Level{level}";
 
     string filePath = Path.Combine(LevelsDirectory, $"{levelName}.txt");
     if (File.Exists(filePath)) {
-      return LoadLevelFromFile(filePath, out state, out visualGrid, out entrance);
+      return LoadLevelFromFile(filePath, out state, out visualGrid, out entrance, out exit);
     }
 
     Debug.LogError($"Level file not found at: {filePath}");
@@ -67,12 +74,14 @@ public class LevelLoader : MonoBehaviour {
       string filePath,
       out SokobanState state,
       out GameObject[,] visualGrid,
-      out GameObject entrance) {
+      out GameObject entrance,
+      out GameObject exit) {
     LevelData data = LevelParser.ParseLevelFile(filePath);
     if (data == null) {
       state = new SokobanState();
       visualGrid = null;
       entrance = null;
+      exit = null;
       return false;
     }
 
@@ -83,15 +92,19 @@ public class LevelLoader : MonoBehaviour {
       TerrainBuilder.BuildTerrain(data.grid);
     }
 
-    SpawnDynamicObjects(state, visualGrid, out entrance);
+    SpawnDynamicObjects(state, visualGrid, out entrance, out exit);
     SetupCamera(data.width, data.height);
 
     return true;
   }
 
-  public void CleanupLevel(GameObject[,] visualGrid, GameObject entrance) {
+  public void CleanupLevel(GameObject[,] visualGrid, GameObject entrance, GameObject exit) {
     if (entrance != null) {
       Destroy(entrance);
+    }
+
+    if (exit != null) {
+      Destroy(exit);
     }
 
     if (visualGrid != null) {
@@ -113,8 +126,10 @@ public class LevelLoader : MonoBehaviour {
   private void SpawnDynamicObjects(
       SokobanState initialState,
       GameObject[,] visualGrid,
-      out GameObject entrance) {
+      out GameObject entrance,
+      out GameObject exit) {
     entrance = null;
+    exit = null;
 
     var terrainGrid = initialState.TerrainGrid;
     var width = terrainGrid.GetLength(0);
@@ -131,9 +146,20 @@ public class LevelLoader : MonoBehaviour {
         }
 
         if (terrain.IsEntrance() && EntrancePrefab != null) {
-          GameObject ent = Instantiate(EntrancePrefab, pos, Quaternion.identity);
-          ent.name = "Entrance";
-          entrance = ent;
+          GameObject go = Instantiate(EntrancePrefab, pos, Quaternion.identity);
+          go.name = "Entrance";
+          entrance = go;
+        }
+
+        if (terrain.IsExit() && ExitPrefab != null) {
+          GameObject go = Instantiate(
+              ExitPrefab,
+              pos,
+              x == 0
+                  ? Quaternion.Euler(0f, 180, 0f)
+                  : Quaternion.Euler(0f, -90f, 0f));
+          go.name = "Exit";
+          exit = go;
         }
 
         if (initialState.IsPlayerAt(x, y)) {
