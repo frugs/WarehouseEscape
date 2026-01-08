@@ -9,7 +9,7 @@ using UnityEngine;
 public class PlayerController : MonoBehaviour {
   private const string PUSH_INDICATOR_LAYER = "PushIndicator";
 
-  [field: Header("Dependencies")]
+  [Header("Dependencies")]
   [field: SerializeField]
   private GameSession GameSession { get; set; }
 
@@ -57,11 +57,16 @@ public class PlayerController : MonoBehaviour {
   private List<CratePushIndicator> _pushIndicators = new List<CratePushIndicator>();
   private CratePushIndicator _previouslyHoveredIndicator;
 
+  // ===== CACHED WALKABLE AREA (BFS optimization) =====
+  private IReadOnlyList<Vector2Int> _cachedWalkableArea;
+  private SokobanState? _cachedWalkableAreaForState;
+
+  private readonly WalkableAreaScanner _walkableAreaScanner = new WalkableAreaScanner();
+
   [UsedImplicitly]
   private void Awake() {
     GameSession = GetComponent<GameSession>();
     MoveScheduler = GetComponent<MoveScheduler>();
-
     _inputActions = new GameInput();
     _pushIndicatorLayerMask = LayerMask.GetMask(PUSH_INDICATOR_LAYER);
   }
@@ -76,6 +81,7 @@ public class PlayerController : MonoBehaviour {
     _inputActions.Player.Disable();
     RemoveWalkIndicator();
     DismissPushIndicators();
+    InvalidateWalkableAreaCache();
   }
 
   [UsedImplicitly]
@@ -106,6 +112,7 @@ public class PlayerController : MonoBehaviour {
         MoveScheduler.ClearInterrupt();
         DismissPushIndicators();
         GameSession.ResetLevel();
+        InvalidateWalkableAreaCache();
         return true;
       }
     }
@@ -133,6 +140,7 @@ public class PlayerController : MonoBehaviour {
           MoveScheduler.Clear();
           MoveScheduler.StepDelay = 0f;
           MoveScheduler.Enqueue(move);
+          InvalidateWalkableAreaCache();
           return true;
         }
       }
@@ -142,7 +150,6 @@ public class PlayerController : MonoBehaviour {
   }
 
   private void HandlePointerInput() {
-    // Update mouse position for hover feedback
     var mousePos = _inputActions.Player.MousePosition.ReadValue<Vector2>();
 
     // Only update hover feedback when mouse position actually changes
@@ -156,7 +163,7 @@ public class PlayerController : MonoBehaviour {
 
       _pointerLastPos = mousePos;
 
-      // Handle hover over indicators (raycast only on mouse move, not every frame)
+      // Handle hover over indicators (single raycast on mouse move, not every frame)
       if (_currentState == InteractionState.ShowingCratePushIndicators) {
         UpdatePushIndicatorHoverOnMouseMove(mousePos);
       }
@@ -165,9 +172,6 @@ public class PlayerController : MonoBehaviour {
     // Handle click/tap input
     if (_inputActions.Player.Click.WasPerformedThisFrame()) {
       if (GameSession.CurrentState.IsWin()) return;
-
-      Vector2Int? maybeGridPos =
-          GetGridPosFromMousePos(_inputActions.Player.MousePosition.ReadValue<Vector2>());
 
       if (_currentState == InteractionState.ShowingCratePushIndicators) {
         // We're showing indicators - check if player clicked on one
@@ -181,12 +185,17 @@ public class PlayerController : MonoBehaviour {
       }
 
       // Normal mode: check what was clicked
+      Vector2Int? maybeGridPos = GetGridPosFromMousePos(mousePos);
       if (maybeGridPos.HasValue) {
         HandleClick(maybeGridPos.Value);
       }
     }
   }
 
+  /// <summary>
+  /// Updates walk indicator visibility based on reachability without moving crates.
+  /// Uses cached BFS results to avoid repeated pathfinding.
+  /// </summary>
   private void UpdateHoverFeedback(Vector2Int? maybeGridPos) {
     if (!maybeGridPos.HasValue) {
       RemoveWalkIndicator();
@@ -194,28 +203,84 @@ public class PlayerController : MonoBehaviour {
       return;
     }
 
-    var state = GameSession.CurrentState;
     var gridPos = maybeGridPos.Value;
 
-    // Check if tile is accessible (walkable)
-    if (state.CanPlayerWalk(gridPos.x, gridPos.y)) {
+    // Check if tile is in cached walkable area (no crate movement needed)
+    if (IsGridPosReachable(gridPos)) {
       // Create or update glowing floor indicator
       if (_walkIndicator == null) {
         _walkIndicator = Instantiate(WalkIndicatorPrefab);
-
-        // Add collider to prevent raycast issues
         var indicatorCollider = _walkIndicator.AddComponent<BoxCollider>();
         indicatorCollider.isTrigger = true;
       }
 
-      // Position at floor tile, slightly above ground
       _walkIndicator.transform.position = gridPos.GridToWorld();
-
       _walkIndicator.SetActive(true);
     } else {
-      // Inaccessible tile - don't show glow
       RemoveWalkIndicator();
     }
+  }
+
+  /// <summary>
+  /// Checks if a grid position is reachable without moving crates.
+  /// Uses cached BFS results.
+  /// </summary>
+  private bool IsGridPosReachable(Vector2Int gridPos) {
+    var state = GameSession.CurrentState;
+
+    // Refresh cache if crate positions have changed
+    if (_cachedWalkableArea == null || !IsCacheValid(state)) {
+      RefreshWalkableAreaCache(state);
+    }
+
+    // Check if position is in cached walkable area
+    if (_cachedWalkableArea != null) {
+      foreach (var reachablePos in _cachedWalkableArea) {
+        if (reachablePos == gridPos) {
+          return true;
+        }
+      }
+    }
+
+    return false;
+  }
+
+  /// <summary>
+  /// Validates if the cached walkable area is still valid.
+  /// Invalid if crates have moved.
+  /// </summary>
+  private bool IsCacheValid(SokobanState currentState) {
+    if (_cachedWalkableAreaForState == null) return false;
+
+    // Cache is valid if crate positions haven't changed
+    if (_cachedWalkableAreaForState?.CratePositions.Length != currentState.CratePositions.Length) {
+      return false;
+    }
+
+    for (int i = 0; i < currentState.CratePositions.Length; i++) {
+      if (_cachedWalkableAreaForState?.CratePositions[i] != currentState.CratePositions[i]) {
+        return false;
+      }
+    }
+
+    return true;
+  }
+
+  /// <summary>
+  /// Performs BFS to find all reachable tiles (excluding crate-pushing).
+  /// Results are cached until crates move.
+  /// </summary>
+  private void RefreshWalkableAreaCache(SokobanState state) {
+    _cachedWalkableAreaForState = state;
+    _cachedWalkableArea = _walkableAreaScanner.GetWalkableAreaNoCopy(state, out _);
+  }
+
+  /// <summary>
+  /// Invalidates the cached walkable area (call when crates move).
+  /// </summary>
+  private void InvalidateWalkableAreaCache() {
+    _cachedWalkableArea = null;
+    _cachedWalkableAreaForState = null;
   }
 
   private void HandleClick(Vector2Int tile) {
@@ -228,10 +293,10 @@ public class PlayerController : MonoBehaviour {
     }
 
     // Check if it's an accessible floor tile
-    if (state.CanPlayerWalk(tile.x, tile.y)) {
+    if (IsGridPosReachable(tile)) {
       List<Vector2Int> path = Pather.FindPath(state, state.PlayerPos, tile);
 
-      if (path is { Count: > 0 }) {
+      if (path != null && path.Count > 0) {
         RemoveWalkIndicator();
         List<SokobanMove> moveList = ConvertPathToMoves(state.PlayerPos, path);
 
@@ -239,6 +304,7 @@ public class PlayerController : MonoBehaviour {
           MoveScheduler.Clear();
           MoveScheduler.StepDelay = 0f;
           MoveScheduler.Enqueue(moveList);
+          InvalidateWalkableAreaCache();
         }
       }
     }
@@ -283,9 +349,19 @@ public class PlayerController : MonoBehaviour {
     var indicator = Instantiate(PushIndicatorPrefab);
 
     indicator.gameObject.name = $"PushIndicator_{direction}";
+    indicator.layer = LayerMask.NameToLayer(PUSH_INDICATOR_LAYER);
+
     var basePosition = (cratePos + direction).GridToWorld(0.5f);
     indicator.transform.position = basePosition;
     indicator.transform.LookAt((cratePos + direction * 2).GridToWorld(0.5f));
+
+    // Ensure collider exists for raycasting
+    var indicatorCollider = indicator.GetComponent<Collider>();
+    if (indicatorCollider == null) {
+      indicatorCollider = indicator.AddComponent<BoxCollider>();
+    }
+
+    indicatorCollider.isTrigger = true;
 
     var crateIndicator = new CratePushIndicator {
         Direction = direction,
@@ -300,7 +376,6 @@ public class PlayerController : MonoBehaviour {
 
   private bool TryHandleIndicatorClick() {
     // Get the hovered indicator from the last mouse move check
-    // If we have a previously hovered indicator, that's the one that was clicked
     if (_previouslyHoveredIndicator != null) {
       ExecuteCratePush(_previouslyHoveredIndicator.Direction);
       DismissPushIndicators();
@@ -311,17 +386,19 @@ public class PlayerController : MonoBehaviour {
   }
 
   private void UpdatePushIndicatorHoverOnMouseMove(Vector2 mousePos) {
-    if (Camera.main == null) return;
-
     // Clear previous hover state
     if (_previouslyHoveredIndicator != null) {
       _previouslyHoveredIndicator.IsHovered = false;
+      UpdateIndicatorMaterial(_previouslyHoveredIndicator, false);
       _previouslyHoveredIndicator = null;
     }
 
+    if (Camera.main == null) return;
+
     Ray ray = Camera.main.ScreenPointToRay(new Vector3(mousePos.x, mousePos.y, 0f));
+
+    // Raycast only against PushIndicator layer
     if (Physics.Raycast(ray, out RaycastHit hit, 100f, _pushIndicatorLayerMask)) {
-      // Found a hit - look up which indicator this is
       GameObject hitObject = hit.collider.gameObject;
 
       // Find the corresponding CratePushIndicator
@@ -329,8 +406,24 @@ public class PlayerController : MonoBehaviour {
         if (indicator.Visual == hitObject) {
           indicator.IsHovered = true;
           _previouslyHoveredIndicator = indicator;
+          UpdateIndicatorMaterial(indicator, true);
           break;
         }
+      }
+    }
+  }
+
+  private void UpdateIndicatorMaterial(CratePushIndicator indicator, bool isHovered) {
+    var indicatorRenderer = indicator.Visual.GetComponent<MeshRenderer>();
+    var indicatorPrefabRenderer = PushIndicatorPrefab.GetComponent<MeshRenderer>();
+
+    if (indicatorRenderer != null && indicatorPrefabRenderer != null) {
+      if (isHovered) {
+        var mat = new Material(indicatorPrefabRenderer.sharedMaterial);
+        mat.color = new Color(0.8f, 1f, 0.2f, 0.9f);
+        indicatorRenderer.material = mat;
+      } else {
+        indicatorRenderer.material = indicatorPrefabRenderer.sharedMaterial;
       }
     }
   }
@@ -338,19 +431,12 @@ public class PlayerController : MonoBehaviour {
   private void UpdatePushIndicatorAnimations() {
     foreach (var indicator in _pushIndicators) {
       if (indicator.IsHovered) {
-        // Update animation time
         indicator.AnimationTime += Time.deltaTime * IndicatorBobSpeed;
 
-        // Calculate bob offset using sine wave
         float bobOffset = Mathf.Sin(indicator.AnimationTime) * IndicatorBobDistance;
-
-        // Apply bob in the direction the indicator is facing
         Vector3 directionVector =
             new Vector3(indicator.Direction.x, 0, indicator.Direction.y).normalized;
         indicator.Visual.transform.position = indicator.BasePosition + directionVector * bobOffset;
-      } else {
-        indicator.Visual.transform.position = indicator.BasePosition;
-        indicator.AnimationTime = 0;
       }
     }
   }
@@ -361,13 +447,10 @@ public class PlayerController : MonoBehaviour {
     var pushTarget = cratePos + pushDirection;
     var pushStandPos = cratePos - pushDirection;
 
-    // Find path to stand position
     var walkPath = Pather.FindPath(state, state.PlayerPos, pushStandPos);
-
     var moveList = new List<SokobanMove>();
 
-    // Add walk moves to get into push position
-    if (walkPath != null && walkPath.Count > 0) {
+    if (walkPath is { Count: > 0 }) {
       var walkPos = state.PlayerPos;
       foreach (var target in walkPath) {
         moveList.Add(SokobanMove.PlayerMove(walkPos, target));
@@ -375,15 +458,14 @@ public class PlayerController : MonoBehaviour {
       }
     }
 
-    // Add the push move itself
     var pushMove = SokobanMove.CratePush(pushStandPos, cratePos, cratePos, pushTarget);
     moveList.Add(pushMove);
 
-    // Execute
     if (moveList.Count > 0) {
       MoveScheduler.Clear();
       MoveScheduler.StepDelay = 0f;
       MoveScheduler.Enqueue(moveList);
+      InvalidateWalkableAreaCache();
     }
   }
 
