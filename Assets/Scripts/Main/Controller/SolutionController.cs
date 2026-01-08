@@ -46,6 +46,8 @@ public class SolutionController : MonoBehaviour {
 
   [ContextMenu("Play Solution")]
   public void PlaySolution() {
+    if (LevelName == null) return;
+
     if (_playbackCoroutine != null) {
       StopCoroutine(_playbackCoroutine);
     }

@@ -28,7 +28,7 @@ public class DirectionalPlayerInputHandler {
     var direction = ReadDirectionalInput();
 
     if (direction != Vector2Int.zero) {
-      if (TryCreateMove(direction, out var move)) {
+      if (MoveRules.TryBuildMove(_gameSession.CurrentState, direction, out var move)) {
         _moveScheduler.Enqueue(move);
         return true;
       }
@@ -62,46 +62,4 @@ public class DirectionalPlayerInputHandler {
 
     return new Vector2Int((int)x, (int)y);
   }
-
-  /// <summary>
-  /// Attempts to create a SokobanMove from the given direction.
-  /// Validates that the move is legal before creating it.
-  /// </summary>
-  /// <param name="direction">The direction to move in (must be a cardinal direction).</param>
-  /// <param name="move">Output parameter containing the created SokobanMove.</param>
-  /// <returns>True if a valid move was created, false otherwise.</returns>
-  private bool TryCreateMove(Vector2Int direction, out SokobanMove move) {
-    move = default;
-
-    if (direction == Vector2Int.zero) {
-      return false;
-    }
-
-    var currentState = _gameSession.CurrentState;
-    var currentPos = _gameSession.CurrentState.PlayerPos;
-    var targetPos = currentPos + direction;
-
-    // Check if target position is walkable
-    if (!currentState.CanPlayerWalk(targetPos.x, targetPos.y)) {
-      return false;
-    }
-
-    // Create move - either a walk or a push
-    if (currentState.IsCrateAt(targetPos.x, targetPos.y)) {
-      // Player is pushing a crate
-      var crateTargetPos = targetPos + direction;
-
-      if (!currentState.CanReceiveCrate(crateTargetPos.x, crateTargetPos.y)) {
-        return false;
-      }
-
-      move = SokobanMove.CratePush(currentPos, targetPos, targetPos, crateTargetPos);
-      return true;
-    } else {
-      // Simple walk
-      move = SokobanMove.PlayerMove(currentPos, targetPos);
-      return true;
-    }
-  }
-
 }

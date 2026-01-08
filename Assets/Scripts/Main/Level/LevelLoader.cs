@@ -85,17 +85,27 @@ public class LevelLoader : MonoBehaviour {
     }
 
     state = SokobanState.Create(data.grid, data.playerPos, data.crates);
-    visualGrid = new GameObject[data.width, data.height];
+    LoadLevelFromState(state, out visualGrid, out entrance, out exit);
+    return true;
+  }
+
+  public void LoadLevelFromState(
+      SokobanState state,
+      out GameObject[,] visualGrid,
+      out GameObject entrance,
+      out GameObject exit) {
+    var width = state.GridWidth;
+    var height = state.GridHeight;
+    visualGrid = new GameObject[width, height];
 
     if (TerrainBuilder != null) {
-      TerrainBuilder.BuildTerrain(data.grid);
+      TerrainBuilder.BuildTerrain(state.TerrainGrid);
     }
 
     SpawnDynamicObjects(state, visualGrid, out entrance, out exit);
-    SetupCamera(data.width, data.height);
-
-    return true;
+    SetupCamera(width, height);
   }
+
 
   public void CleanupLevel(GameObject[,] visualGrid, GameObject entrance, GameObject exit) {
     if (entrance != null) {

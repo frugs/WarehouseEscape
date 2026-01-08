@@ -21,6 +21,7 @@ public class GameSession : MonoBehaviour {
   private GameObject[,] _visualGrid;
   private GameObject _entrance;
   private GameObject _exit;
+  private SokobanState _initialState;
   private SokobanState _currentState;
 
   public SokobanState CurrentState => _currentState;
@@ -36,30 +37,82 @@ public class GameSession : MonoBehaviour {
 
   [UsedImplicitly]
   private void Start() {
-    LoadLevel();
+    LoadLevel(LevelNumber);
   }
 
-  private void LoadLevel() {
+  public void ResetLevel() {
+    LevelLoader.CleanupLevel(_visualGrid, _entrance, _exit);
+
+    LevelLoader.LoadLevelFromState(
+        _initialState,
+        out _visualGrid,
+        out _entrance,
+        out _exit);
+    _currentState = _initialState;
+
+    MenuManager.ResumeGame();
+  }
+
+  public void LoadNextLevel() {
+    LoadLevel(++LevelNumber);
+  }
+
+  public void LoadGeneratedLevel() {
+    LevelLoader.CleanupLevel(_visualGrid, _entrance, _exit);
+
+    var generator = new SokobanLevelGenerator();
+    var maybeState = generator.GenerateLevel(
+        minSize: 40,
+        maxSize: 40,
+        targetCount: 2,
+        holeCount: 2,
+        useEntranceExit: true
+    );
+
+    if (!maybeState.HasValue) {
+      Debug.LogWarning("Generation failed, loading next level instead");
+      LoadNextLevel();
+      return;
+    }
+
+    _initialState = maybeState.Value;
+    _currentState = _initialState;
+
+    if (LevelLoader != null) {
+      LevelLoader.LoadLevelFromState(_initialState, out _visualGrid, out _entrance, out _exit);
+    }
+
+    if (SolutionController != null) {
+      SolutionController.LevelName = null;
+    }
+
+    if (MenuManager != null) {
+      MenuManager.ResumeGame();
+    }
+
+    StateChanged?.Invoke();
+
+    Debug.Log("Loaded generated level");
+  }
+
+  private void LoadLevel(int levelNumber) {
     LevelLoader.CleanupLevel(_visualGrid, _entrance, _exit);
 
     if (LevelLoader.LoadLevel(
-            LevelNumber,
-            out var initialState,
-            out var visualGrid,
-            out var entrance,
-            out var exit,
+            levelNumber,
+            out _initialState,
+            out _visualGrid,
+            out _entrance,
+            out _exit,
             out var levelName)) {
-      _currentState = initialState;
-      _visualGrid = visualGrid;
-      _entrance = entrance;
-      _exit = exit;
+      _currentState = _initialState;
       SolutionController.LevelName = levelName;
     }
 
     MenuManager.ResumeGame();
   }
 
-  // ================= CORE UPDATE LOGIC =================
+// ================= CORE UPDATE LOGIC =================
 
   /// <summary>
   /// Updates BOTH the Logic Data (Cells) and the Visual Array (GameObject references).
@@ -106,12 +159,5 @@ public class GameSession : MonoBehaviour {
         MenuManager.WinGame();
       }
     }
-  }
-
-  public void ResetLevel() => LoadLevel();
-
-  public void NextLevel() {
-    LevelNumber++;
-    LoadLevel();
   }
 }
