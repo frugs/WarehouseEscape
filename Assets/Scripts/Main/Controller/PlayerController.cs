@@ -7,12 +7,13 @@ using UnityEngine;
 /// Supports walking to accessible tiles and pushing crates with directional indicators.
 /// </summary>
 public class PlayerController : MonoBehaviour {
-  [Header("Dependencies")] [field: SerializeField]
+  [Header("Dependencies")]
+  [field: SerializeField]
   private GameSession GameSession { get; set; }
 
   [SerializeField] private MoveScheduler MoveScheduler;
 
-  [Header("UI References")] [SerializeField][UsedImplicitly]
+  [Header("UI References")] [SerializeField] [UsedImplicitly]
   private GameObject WalkIndicatorPrefab;
 
   [SerializeField] [UsedImplicitly] private GameObject PushIndicatorPrefab;
@@ -22,14 +23,15 @@ public class PlayerController : MonoBehaviour {
   // State machine
   private enum InteractionState {
     Idle,
-    ShowingCrateIndicators
+    ShowingCratePushIndicators
   }
 
   private InteractionState _currentState = InteractionState.Idle;
   private Vector2Int _currentCratePos = Vector2Int.zero;
-  private GameObject _walkIndicator; // Glowing floor effect for walkable tiles
-  private Material _glowMaterial; // Cached glow material
-  private List<CrateIndicator> _crateIndicators = new List<CrateIndicator>();
+  private GameObject _walkIndicator;
+  private Vector2? _pointerLastPos;
+
+  private List<CrateIndicator> _pushIndicators = new List<CrateIndicator>();
 
   // Data structure for crate push indicators
   private class CrateIndicator {
@@ -53,8 +55,8 @@ public class PlayerController : MonoBehaviour {
   [UsedImplicitly]
   private void OnDisable() {
     InputActions.Player.Disable();
-    CleanupGlowingFloor();
-    DismissIndicators();
+    RemoveWalkIndicator();
+    DismissPushIndicators();
   }
 
   [UsedImplicitly]
@@ -75,7 +77,7 @@ public class PlayerController : MonoBehaviour {
     if (InputActions.Player.Restart.WasPerformedThisFrame()) {
       if (InputActions.Player.Restart.IsPressed()) {
         MoveScheduler.ClearInterrupt();
-        DismissIndicators();
+        DismissPushIndicators();
         GameSession.ResetLevel();
         return true;
       }
@@ -97,7 +99,8 @@ public class PlayerController : MonoBehaviour {
       }
 
       if (dir != Vector2Int.zero) {
-        DismissIndicators();
+        DismissPushIndicators();
+        RemoveWalkIndicator();
 
         if (MoveRules.TryBuildMove(GameSession.CurrentState, dir, out SokobanMove move)) {
           MoveScheduler.Clear();
@@ -114,50 +117,55 @@ public class PlayerController : MonoBehaviour {
   private void HandlePointerInput() {
     // Update mouse position for hover feedback
     var mousePos = InputActions.Player.MousePosition.ReadValue<Vector2>();
-    Vector2Int? hoveredTile = GetTileFromMousePosition(mousePos);
+
+    Vector2Int? maybeGridPos = GetGridPosFromMousePos(mousePos);
 
     // Handle hover feedback when NOT showing indicators
-    if (_currentState == InteractionState.Idle) {
-      UpdateHoverFeedback(hoveredTile);
+    if (_currentState == InteractionState.Idle &&
+        (_pointerLastPos == null || (_pointerLastPos.Value - mousePos).sqrMagnitude > 100f)) {
+      UpdateHoverFeedback(maybeGridPos);
+      _pointerLastPos = mousePos;
     }
 
     // Handle click/tap input
     if (InputActions.Player.Click.WasPerformedThisFrame()) {
       if (GameSession.CurrentState.IsWin()) return;
 
-      if (_currentState == InteractionState.ShowingCrateIndicators) {
+      if (_currentState == InteractionState.ShowingCratePushIndicators) {
         // We're showing indicators - check if player clicked on one
         if (TryHandleIndicatorClick(mousePos)) {
           return;
         }
 
         // Player clicked elsewhere - dismiss indicators
-        DismissIndicators();
+        DismissPushIndicators();
         return;
       }
 
       // Normal mode: check what was clicked
-      if (hoveredTile.HasValue) {
-        HandleTileClick(hoveredTile.Value);
+      if (maybeGridPos.HasValue) {
+        HandleClick(maybeGridPos.Value);
       }
     }
 
     // Handle hover over indicators
-    if (_currentState == InteractionState.ShowingCrateIndicators) {
+    if (_currentState == InteractionState.ShowingCratePushIndicators) {
       UpdateIndicatorHover(mousePos);
     }
   }
 
-  private void UpdateHoverFeedback(Vector2Int? tile) {
-    if (!tile.HasValue) {
-      CleanupGlowingFloor();
+  private void UpdateHoverFeedback(Vector2Int? maybeGridPos) {
+    if (!maybeGridPos.HasValue) {
+      RemoveWalkIndicator();
+      _pointerLastPos = null;
       return;
     }
 
     var state = GameSession.CurrentState;
+    var gridPos = maybeGridPos.Value;
 
     // Check if tile is accessible (walkable)
-    if (state.CanPlayerWalk(tile.Value.x, tile.Value.y)) {
+    if (state.CanPlayerWalk(gridPos.x, gridPos.y)) {
       // Create or update glowing floor indicator
       if (_walkIndicator == null) {
         _walkIndicator = Instantiate(WalkIndicatorPrefab);
@@ -168,17 +176,16 @@ public class PlayerController : MonoBehaviour {
       }
 
       // Position at floor tile, slightly above ground
-      var floorPos = tile.Value.GridToWorld(0.02f);
-      _walkIndicator.transform.position = floorPos;
+      _walkIndicator.transform.position = gridPos.GridToWorld();
 
       _walkIndicator.SetActive(true);
     } else {
       // Inaccessible tile - don't show glow
-      CleanupGlowingFloor();
+      RemoveWalkIndicator();
     }
   }
 
-  private void HandleTileClick(Vector2Int tile) {
+  private void HandleClick(Vector2Int tile) {
     var state = GameSession.CurrentState;
 
     // Check if clicking on a crate
@@ -192,7 +199,7 @@ public class PlayerController : MonoBehaviour {
       List<Vector2Int> path = Pather.FindPath(state, state.PlayerPos, tile);
 
       if (path != null && path.Count > 0) {
-        CleanupGlowingFloor();
+        RemoveWalkIndicator();
         List<SokobanMove> moveList = ConvertPathToMoves(state.PlayerPos, path);
 
         if (moveList.Count > 0) {
@@ -205,9 +212,9 @@ public class PlayerController : MonoBehaviour {
   }
 
   private void ShowCrateIndicators(Vector2Int cratePos) {
-    _currentState = InteractionState.ShowingCrateIndicators;
+    _currentState = InteractionState.ShowingCratePushIndicators;
     _currentCratePos = cratePos;
-    _crateIndicators.Clear();
+    _pushIndicators.Clear();
 
     var state = GameSession.CurrentState;
 
@@ -236,7 +243,7 @@ public class PlayerController : MonoBehaviour {
       CreatePushIndicator(dir, cratePos);
     }
 
-    CleanupGlowingFloor();
+    RemoveWalkIndicator();
   }
 
   private void CreatePushIndicator(Vector2Int direction, Vector2Int cratePos) {
@@ -251,14 +258,14 @@ public class PlayerController : MonoBehaviour {
         Direction = direction, Visual = indicator, IsHovered = false
     };
 
-    _crateIndicators.Add(crateIndicator);
+    _pushIndicators.Add(crateIndicator);
   }
 
   private bool TryHandleIndicatorClick(Vector2 mousePos) {
-    foreach (var indicator in _crateIndicators) {
+    foreach (var indicator in _pushIndicators) {
       if (IsMouseOverIndicator(indicator, mousePos)) {
         ExecuteCratePush(indicator.Direction);
-        DismissIndicators();
+        DismissPushIndicators();
         return true;
       }
     }
@@ -267,7 +274,7 @@ public class PlayerController : MonoBehaviour {
   }
 
   private void UpdateIndicatorHover(Vector2 mousePos) {
-    foreach (var indicator in _crateIndicators) {
+    foreach (var indicator in _pushIndicators) {
       bool wasHovered = indicator.IsHovered;
       indicator.IsHovered = IsMouseOverIndicator(indicator, mousePos);
 
@@ -334,25 +341,25 @@ public class PlayerController : MonoBehaviour {
     }
   }
 
-  private void DismissIndicators() {
-    foreach (var indicator in _crateIndicators) {
+  private void DismissPushIndicators() {
+    foreach (var indicator in _pushIndicators) {
       if (indicator.Visual != null) {
         Destroy(indicator.Visual);
       }
     }
 
-    _crateIndicators.Clear();
+    _pushIndicators.Clear();
     _currentState = InteractionState.Idle;
   }
 
-  private void CleanupGlowingFloor() {
+  private void RemoveWalkIndicator() {
     if (_walkIndicator != null) {
       Destroy(_walkIndicator);
       _walkIndicator = null;
     }
   }
 
-  private Vector2Int? GetTileFromMousePosition(Vector2 mousePos) {
+  private Vector2Int? GetGridPosFromMousePos(Vector2 mousePos) {
     if (Camera.main == null) return null;
 
     Ray ray = Camera.main.ScreenPointToRay(mousePos);
