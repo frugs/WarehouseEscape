@@ -106,9 +106,4 @@ public class PushIndicatorManager : MonoBehaviour {
     _indicators.Clear();
     _previouslyHoveredIndicator = null;
   }
-
-  /// <summary>
-  /// Get the count of active indicators.
-  /// </summary>
-  public int Count => _indicators.Count;
 }

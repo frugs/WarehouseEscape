@@ -85,8 +85,9 @@ public class PlayerController : MonoBehaviour {
   /// <returns>True if restart was triggered, false otherwise.</returns>
   private bool HandleRestartInput() {
     if (_inputActions.Player.Restart.WasPerformedThisFrame()) {
-      GameSession.ResetLevel();
       _pointerHandler.ResetToIdle();
+      MoveScheduler.ClearInterrupt();
+      GameSession.ResetLevel();
       return true;
     }
 
