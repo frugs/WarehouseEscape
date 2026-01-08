@@ -230,6 +230,8 @@ public class PlayerController : MonoBehaviour {
       if (!state.IsValidPos(pushStandPos.x, pushStandPos.y)) continue;
       if (!state.CanPlayerWalk(pushStandPos.x, pushStandPos.y)) continue;
 
+      if (pushTarget == state.PlayerPos) continue;
+
       // Can player actually reach this position?
       List<Vector2Int> walkPath = Pather.FindPath(state, state.PlayerPos, pushStandPos);
       if (walkPath == null || walkPath.Count < 0) {
@@ -247,7 +249,7 @@ public class PlayerController : MonoBehaviour {
     var indicator = Instantiate(PushIndicatorPrefab);
 
     indicator.gameObject.name = $"PushIndicator_{direction}";
-    indicator.transform.position = cratePos.GridToWorld(0.5f);
+    indicator.transform.position = (cratePos + direction).GridToWorld(0.5f);
     indicator.transform.LookAt((cratePos + direction * 2).GridToWorld(0.5f));
 
     var crateIndicator = new CrateIndicator {
