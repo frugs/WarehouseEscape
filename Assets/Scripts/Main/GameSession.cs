@@ -3,17 +3,20 @@ using JetBrains.Annotations;
 using UnityEngine;
 
 public class GameSession : MonoBehaviour {
-  [Header("Level Settings")]
+  [field: Header("Level Settings")]
   [field: SerializeField]
+  [UsedImplicitly]
+  private bool StartWithGeneratedLevel { get; set; }
+
+  [field: SerializeField]
+  [UsedImplicitly]
   private int LevelNumber { get; set; } = 1;
 
-  [Header("References")]
+  [field: Header("References")]
   [field: SerializeField]
   private LevelLoader LevelLoader { get; set; }
 
-  [Header("References")]
-  [field: SerializeField]
-  private SolutionController SolutionController { get; set; }
+  [field: SerializeField] private SolutionController SolutionController { get; set; }
 
   [field: SerializeField] private MenuManager MenuManager { get; set; }
 
@@ -37,7 +40,11 @@ public class GameSession : MonoBehaviour {
 
   [UsedImplicitly]
   private void Start() {
-    LoadLevel(LevelNumber);
+    if (StartWithGeneratedLevel) {
+      LoadGeneratedLevel();
+    } else {
+      LoadLevel(LevelNumber);
+    }
   }
 
   public void ResetLevel() {
