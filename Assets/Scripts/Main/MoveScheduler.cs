@@ -4,8 +4,19 @@ using JetBrains.Annotations;
 using UnityEngine;
 
 public class MoveScheduler : MonoBehaviour {
-  [SerializeField] private GameSession GameSession;
-  [SerializeField] private MoveAnimator MoveAnimator;
+  [field: Header("References")]
+  [field: SerializeField]
+  [UsedImplicitly]
+  private GameSession GameSession { get; set; }
+
+  [field: SerializeField]
+  [UsedImplicitly]
+  private MoveAnimator MoveAnimator { get; set; }
+
+
+  [field: SerializeField]
+  [UsedImplicitly]
+  private UndoBehaviour UndoBehaviour { get; set; }
 
   // The unified queue
   private readonly Queue<SokobanMove> MoveQueue = new Queue<SokobanMove>();
@@ -13,12 +24,16 @@ public class MoveScheduler : MonoBehaviour {
   // Configurable delay for solution playback
   public float StepDelay { get; set; } = 0f;
 
-  private Coroutine CurrentProcess;
+  private UndoManager _undoManager;
+  private Coroutine _currentProcess;
 
   [UsedImplicitly]
   private void Awake() {
-    GameSession = GetComponent<GameSession>();
-    MoveAnimator = GetComponent<MoveAnimator>();
+    if (GameSession == null) GameSession = GetComponent<GameSession>();
+    if (MoveAnimator == null) MoveAnimator = GetComponent<MoveAnimator>();
+    if (UndoBehaviour == null) UndoBehaviour = GetComponent<UndoBehaviour>();
+
+    _undoManager = UndoBehaviour.UndoManager;
   }
 
   public void Enqueue(SokobanMove move) {
@@ -42,13 +57,13 @@ public class MoveScheduler : MonoBehaviour {
 
   public void ClearInterrupt() {
     StopAllCoroutines();
-    CurrentProcess = null;
+    _currentProcess = null;
     Clear();
   }
 
   private void TryProcessQueue() {
-    if (CurrentProcess == null && MoveQueue.Count > 0) {
-      CurrentProcess = StartCoroutine(ProcessQueueRoutine());
+    if (_currentProcess == null && MoveQueue.Count > 0) {
+      _currentProcess = StartCoroutine(ProcessQueueRoutine());
     }
   }
 
@@ -56,8 +71,9 @@ public class MoveScheduler : MonoBehaviour {
     while (MoveQueue.Count > 0) {
       var move = MoveQueue.Dequeue();
 
-      // 1. Logic & Visual Pointers (The "Instant" part)
+      var beforeState = GameSession.CurrentState;
       GameSession.ApplyMoveToCurrentState(move, out GameObject playerObj, out GameObject crateObj);
+      _undoManager?.RecordMove(beforeState, move);
 
       // 2. Animations (The "Over Time" part)
       var anims = new List<Coroutine>();
@@ -86,6 +102,6 @@ public class MoveScheduler : MonoBehaviour {
       GameSession.CheckWinCondition();
     }
 
-    CurrentProcess = null;
+    _currentProcess = null;
   }
 }

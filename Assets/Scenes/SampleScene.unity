@@ -1196,6 +1196,7 @@ GameObject:
   - component: {fileID: 1936126215}
   - component: {fileID: 1936126216}
   - component: {fileID: 1936126217}
+  - component: {fileID: 1936126218}
   m_Layer: 0
   m_Name: GameController
   m_TagString: Untagged
@@ -1309,8 +1310,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 79d830973d415284bb89e9cc07e63ca0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Main::MoveExecutor
-  GameSession: {fileID: 0}
-  MoveAnimator: {fileID: 0}
+  <GameSession>k__BackingField: {fileID: 0}
+  <MoveAnimator>k__BackingField: {fileID: 0}
+  <UndoBehaviour>k__BackingField: {fileID: 0}
 --- !u!114 &1936126213
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1358,6 +1360,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Main::PlayerController
   <GameSession>k__BackingField: {fileID: 0}
   <MoveScheduler>k__BackingField: {fileID: 0}
+  <UndoBehaviour>k__BackingField: {fileID: 0}
   <PushIndicatorManager>k__BackingField: {fileID: 0}
   <WalkIndicatorPrefab>k__BackingField: {fileID: 4252397978430404935, guid: 419be7bbbc8d1434480ecf48055eb0ec, type: 3}
 --- !u!114 &1936126216
@@ -1387,6 +1390,19 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Main::PushIndicatorManager
   <PushIndicatorPrefab>k__BackingField: {fileID: 6514692909629603639, guid: b022b842adc49714bac9c2db37f26daf, type: 3}
+--- !u!114 &1936126218
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1936126205}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 858d06326af44504ca3c7733b42edd45, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Main::UndoBehaviour
+  <GameSession>k__BackingField: {fileID: 0}
 --- !u!1 &1967644723
 GameObject:
   m_ObjectHideFlags: 0

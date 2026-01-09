@@ -20,7 +20,6 @@ public class GameSession : MonoBehaviour {
 
   [field: SerializeField] private MenuManager MenuManager { get; set; }
 
-  // ================= STATE =================
   private GameObject[,] _visualGrid;
   private GameObject _entrance;
   private GameObject _exit;
@@ -30,6 +29,7 @@ public class GameSession : MonoBehaviour {
   public SokobanState CurrentState => _currentState;
 
   public event Action StateChanged;
+  public event Action StateReset;
 
   [UsedImplicitly]
   private void Awake() {
@@ -58,6 +58,9 @@ public class GameSession : MonoBehaviour {
     _currentState = _initialState;
 
     MenuManager.ResumeGame();
+
+    StateChanged?.Invoke();
+    StateReset?.Invoke();
   }
 
   public void LoadNextLevel() {
@@ -98,6 +101,7 @@ public class GameSession : MonoBehaviour {
     }
 
     StateChanged?.Invoke();
+    StateReset?.Invoke();
 
     Debug.Log("Loaded generated level");
   }
@@ -117,6 +121,9 @@ public class GameSession : MonoBehaviour {
     }
 
     MenuManager.ResumeGame();
+
+    StateChanged?.Invoke();
+    StateReset?.Invoke();
   }
 
 // ================= CORE UPDATE LOGIC =================
@@ -154,9 +161,26 @@ public class GameSession : MonoBehaviour {
     _visualGrid[move.playerTo.x, move.playerTo.y] = playerObj;
 
     // Run callbacks
-    if (StateChanged != null) {
-      StateChanged();
+    StateChanged?.Invoke();
+  }
+
+  /// <summary>
+  /// Restores the game to a specific state.
+  /// Used by UndoManager to revert to previous states.
+  /// </summary>
+  public void RestoreState(SokobanState targetState) {
+    if (_visualGrid == null) {
+      Debug.LogError("[GameSession] Visual grid not initialized");
+      return;
     }
+
+    _currentState = targetState;
+
+    LevelLoader.CleanupLevel(_visualGrid, _entrance, _exit);
+    LevelLoader.LoadLevelFromState(targetState, out _visualGrid, out _entrance, out _exit);
+
+    // Notify listeners
+    StateChanged?.Invoke();
   }
 
   public void CheckWinCondition() {
