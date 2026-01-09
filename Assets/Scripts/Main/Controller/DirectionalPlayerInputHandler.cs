@@ -29,6 +29,7 @@ public class DirectionalPlayerInputHandler {
 
     if (direction != Vector2Int.zero) {
       if (MoveRules.TryBuildMove(_gameSession.CurrentState, direction, out var move)) {
+        _moveScheduler.Clear();
         _moveScheduler.Enqueue(move);
         return true;
       }
