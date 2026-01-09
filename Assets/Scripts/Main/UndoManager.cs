@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -57,10 +56,4 @@ public class UndoManager {
   public void Clear() {
     _history.Clear();
   }
-
-  /// <summary>
-  /// Returns the number of moves in the history.
-  /// Useful for debugging or UI (e.g., "Undo x moves").
-  /// </summary>
-  public int HistoryCount => _history.Count;
 }

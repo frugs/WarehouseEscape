@@ -182,6 +182,11 @@ public class LevelLoader : MonoBehaviour {
         }
       }
     }
+
+    foreach (var pos in initialState.FilledHoles) {
+      GameObject c = Instantiate(CratePrefab, pos.GridToWorld(-0.5f), Quaternion.identity);
+      c.name = $"FilledHole_{pos.x}_{pos.y}";
+    }
   }
 
   private void SetupCamera(int gridWidth, int gridHeight) {
