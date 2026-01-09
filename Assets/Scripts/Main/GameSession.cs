@@ -64,8 +64,8 @@ public class GameSession : MonoBehaviour {
     var maybeState = generator.GenerateLevel(
         minSize: 40,
         maxSize: 40,
-        targetCount: 2,
-        holeCount: 2,
+        targetCount: 3,
+        holeCount: 1,
         useEntranceExit: true
     );
 
