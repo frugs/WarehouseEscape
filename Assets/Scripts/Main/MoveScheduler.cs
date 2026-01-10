@@ -80,13 +80,9 @@ public class MoveScheduler : MonoBehaviour {
 
       if (playerObj != null) {
         anims.Add(
-            StartCoroutine(
-                MoveAnimator.AnimateMoveTransform(playerObj, move.playerTo)));
+            StartCoroutine(MoveAnimator.AnimateMoveTransform(playerObj, move.playerTo)));
         anims.Add(
-            StartCoroutine(
-                MoveAnimator.AnimateRotateTransform(
-                    playerObj,
-                    (move.playerTo - move.playerFrom).GridToWorld())));
+            StartCoroutine(MoveAnimator.AnimateRotateTransform(playerObj, move.playerTo)));
       }
 
       if (move.type == MoveType.CratePush && crateObj != null) {
