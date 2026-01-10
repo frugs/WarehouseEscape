@@ -28,6 +28,8 @@ public class GameSession : MonoBehaviour {
 
   public SokobanState CurrentState => _currentState;
 
+  public PlayerAnimationState PlayerAnimationState { get; } = new PlayerAnimationState();
+
   public event Action StateChanged;
   public event Action StateReset;
 
@@ -56,6 +58,7 @@ public class GameSession : MonoBehaviour {
         out _entrance,
         out _exit);
     _currentState = _initialState;
+    PlayerAnimationState.Reset();
 
     MenuManager.ResumeGame();
 
@@ -87,6 +90,7 @@ public class GameSession : MonoBehaviour {
 
     _initialState = maybeState.Value;
     _currentState = _initialState;
+    PlayerAnimationState.Reset();
 
     if (LevelLoader != null) {
       LevelLoader.LoadLevelFromState(_initialState, out _visualGrid, out _entrance, out _exit);
@@ -119,6 +123,8 @@ public class GameSession : MonoBehaviour {
       _currentState = _initialState;
       SolutionController.LevelName = levelName;
     }
+
+    PlayerAnimationState.Reset();
 
     MenuManager.ResumeGame();
 
@@ -175,6 +181,7 @@ public class GameSession : MonoBehaviour {
     }
 
     _currentState = targetState;
+    PlayerAnimationState.Reset();
 
     LevelLoader.CleanupLevel(_visualGrid, _entrance, _exit);
     LevelLoader.LoadLevelFromState(targetState, out _visualGrid, out _entrance, out _exit);

@@ -1,12 +1,11 @@
 using System.Collections;
 using UnityEngine;
 
-public class MoveAnimator : MonoBehaviour {
-  [SerializeField] private float MoveAnimationDuration = 0.2f;
-  [SerializeField] private float RotationAnimationDuration = 0.05f;
-  [SerializeField] private float FallAnimationDuration = 0.15f;
-
-  public IEnumerator AnimateMoveTransform(GameObject obj, Vector2Int targetGridPos) {
+public class MoveAnimator {
+  public IEnumerator AnimateMoveTransform(
+      GameObject obj,
+      Vector2Int targetGridPos,
+      float duration) {
     if (obj == null) yield break;
 
     Vector3 startPos = obj.transform.position;
@@ -16,9 +15,9 @@ public class MoveAnimator : MonoBehaviour {
         obj.transform.position.y);
 
     float elapsed = 0f;
-    while (elapsed < MoveAnimationDuration) {
+    while (elapsed < duration) {
       elapsed += Time.deltaTime;
-      float t = elapsed / MoveAnimationDuration;
+      float t = elapsed / duration;
       t = t * (2 - t); // Quadratic ease-out
 
       obj.transform.position = Vector3.Lerp(startPos, endPos, t);
@@ -29,7 +28,10 @@ public class MoveAnimator : MonoBehaviour {
     obj.transform.position = endPos;
   }
 
-  public IEnumerator AnimateRotateTransform(GameObject obj, Vector2Int targetGridPos) {
+  public IEnumerator AnimateRotateTransform(
+      GameObject obj,
+      Vector2Int targetGridPos,
+      float duration) {
     Vector3 startPos = obj.transform.position;
     Vector3 endPos = GridUtils.GridToWorld(
         targetGridPos.x,
@@ -40,10 +42,10 @@ public class MoveAnimator : MonoBehaviour {
     lookDirection.y = 0f;
 
     var targetRot = Quaternion.LookRotation(lookDirection, Vector3.up);
-    return AnimateRotateTransform(obj, targetRot);
+    return AnimateRotateTransform(obj, targetRot, duration);
   }
 
-  public IEnumerator AnimateRotateTransform(GameObject obj, Quaternion targetRot) {
+  public IEnumerator AnimateRotateTransform(GameObject obj, Quaternion targetRot, float duration) {
     if (obj == null) yield break;
 
     float elapsed = 0f;
@@ -58,9 +60,9 @@ public class MoveAnimator : MonoBehaviour {
     // e.g. if start=0, target=270, delta is -90. New target becomes -90.
     targetAngle = startAngle + deltaAngle;
 
-    while (elapsed < RotationAnimationDuration) {
+    while (elapsed < duration) {
       elapsed += Time.deltaTime;
-      float t = elapsed / RotationAnimationDuration;
+      float t = elapsed / duration;
 
       float angle = Mathf.LerpAngle(startAngle, targetAngle, t);
       obj.transform.rotation = Quaternion.Euler(0, angle, 0);
@@ -71,20 +73,24 @@ public class MoveAnimator : MonoBehaviour {
     obj.transform.rotation = targetRot;
   }
 
-  public IEnumerator AnimateCrateFall(GameObject obj, Vector2Int targetGridPos) {
+  public IEnumerator AnimateCrateFall(
+      GameObject obj,
+      Vector2Int targetGridPos,
+      float moveDuration,
+      float fallDuration) {
     if (obj == null) yield break;
 
     // 1. Slide to the hole position
-    yield return AnimateMoveTransform(obj, targetGridPos);
+    yield return AnimateMoveTransform(obj, targetGridPos, moveDuration);
 
     // 2. Sink down
     Vector3 startPos = obj.transform.position;
     Vector3 endPos = startPos + Vector3.down * 1.0f; // Sink depth
     float elapsed = 0f;
 
-    while (elapsed < FallAnimationDuration) {
+    while (elapsed < fallDuration) {
       elapsed += Time.deltaTime;
-      float t = elapsed / FallAnimationDuration;
+      float t = elapsed / fallDuration;
       obj.transform.position = Vector3.Lerp(startPos, endPos, t);
       yield return null;
     }

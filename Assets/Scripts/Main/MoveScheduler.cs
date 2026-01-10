@@ -11,12 +11,24 @@ public class MoveScheduler : MonoBehaviour {
 
   [field: SerializeField]
   [UsedImplicitly]
-  private MoveAnimator MoveAnimator { get; set; }
+  private UndoBehaviour UndoBehaviour { get; set; }
 
+  [field: Header("Animation Configuration")]
+  [field: SerializeField]
+  [UsedImplicitly]
+  private float MoveAnimationDuration { get; set; } = 0.2f;
 
   [field: SerializeField]
   [UsedImplicitly]
-  private UndoBehaviour UndoBehaviour { get; set; }
+  private float PushAnimationDuration { get; set; } = 0.5f;
+
+  [field: SerializeField]
+  [UsedImplicitly]
+  private float RotationAnimationDuration { get; set; } = 0.05f;
+
+  [field: SerializeField]
+  [UsedImplicitly]
+  private float FallAnimationDuration { get; set; } = 0.25f;
 
   // The unified queue
   private readonly Queue<SokobanMove> MoveQueue = new Queue<SokobanMove>();
@@ -26,11 +38,11 @@ public class MoveScheduler : MonoBehaviour {
 
   private UndoManager _undoManager;
   private Coroutine _currentProcess;
+  private MoveAnimator _moveAnimator = new MoveAnimator();
 
   [UsedImplicitly]
   private void Awake() {
     if (GameSession == null) GameSession = GetComponent<GameSession>();
-    if (MoveAnimator == null) MoveAnimator = GetComponent<MoveAnimator>();
     if (UndoBehaviour == null) UndoBehaviour = GetComponent<UndoBehaviour>();
 
     _undoManager = UndoBehaviour.UndoManager;
@@ -79,10 +91,22 @@ public class MoveScheduler : MonoBehaviour {
       var anims = new List<Coroutine>();
 
       if (playerObj != null) {
+        var moveDuration = move.type == MoveType.PlayerMove
+            ? MoveAnimationDuration
+            : PushAnimationDuration;
+
         anims.Add(
-            StartCoroutine(MoveAnimator.AnimateMoveTransform(playerObj, move.playerTo)));
+            StartCoroutine(
+                _moveAnimator.AnimateMoveTransform(
+                    playerObj,
+                    move.playerTo,
+                    moveDuration)));
         anims.Add(
-            StartCoroutine(MoveAnimator.AnimateRotateTransform(playerObj, move.playerTo)));
+            StartCoroutine(
+                _moveAnimator.AnimateRotateTransform(
+                    playerObj,
+                    move.playerTo,
+                    RotationAnimationDuration)));
       }
 
       if (move.type == MoveType.CratePush && crateObj != null) {
@@ -92,12 +116,29 @@ public class MoveScheduler : MonoBehaviour {
 
         anims.Add(
             fellInHole
-                ? StartCoroutine(MoveAnimator.AnimateCrateFall(crateObj, move.crateTo))
-                : StartCoroutine(MoveAnimator.AnimateMoveTransform(crateObj, move.crateTo)));
+                ? StartCoroutine(
+                    _moveAnimator.AnimateCrateFall(
+                        crateObj,
+                        move.crateTo,
+                        PushAnimationDuration,
+                        FallAnimationDuration))
+                : StartCoroutine(
+                    _moveAnimator.AnimateMoveTransform(
+                        crateObj,
+                        move.crateTo,
+                        PushAnimationDuration)));
       }
+
+      GameSession.PlayerAnimationState.CurrentState = move.type switch {
+          MoveType.PlayerMove => PlayerAnimationState.State.Walking,
+          MoveType.CratePush => PlayerAnimationState.State.Pushing,
+          _ => PlayerAnimationState.State.Idle,
+      };
 
       // Wait for animations
       foreach (var c in anims) yield return c;
+
+      GameSession.PlayerAnimationState.ToIdle();
 
       // Optional delay (useful for solution playback)
       if (StepDelay > 0) yield return new WaitForSeconds(StepDelay);

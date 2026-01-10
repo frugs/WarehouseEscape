@@ -1192,7 +1192,6 @@ GameObject:
   - component: {fileID: 1936126211}
   - component: {fileID: 1936126212}
   - component: {fileID: 1936126213}
-  - component: {fileID: 1936126214}
   - component: {fileID: 1936126215}
   - component: {fileID: 1936126216}
   - component: {fileID: 1936126217}
@@ -1311,8 +1310,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Main::MoveExecutor
   <GameSession>k__BackingField: {fileID: 0}
-  <MoveAnimator>k__BackingField: {fileID: 0}
   <UndoBehaviour>k__BackingField: {fileID: 0}
+  <MoveAnimationDuration>k__BackingField: 0.3
+  <PushAnimationDuration>k__BackingField: 0.5
+  <RotationAnimationDuration>k__BackingField: 0.05
+  <FallAnimationDuration>k__BackingField: 0.25
 --- !u!114 &1936126213
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1332,21 +1334,6 @@ MonoBehaviour:
   <EntrancePrefab>k__BackingField: {fileID: 0}
   <ExitPrefab>k__BackingField: {fileID: 6041455645285936546, guid: 37a2dbc88e66daa4aa3be5310899c30a, type: 3}
   <LevelsDirectoryName>k__BackingField: Levels
---- !u!114 &1936126214
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1936126205}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 763cf967b270bbb42bc30dca4febf888, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Main::MoveAnimator
-  MoveAnimationDuration: 0.2
-  RotationAnimationDuration: 0.15
-  FallAnimationDuration: 0.15
 --- !u!114 &1936126215
 MonoBehaviour:
   m_ObjectHideFlags: 0
