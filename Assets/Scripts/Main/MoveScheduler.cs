@@ -78,8 +78,16 @@ public class MoveScheduler : MonoBehaviour {
       // 2. Animations (The "Over Time" part)
       var anims = new List<Coroutine>();
 
-      if (playerObj != null)
-        anims.Add(StartCoroutine(MoveAnimator.AnimateTransform(playerObj, move.playerTo)));
+      if (playerObj != null) {
+        anims.Add(
+            StartCoroutine(
+                MoveAnimator.AnimateMoveTransform(playerObj, move.playerTo)));
+        anims.Add(
+            StartCoroutine(
+                MoveAnimator.AnimateRotateTransform(
+                    playerObj,
+                    (move.playerTo - move.playerFrom).GridToWorld())));
+      }
 
       if (move.type == MoveType.CratePush && crateObj != null) {
         // Handle the "fell in hole" logic here centrally
@@ -89,7 +97,7 @@ public class MoveScheduler : MonoBehaviour {
         anims.Add(
             fellInHole
                 ? StartCoroutine(MoveAnimator.AnimateCrateFall(crateObj, move.crateTo))
-                : StartCoroutine(MoveAnimator.AnimateTransform(crateObj, move.crateTo)));
+                : StartCoroutine(MoveAnimator.AnimateMoveTransform(crateObj, move.crateTo)));
       }
 
       // Wait for animations

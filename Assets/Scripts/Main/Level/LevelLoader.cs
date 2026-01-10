@@ -172,7 +172,11 @@ public class LevelLoader : MonoBehaviour {
         }
 
         if (initialState.IsPlayerAt(x, y)) {
-          GameObject p = Instantiate(PlayerPrefab, pos, Quaternion.identity);
+          var playerPos = GridUtils.GridToWorld(x, y);
+          GameObject p = Instantiate(
+              PlayerPrefab,
+              playerPos,
+              Quaternion.identity);
           p.name = "Player";
           visualGrid[x, y] = p;
         } else if (initialState.IsCrateAt(x, y)) {

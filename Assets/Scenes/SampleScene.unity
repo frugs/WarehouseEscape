@@ -1326,7 +1326,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Main::LevelLoader
   <TerrainBuilder>k__BackingField: {fileID: 0}
-  <PlayerPrefab>k__BackingField: {fileID: 721129335946948922, guid: 081bf8a76a88e34408793b404f24af5d, type: 3}
+  <PlayerPrefab>k__BackingField: {fileID: 8618417370276943027, guid: f182a16db4a4e09479da901eb0d7a2bb, type: 3}
   <CratePrefab>k__BackingField: {fileID: 4699907650127345005, guid: 4fc469b1f980a6b429697cc87278a555, type: 3}
   <TargetPrefab>k__BackingField: {fileID: 5504698377664096694, guid: f5ee4a16c1e9af04ca27e6740c476264, type: 3}
   <EntrancePrefab>k__BackingField: {fileID: 0}
@@ -1345,6 +1345,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Main::MoveAnimator
   MoveAnimationDuration: 0.2
+  RotationAnimationDuration: 0.15
   FallAnimationDuration: 0.15
 --- !u!114 &1936126215
 MonoBehaviour:
