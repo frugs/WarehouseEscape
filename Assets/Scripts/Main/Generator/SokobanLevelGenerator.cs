@@ -13,6 +13,7 @@ public class SokobanLevelGenerator {
   /// </summary>
   /// <returns>A fully constructed SokobanState, or null if generation failed.</returns>
   public SokobanState? GenerateLevel(
+      out SokobanSolution solution,
       int minSize = 6,
       int maxSize = 12,
       int targetCount = 5,
@@ -20,6 +21,7 @@ public class SokobanLevelGenerator {
       bool useEntranceExit = true,
       int? seed = null,
       CancellationToken cancellation = default) {
+    solution = null;
     const int TimeoutMs = 60_000;
     Stopwatch timer = Stopwatch.StartNew();
 
@@ -69,7 +71,7 @@ public class SokobanLevelGenerator {
 
       if (solver.IsSolvable(
               state,
-              out _,
+              out solution,
               maxIterations: GeneratorSolverLimit,
               cancellation: cancellation)) {
         UnityEngine.Debug.Log(

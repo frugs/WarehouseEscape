@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Threading;
 using UnityEngine;
 using UnityEngine.Pool;
+using Debug = UnityEngine.Debug;
 
 public class SokobanSolver {
   private const int MAX_ITERATIONS = 10_000_000; // Limit total states explored
@@ -35,6 +36,7 @@ public class SokobanSolver {
     // 1. Setup
     solution = null;
 
+    var listPool = new ListPool<Vector2Int>();
     var parentMap = new Dictionary<SokobanState, PathNode>();
     var visited = new HashSet<SokobanState>();
     var queue = new PriorityQueue<SolverContext, int>();
@@ -185,7 +187,7 @@ public class SokobanSolver {
               var nextCanonical = nextRawState.WithPlayerMove(nextCanonicalPos);
 
               if (!visited.Contains(nextCanonical)) {
-                var nextWalkableCopy = ListPool<Vector2Int>.Get();
+                var nextWalkableCopy = listPool.Get();
                 nextWalkableCopy.Capacity = nextWalkable.Count;
                 nextWalkableCopy.AddRange(nextWalkable);
 
@@ -206,7 +208,7 @@ public class SokobanSolver {
         }
       }
 
-      ListPool<Vector2Int>.Release(walkable);
+      listPool.Release(walkable);
     }
 
     UnityEngine.Debug.Log(

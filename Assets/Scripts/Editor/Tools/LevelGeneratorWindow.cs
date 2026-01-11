@@ -97,6 +97,7 @@ public class LevelGeneratorWindow : EditorWindow {
 
         int? seedToUse = UseFixedSeed ? Seed : null;
         return generator.GenerateLevel(
+            out var solution,
             MaxSize,
             MaxSize,
             TargetCount,
@@ -114,7 +115,7 @@ public class LevelGeneratorWindow : EditorWindow {
     int threadCount = Environment.ProcessorCount;
     int baseSeed = UseFixedSeed ? Seed : Random.Range(0, int.MaxValue);
 
-    List<Task<SokobanState?>> tasks = new List<Task<SokobanState?>>();
+    var tasks = new List<Task<(SokobanState?, SokobanSolution)>>();
 
     Debug.Log($"Starting generation on {threadCount} threads...");
 
@@ -130,7 +131,8 @@ public class LevelGeneratorWindow : EditorWindow {
                 // Offset seed so threads don't generate identical levels
                 int threadSeed = baseSeed + (threadIndex * 1123);
 
-                return generator.GenerateLevel(
+                var state = generator.GenerateLevel(
+                    out var solution,
                     MaxSize,
                     MaxSize, // assuming width=height based on your code
                     TargetCount,
@@ -140,23 +142,29 @@ public class LevelGeneratorWindow : EditorWindow {
                     // ReSharper disable once AccessToDisposedClosure
                     cancellation
                 );
+                return (state, solution);
               },
               cancellation));
     }
 
     // Wait for the first task to return a valid result
-    SokobanState? result = await WaitForFirstSuccess(tasks, cts);
+    var (result, resultSolution) = await WaitForFirstSuccess(tasks, cts);
+
+    if (result != null) {
+      Debug.Log($"Generated level difficulty: {resultSolution?.Difficulty}");
+    }
+
     return result;
   }
 
-  private async Task<SokobanState?> WaitForFirstSuccess(
-      List<Task<SokobanState?>> tasks,
+  private async Task<T> WaitForFirstSuccess<T>(
+      List<Task<T>> tasks,
       CancellationTokenSource cts) {
-    var remainingTasks = new List<Task<SokobanState?>>(tasks);
+    var remainingTasks = new List<Task<T>>(tasks);
 
     while (remainingTasks.Count > 0) {
       // Wait for any task to complete
-      Task<SokobanState?> completedTask = await Task.WhenAny(remainingTasks);
+      Task<T> completedTask = await Task.WhenAny(remainingTasks);
       remainingTasks.Remove(completedTask);
 
       // If it completed successfully (didn't crash/cancel)
@@ -175,7 +183,7 @@ public class LevelGeneratorWindow : EditorWindow {
       // or returned null (exhausted attempts). We loop and wait for the next one.
     }
 
-    return null; // All threads failed
+    return default; // All threads failed
   }
 
   private async void GenerateAndLog() {

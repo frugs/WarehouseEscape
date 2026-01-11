@@ -75,6 +75,7 @@ public class GameSession : MonoBehaviour {
 
     var generator = new SokobanLevelGenerator();
     var maybeState = generator.GenerateLevel(
+        out _,
         minSize: 40,
         maxSize: 40,
         targetCount: 3,
