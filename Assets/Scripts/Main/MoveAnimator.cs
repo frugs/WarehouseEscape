@@ -5,7 +5,8 @@ public class MoveAnimator {
   public IEnumerator AnimateMoveTransform(
       GameObject obj,
       Vector2Int targetGridPos,
-      float duration) {
+      float duration, 
+      AnimationCurve curve = null) {
     if (obj == null) yield break;
 
     Vector3 startPos = obj.transform.position;
@@ -18,9 +19,9 @@ public class MoveAnimator {
     while (elapsed < duration) {
       elapsed += Time.deltaTime;
       float t = elapsed / duration;
-      t = t * (2 - t); // Quadratic ease-out
-
-      obj.transform.position = Vector3.Lerp(startPos, endPos, t);
+      float curvedT = curve != null ? curve.Evaluate(t) : t;
+        
+      obj.position = Vector3.Lerp(startPos, endPos, curvedT);
 
       yield return null;
     }
