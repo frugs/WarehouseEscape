@@ -58,12 +58,18 @@ public class SokobanSolution {
   }
 
   private float CalculateDifficulty() {
-    float normLen = Mathf.Log(SolutionLength + 1f, 2f);
-    float pushes = NumPushes * 1.5f;
-    float risk = TrueHoles * (Targets * 0.8f);
-    float search = Mathf.Sqrt(StatesExplored / 1000f);
-    float disp = CrateDispersion / (InitialState.GridWidth + InitialState.GridHeight);
-    float raw = normLen * pushes * (1f + risk) * (1f + search) * (1f + disp);
-    return Mathf.Clamp(raw * 0.6f, 0.5f, 10f);
+    float ratio = StatesExplored / Mathf.Max(SolutionLength, 1f);
+    float complexity = Mathf.Log(ratio + 1f, 2f);
+    float push = Mathf.Log(NumPushes + 1f, 5f) * 0.3f;
+    float risk = Mathf.Log(TrueHoles + Targets + 1f, 2f) * 0.3f;
+    float disp = CrateDispersion / 100f;
+    float raw = complexity + push + risk + disp;
+    float final = Mathf.Clamp(raw, 0.5f, 10f);
+
+    Debug.Log(
+        $"Difficulty breakdown: complexity={complexity:F2}, push={push:F2}, " +
+        $"risk={risk:F2}, disp={disp:F2}, raw={raw:F2}, final={final:F2}");
+
+    return final;
   }
 }
