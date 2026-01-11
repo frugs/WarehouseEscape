@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using System.Diagnostics; // For Stopwatch
 using System.IO;
 using UnityEditor;

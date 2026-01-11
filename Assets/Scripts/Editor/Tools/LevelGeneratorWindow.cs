@@ -96,7 +96,7 @@ public class LevelGeneratorWindow : EditorWindow {
         var generator = new SokobanLevelGenerator();
 
         int? seedToUse = UseFixedSeed ? Seed : null;
-        return generator.GenerateLevel(
+        var result = generator.GenerateLevel(
             out var solution,
             MaxSize,
             MaxSize,
@@ -104,6 +104,12 @@ public class LevelGeneratorWindow : EditorWindow {
             HoleCount,
             UseEntranceExit,
             seedToUse);
+
+        if (result != null) {
+          Debug.Log($"Generated level difficulty: {solution?.Difficulty}");
+        }
+
+        return result;
       }
     } finally {
       _isGenerating = false;

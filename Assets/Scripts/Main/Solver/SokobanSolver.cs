@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading;
 using UnityEngine;
-using UnityEngine.Pool;
 using Debug = UnityEngine.Debug;
 
 public class SokobanSolver {
@@ -115,7 +114,7 @@ public class SokobanSolver {
 
       if ((maxIterations > 0 && ++iterations > maxIterations) ||
           (timeoutMs > 0 && timer.ElapsedMilliseconds > MAX_MS)) {
-        UnityEngine.Debug.Log(
+        Debug.Log(
             $"Solver Timeout! Checked {statesExplored} states in {timer.ElapsedMilliseconds}ms.");
         return false; // Give up
       }
@@ -127,7 +126,7 @@ public class SokobanSolver {
       // Check Win on the canonical state (crates are the same)
       if (currentState.IsSolved(out var exitPos)) {
         if (exitPos == null || walkable.Contains(exitPos.Value)) {
-          UnityEngine.Debug.Log(
+          Debug.Log(
               $"Solved - Checked {statesExplored} states in {timer.ElapsedMilliseconds}ms.");
 
           var solutionMoves = ReconstructPath(
@@ -211,7 +210,7 @@ public class SokobanSolver {
       listPool.Release(walkable);
     }
 
-    UnityEngine.Debug.Log(
+    Debug.Log(
         $"Unsolvable - Checked {statesExplored} states in {timer.ElapsedMilliseconds}ms.");
     return false; // Unsolvable
   }
