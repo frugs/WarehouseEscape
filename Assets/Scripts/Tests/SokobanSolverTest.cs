@@ -43,7 +43,7 @@ public class SokobanSolverTests {
     SokobanSolver solver = new SokobanSolver();
 
     // ACT
-    bool isSolvable = solver.IsSolvable(state);
+    bool isSolvable = solver.IsSolvable(state, out _);
 
     // ASSERT
     Assert.IsTrue(isSolvable, "Solver should find a solution for a simple push.");
@@ -66,7 +66,7 @@ public class SokobanSolverTests {
     SokobanSolver solver = new SokobanSolver();
 
     // ACT
-    bool isSolvable = solver.IsSolvable(state);
+    bool isSolvable = solver.IsSolvable(state, out _);
 
     // ASSERT
     Assert.IsFalse(isSolvable, "Solver should return false when crate is stuck in a corner.");
@@ -89,14 +89,15 @@ public class SokobanSolverTests {
     SokobanSolver solver = new SokobanSolver();
 
     // ACT
-    List<SokobanMove> solution = solver.FindSolutionPath(state);
+    solver.IsSolvable(state, out var solution);
+    var moves = solution.Moves;
 
     // ASSERT
-    Assert.IsNotNull(solution, "Solution should not be null.");
-    Assert.AreEqual(1, solution.Count, "Should require exactly 1 move.");
+    Assert.IsNotNull(moves, "Solution should not be null.");
+    Assert.AreEqual(1, moves.Count, "Should require exactly 1 move.");
 
     // Verify move
-    SokobanMove move = solution[0];
+    SokobanMove move = moves[0];
     Assert.AreEqual(MoveType.CratePush, move.type);
     Assert.AreEqual(new Vector2Int(1, 1), move.playerFrom);
     Assert.AreEqual(new Vector2Int(2, 1), move.playerTo);
@@ -120,14 +121,15 @@ public class SokobanSolverTests {
     SokobanSolver solver = new SokobanSolver();
 
     // ACT
-    List<SokobanMove> solution = solver.FindSolutionPath(state);
+    solver.IsSolvable(state, out var solution);
+    var moves = solution.Moves;
 
     // ASSERT
-    Assert.IsNotNull(solution, "Solution should not be null.");
-    Assert.AreEqual(4, solution.Count, "Should require exactly 4 moves.");
+    Assert.IsNotNull(moves, "Solution should not be null.");
+    Assert.AreEqual(4, moves.Count, "Should require exactly 4 moves.");
 
     // Verify move
-    var iter = solution.GetEnumerator();
+    var iter = moves.GetEnumerator();
     iter.MoveNext();
 
     {
@@ -181,14 +183,15 @@ public class SokobanSolverTests {
     SokobanSolver solver = new SokobanSolver();
 
     // ACT
-    List<SokobanMove> solution = solver.FindSolutionPath(state);
+    solver.IsSolvable(state, out var solution);
+    var moves = solution.Moves;
 
     // ASSERT
-    Assert.IsNotNull(solution, "Solution should not be null.");
-    Assert.AreEqual(4, solution.Count, "Should require exactly 4 moves.");
+    Assert.IsNotNull(moves, "Solution should not be null.");
+    Assert.AreEqual(4, moves.Count, "Should require exactly 4 moves.");
 
     // Verify moves
-    var iter = solution.GetEnumerator();
+    var iter = moves.GetEnumerator();
     iter.MoveNext();
 
     {
@@ -243,14 +246,15 @@ public class SokobanSolverTests {
     SokobanSolver solver = new SokobanSolver();
 
     // ACT
-    List<SokobanMove> solution = solver.FindSolutionPath(state);
+    solver.IsSolvable(state, out var solution);
+    var moves = solution.Moves;
 
     // ASSERT
-    Assert.IsNotNull(solution, "Solution should not be null.");
-    Assert.AreEqual(3, solution.Count, "Should require exactly 3 moves.");
+    Assert.IsNotNull(moves, "Solution should not be null.");
+    Assert.AreEqual(3, moves.Count, "Should require exactly 3 moves.");
 
     // Verify move
-    var iter = solution.GetEnumerator();
+    var iter = moves.GetEnumerator();
     iter.MoveNext();
 
     {

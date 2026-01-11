@@ -32,19 +32,21 @@ public static class LevelSolverMenu {
 
     // Use a generous timeout for Editor operations (e.g., 10 seconds)
     // You might need to adjust your Solver's internal safety checks if they are hardcoded
-    List<SokobanMove> solution = solver.FindSolutionPath(startState);
+    bool solvable = solver.IsSolvable(startState, out var solution);
 
     sw.Stop();
 
     // 5. Handle Result
-    if (solution != null) {
+    if (solvable) {
+      var moves = solution.Moves;
+
       UnityEngine.Debug.Log(
           $"<color=green>SOLVED!</color> Found solution " +
-          $"({solution.Count} steps) in {sw.ElapsedMilliseconds}ms.");
+          $"({moves.Count} steps) in {sw.ElapsedMilliseconds}ms.");
 
       // Export using your new SolutionExporter
       string levelName = Path.GetFileNameWithoutExtension(path);
-      SokobanSolutionExporter.Export(levelName, solution, sw.ElapsedMilliseconds);
+      SokobanSolutionExporter.Export(levelName, moves, sw.ElapsedMilliseconds);
 
       // Refresh Asset Database so the new .json file appears in Unity immediately
       AssetDatabase.Refresh();

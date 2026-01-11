@@ -4,9 +4,15 @@ using UnityEngine;
 
 [System.Serializable]
 public class SokobanSolution {
-  public SokobanState InitialState; // Full starting state (grid, crates, etc.)
-  public List<SokobanMove> Moves; // Solution path
-  public int StatesExplored;
+  public List<SokobanMove> Moves { get; } // Solution path
+  public SokobanState InitialState { get; } // Full starting state (grid, crates, etc.)
+  public int StatesExplored { get; }
+
+  public SokobanSolution(List<SokobanMove> moves, SokobanState state, int statesExplored) {
+    Moves = moves;
+    InitialState = state;
+    StatesExplored = statesExplored;
+  }
 
   // Computed metrics
   public int SolutionLength => Moves?.Count ?? 0;

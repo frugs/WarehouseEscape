@@ -23,27 +23,18 @@ public class SokobanSolver {
   private DeadSquareMap DeadSquareMap { get; set; }
 
   /// <summary>
-  /// Checks if a level is solvable within the given iteration limit.
-  /// </summary>
-  public bool IsSolvable(
-      SokobanState state,
-      int maxIterations = MAX_ITERATIONS,
-      long timeoutMs = MAX_MS,
-      CancellationToken cancellation = default) {
-    var solution = FindSolutionPath(state, maxIterations, timeoutMs, cancellation);
-    return solution != null;
-  }
-
-  /// <summary>
   /// Finds the shortest solution path using BFS with Canonical State Optimization.
   /// This treats all reachable player positions as a single state.
   /// </summary>
-  public List<SokobanMove> FindSolutionPath(
+  public bool IsSolvable(
       SokobanState initialState,
+      out SokobanSolution solution,
       int maxIterations = MAX_ITERATIONS,
       long timeoutMs = MAX_MS,
       CancellationToken cancellation = default) {
     // 1. Setup
+    solution = null;
+
     var parentMap = new Dictionary<SokobanState, PathNode>();
     var visited = new HashSet<SokobanState>();
     var queue = new PriorityQueue<SolverContext, int>();
@@ -118,13 +109,13 @@ public class SokobanSolver {
 
     // 3. BFS Loop
     while (queue.Count > 0) {
-      if (cancellation.IsCancellationRequested) return null;
+      if (cancellation.IsCancellationRequested) return false;
 
       if ((maxIterations > 0 && ++iterations > maxIterations) ||
           (timeoutMs > 0 && timer.ElapsedMilliseconds > MAX_MS)) {
         UnityEngine.Debug.Log(
             $"Solver Timeout! Checked {statesExplored} states in {timer.ElapsedMilliseconds}ms.");
-        return null; // Give up
+        return false; // Give up
       }
 
       var currentContext = queue.Dequeue();
@@ -137,7 +128,10 @@ public class SokobanSolver {
           UnityEngine.Debug.Log(
               $"Solved - Checked {statesExplored} states in {timer.ElapsedMilliseconds}ms.");
 
-          var solution = ReconstructPath(parentMap, currentContext.CanonicalState, initialState);
+          var solutionMoves = ReconstructPath(
+              parentMap,
+              currentContext.CanonicalState,
+              initialState);
           if (exitPos != null) {
             var rawState = currentContext.RawState;
             var pathToExit = Pather.FindPath(
@@ -148,13 +142,14 @@ public class SokobanSolver {
               // Convert raw coords into PlayerMove steps
               var walkPos = rawState.PlayerPos;
               foreach (var target in pathToExit) {
-                solution.Add(SokobanMove.PlayerMove(walkPos, target));
+                solutionMoves.Add(SokobanMove.PlayerMove(walkPos, target));
                 walkPos = target;
               }
             }
           }
 
-          return solution;
+          solution = new SokobanSolution(solutionMoves, initialState, statesExplored);
+          return true;
         }
       }
 
@@ -216,7 +211,7 @@ public class SokobanSolver {
 
     UnityEngine.Debug.Log(
         $"Unsolvable - Checked {statesExplored} states in {timer.ElapsedMilliseconds}ms.");
-    return null; // Unsolvable
+    return false; // Unsolvable
   }
 
   /// <summary>

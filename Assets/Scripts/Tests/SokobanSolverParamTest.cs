@@ -140,7 +140,7 @@ X X X X X X X < X
 }
 
 public class SokobanParamTests {
-  private const bool LogSolutions = true;
+  private const bool LogSolutionMoves = true;
 
 
   [Test, TestCaseSource(typeof(SokobanTestCases), nameof(SokobanTestCases.GetSolverCases))]
@@ -156,20 +156,18 @@ public class SokobanParamTests {
     SokobanSolver solver = new SokobanSolver();
 
     // 2. ACT
-    var solution = solver.FindSolutionPath(initialState);
-    if (LogSolutions && solution != null) {
-      foreach (var move in solution) {
+    var solvable = solver.IsSolvable(initialState, out var solution);
+    if (LogSolutionMoves && solvable) {
+      foreach (var move in solution.Moves) {
         UnityEngine.Debug.Log(move);
       }
     }
 
-
     // 3. ASSERT
-    var solvable = solution != null;
     Assert.AreEqual(
         expectedSolvable,
         solvable,
         $"Expected level to be {(expectedSolvable ? "Solvable" : "Unsolvable")}, " +
-        $"but Solver returned {solution}.");
+        $"but Solver returned {solution?.Moves}.");
   }
 }

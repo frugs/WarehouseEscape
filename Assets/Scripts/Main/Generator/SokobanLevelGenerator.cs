@@ -69,6 +69,7 @@ public class SokobanLevelGenerator {
 
       if (solver.IsSolvable(
               state,
+              out _,
               maxIterations: GeneratorSolverLimit,
               cancellation: cancellation)) {
         UnityEngine.Debug.Log(
