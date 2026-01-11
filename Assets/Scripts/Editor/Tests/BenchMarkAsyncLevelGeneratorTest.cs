@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 using NUnit.Framework;
 using UnityEngine.TestTools;
 using Debug = UnityEngine.Debug;
@@ -91,6 +92,135 @@ public class BenchMarkAsyncLevelGeneratorTest {
       }
     }
   }
+
+  [UnityTest]
+  public IEnumerator Diagnose_GC_Pressure() {
+    foreach (int threadCount in ThreadCounts) {
+      GC.Collect();
+      GC.WaitForPendingFinalizers();
+
+      long beforeBytes = GC.GetTotalMemory(false);
+
+      yield return RunBenchmarkForThreadCount(threadCount);
+
+      long afterBytes = GC.GetTotalMemory(false);
+      long allocated = afterBytes - beforeBytes;
+
+      Debug.Log(
+          $"{threadCount} threads: Allocated {allocated / 1024 / 1024}MB, " +
+          $"Rate: {allocated / (double)_benchmarkResults[threadCount]:F1} bytes/ms");
+    }
+  }
+
+  [UnityTest]
+  public IEnumerator Diagnose_DeadSquareMap_Cache_Behavior() {
+    var task = AsyncLevelGenerator.GenerateLevelAsync(
+        MIN_SIZE,
+        MAX_SIZE,
+        TARGET_COUNT,
+        HOLE_COUNT,
+        USE_ENTRANCE_EXIT,
+        TEST_SEED,
+        SEED_OFFSET,
+        1,
+        waitForFullCompletion: true
+    );
+
+    // Wait for the async operation to complete
+    while (!task.IsCompleted) {
+      yield return null;
+    }
+
+    var (maybeState, _, _) = task.Result;
+
+    if (maybeState is not { } state) yield break;
+
+    foreach (int threadCount in ThreadCounts) {
+      Debug.Log($"\n=== DeadSquareMap Test: {threadCount} threads ===");
+
+      var tasks = new List<Task>();
+      var deadSquareTimings = new Dictionary<int, long>();
+
+      for (int i = 0; i < threadCount; i++) {
+        int threadIdx = i;
+        tasks.Add(
+            Task.Run(() => {
+              var timer = Stopwatch.StartNew();
+              _ = new DeadSquareMap(state);
+              timer.Stop();
+
+              lock (deadSquareTimings) {
+                deadSquareTimings[threadIdx] = timer.ElapsedMilliseconds;
+              }
+            }));
+      }
+
+      Task.WaitAll(tasks.ToArray());
+
+      var avg = deadSquareTimings.Values.Average();
+      Debug.Log($"DeadSquareMap avg per thread: {avg:F1}ms");
+
+      yield return null;
+    }
+  }
+
+  [UnityTest]
+  public IEnumerator Diagnose_Solver_Cache_Thrashing() {
+    var task = AsyncLevelGenerator.GenerateLevelAsync(
+        MIN_SIZE,
+        MAX_SIZE,
+        TARGET_COUNT,
+        HOLE_COUNT,
+        USE_ENTRANCE_EXIT,
+        TEST_SEED,
+        SEED_OFFSET,
+        1,
+        waitForFullCompletion: true
+    );
+
+    // Wait for the async operation to complete
+    while (!task.IsCompleted) {
+      yield return null;
+    }
+
+    var (maybeState, _, _) = task.Result;
+
+    if (maybeState is not { } state) yield break;
+
+    foreach (int threadCount in ThreadCounts) {
+      Debug.Log($"\n=== Solver Search Test: {threadCount} threads ===");
+
+      var stopWatch = Stopwatch.StartNew();
+
+      var tasks = new List<Task<int>>(); // States explored
+
+      for (int i = 0; i < threadCount; i++) {
+        tasks.Add(
+            Task.Run(() => {
+              var solver = new SokobanSolver();
+
+              solver.IsSolvable(state, out _, out var statesExplored);
+              return statesExplored;
+            }));
+      }
+
+      var whenAll = Task.WhenAll(tasks);
+      while (!whenAll.IsCompleted) {
+        yield return null;
+      }
+
+      int totalStatesExplored = tasks.Sum(t => t.Result);
+      long wallClockMs = stopWatch.ElapsedMilliseconds;
+      double statesPerMs = totalStatesExplored / (double)wallClockMs;
+
+      Debug.Log(
+          $"Solver throughput: {statesPerMs:F2} states/ms " +
+          $"({totalStatesExplored} total states in {wallClockMs}ms)");
+
+      yield return null;
+    }
+  }
+
 
   private IEnumerator RunBenchmarkForThreadCount(int threadCount) {
     Debug.Log($"Starting benchmark for {threadCount} thread(s)...");
