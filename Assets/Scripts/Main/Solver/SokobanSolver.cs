@@ -32,7 +32,8 @@ public class SokobanSolver {
       out int statesExplored,
       int maxIterations = MAX_ITERATIONS,
       long timeoutMs = MAX_MS,
-      CancellationToken cancellation = default) {
+      CancellationToken cancellation = default,
+      bool logVerbose = false) {
     // 1. Setup
     solution = null;
     statesExplored = 0;
@@ -115,8 +116,11 @@ public class SokobanSolver {
 
       if ((maxIterations > 0 && ++iterations > maxIterations) ||
           (timeoutMs > 0 && timer.ElapsedMilliseconds > MAX_MS)) {
-        Debug.Log(
-            $"Solver Timeout! Checked {statesExplored} states in {timer.ElapsedMilliseconds}ms.");
+        if (logVerbose) {
+          Debug.Log(
+              $"Solver Timeout! Checked {statesExplored} states in {timer.ElapsedMilliseconds}ms.");
+        }
+
         return false; // Give up
       }
 
@@ -127,8 +131,10 @@ public class SokobanSolver {
       // Check Win on the canonical state (crates are the same)
       if (currentState.IsSolved(out var exitPos)) {
         if (exitPos == null || walkable.Contains(exitPos.Value)) {
-          Debug.Log(
-              $"Solved - Checked {statesExplored} states in {timer.ElapsedMilliseconds}ms.");
+          if (logVerbose) {
+            Debug.Log(
+                $"Solved - Checked {statesExplored} states in {timer.ElapsedMilliseconds}ms.");
+          }
 
           var solutionMoves = ReconstructPath(
               parentMap,
@@ -211,8 +217,11 @@ public class SokobanSolver {
       listPool.Release(walkable);
     }
 
-    Debug.Log(
-        $"Unsolvable - Checked {statesExplored} states in {timer.ElapsedMilliseconds}ms.");
+    if (logVerbose) {
+      Debug.Log(
+          $"Unsolvable - Checked {statesExplored} states in {timer.ElapsedMilliseconds}ms.");
+    }
+
     return false; // Unsolvable
   }
 

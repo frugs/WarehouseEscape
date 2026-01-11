@@ -1,8 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
 using JetBrains.Annotations;
 using UnityEditor;
@@ -81,22 +79,27 @@ public class LevelGeneratorWindow : EditorWindow {
     try {
       _isGenerating = true;
 
+      int seedToUse = UseFixedSeed ? Seed : Random.Range(0, 999999999);
+      const int seedOffset = 1123;
+
       if (MultiThreading) {
-        const int timeOutMs = 65_000;
-        using var cts = new CancellationTokenSource();
-        cts.CancelAfter(timeOutMs);
+        int threadCount = 2; // Testing showed 2 threads optimal
 
-        var result = await GenerateStateAsync(cts);
-
-        if (result == null && cts.IsCancellationRequested) {
-          Debug.Log($"Cancelled generation after {timeOutMs}ms");
-        }
+        var (result, _, _) = await AsyncLevelGenerator.GenerateLevelAsync(
+            MaxSize,
+            MaxSize,
+            TargetCount,
+            HoleCount,
+            UseEntranceExit,
+            seedToUse,
+            seedOffset,
+            threadCount,
+            waitForFullCompletion: false);
 
         return result;
       } else {
         var generator = new SokobanLevelGenerator();
 
-        int? seedToUse = UseFixedSeed ? Seed : null;
         var result = generator.GenerateLevel(
             out var solution,
             out _,
@@ -119,94 +122,6 @@ public class LevelGeneratorWindow : EditorWindow {
     } finally {
       _isGenerating = false;
     }
-  }
-
-  private async Task<SokobanState?> GenerateStateAsync(CancellationTokenSource cts = null) {
-    var cancellation = cts?.Token ?? CancellationToken.None;
-    int threadCount = Environment.ProcessorCount;
-    int baseSeed = UseFixedSeed ? Seed : Random.Range(0, int.MaxValue);
-
-    var tasks =
-        new List<Task<(
-            SokobanState? State,
-            SokobanSolution Solution,
-            int Attempts,
-            int TotalStatesExplored)>>();
-
-    Debug.Log($"Starting generation on {threadCount} threads...");
-
-    for (int i = 0; i < threadCount; i++) {
-      // Capture loop variable
-      int threadIndex = i;
-
-      tasks.Add(
-          Task.Run(
-              () => {
-                // Create a dedicated generator for this thread
-                var generator = new SokobanLevelGenerator();
-                // Offset seed so threads don't generate identical levels
-                int threadSeed = baseSeed + (threadIndex * 1123);
-
-                var state = generator.GenerateLevel(
-                    out var solution,
-                    out var attempts,
-                    out var statesExplored,
-                    MaxSize,
-                    MaxSize, // assuming width=height based on your code
-                    TargetCount,
-                    HoleCount,
-                    UseEntranceExit,
-                    threadSeed,
-                    // ReSharper disable once AccessToDisposedClosure
-                    cancellation
-                );
-                return (state, solution, attempts, statesExplored);
-              },
-              cancellation));
-    }
-
-    // Wait for the first task to return a valid result
-    var (result, resultSolution, _, _) = await WaitForFirstSuccess(tasks, cts);
-
-    if (result != null) {
-      Debug.Log($"Generated level difficulty: {resultSolution?.Difficulty}");
-    }
-
-    var totalAttempts = tasks.Sum(t => t.Result.Attempts);
-    var totalStatesExplored = tasks.Sum(t => t.Result.TotalStatesExplored);
-    Debug.Log($"Total attempts: {totalAttempts}");
-    Debug.Log($"Solver explored {totalStatesExplored} total states");
-
-    return result;
-  }
-
-  private async Task<T> WaitForFirstSuccess<T>(
-      List<Task<T>> tasks,
-      CancellationTokenSource cts) {
-    var remainingTasks = new List<Task<T>>(tasks);
-
-    while (remainingTasks.Count > 0) {
-      // Wait for any task to complete
-      Task<T> completedTask = await Task.WhenAny(remainingTasks);
-      remainingTasks.Remove(completedTask);
-
-      // If it completed successfully (didn't crash/cancel)
-      if (completedTask.Status == TaskStatus.RanToCompletion) {
-        var result = completedTask.Result;
-        if (result != null) {
-          // We found a level! Cancel all other threads.
-          cts.Cancel();
-
-          await Task.WhenAll(remainingTasks);
-          return result;
-        }
-      }
-
-      // If we are here, the task either failed, was cancelled,
-      // or returned null (exhausted attempts). We loop and wait for the next one.
-    }
-
-    return default; // All threads failed
   }
 
   private async void GenerateAndLog() {

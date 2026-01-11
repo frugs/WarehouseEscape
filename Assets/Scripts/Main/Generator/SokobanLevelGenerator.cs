@@ -22,9 +22,10 @@ public class SokobanLevelGenerator {
       int holeCount = 2,
       bool useEntranceExit = true,
       int? seed = null,
-      CancellationToken cancellation = default) {
+      CancellationToken cancellation = default,
+      bool logVerbose = false) {
     solution = null;
-    attempts = 0;
+    attempts = 1;
     totalStatesExplored = 0;
     const int TimeoutMs = 60_000;
     Stopwatch timer = Stopwatch.StartNew();
@@ -42,17 +43,22 @@ public class SokobanLevelGenerator {
       var attemptStart = timer.ElapsedMilliseconds;
 
       if (timer.ElapsedMilliseconds > TimeoutMs) {
-        UnityEngine.Debug.LogError(
-            $"Timeout! {i} attempts in {timer.ElapsedMilliseconds}ms.");
+        if (logVerbose) {
+          UnityEngine.Debug.LogError(
+              $"Timeout! {i} attempts in {timer.ElapsedMilliseconds}ms.");
+        }
+
         return null; // Give up
       }
 
       // 1. Create Room Structure
       int maxWidth = random.Next(minSize, maxSize);
       int maxHeight = random.Next(minSize, maxSize);
-      var roomLayout = _roomLayoutGenerator.GenerateLayout(maxWidth, maxHeight);
+      var roomLayout = _roomLayoutGenerator.GenerateLayout(maxWidth, maxHeight, random);
 
-      UnityEngine.Debug.Log($"Generated layout in {timer.ElapsedMilliseconds - attemptStart}ms");
+      if (logVerbose) {
+        UnityEngine.Debug.Log($"Generated layout in {timer.ElapsedMilliseconds - attemptStart}ms");
+      }
 
       var placeFeaturesStart = timer.ElapsedMilliseconds;
 
@@ -61,10 +67,12 @@ public class SokobanLevelGenerator {
           roomLayout,
           targetCount,
           holeCount,
-          useEntranceExit);
+          useEntranceExit,
+          random);
 
-      UnityEngine.Debug.Log(
-          $"Placed features in {timer.ElapsedMilliseconds - placeFeaturesStart}ms");
+      if (logVerbose)
+        UnityEngine.Debug.Log(
+            $"Placed features in {timer.ElapsedMilliseconds - placeFeaturesStart}ms");
 
       if (maybeState == null) continue; // Population failed (no space)
 
@@ -81,8 +89,10 @@ public class SokobanLevelGenerator {
       totalStatesExplored += statesExplored;
 
       if (isSolvable) {
-        UnityEngine.Debug.Log(
-            $"Generated solvable level in {i + 1} attempts and {timer.ElapsedMilliseconds}ms.");
+        if (logVerbose) {
+          UnityEngine.Debug.Log(
+              $"Generated solvable level in {i + 1} attempts and {timer.ElapsedMilliseconds}ms.");
+        }
 
         // Final Polish Step
         PostProcessPerimeterWalls(state.TerrainGrid);
@@ -91,7 +101,10 @@ public class SokobanLevelGenerator {
       }
     }
 
-    UnityEngine.Debug.LogError("Failed to generate a solvable level within attempt limit.");
+    if (logVerbose) {
+      UnityEngine.Debug.LogError("Failed to generate a solvable level within attempt limit.");
+    }
+
     return null;
   }
 
