@@ -117,16 +117,13 @@ public class MoveScheduler : MonoBehaviour {
         anims.Add(
             fellInHole
                 ? StartCoroutine(
-                    _moveAnimator.AnimateCrateFall(
+                    AnimateCrateFall(
                         crateObj,
-                        move.crateTo,
-                        PushAnimationDuration,
-                        FallAnimationDuration))
+                        move.crateTo)
                 : StartCoroutine(
-                    _moveAnimator.AnimateMoveTransform(
+                    AnimateCratePush(
                         crateObj,
-                        move.crateTo,
-                        PushAnimationDuration)));
+                        move.crateTo);
       }
 
       GameSession.PlayerAnimationState.CurrentState = move.type switch {
@@ -149,4 +146,27 @@ public class MoveScheduler : MonoBehaviour {
 
     _currentProcess = null;
   }
+
+  private IEnumerator AnimateCratePush(
+      GameObject crate Obj,
+      targetGridPos) {
+    return _moveAnimator.AnimateMoveTransform(
+                        crateObj,
+                        targetGridPos,
+                        PushAnimationDuration,
+                        AnimationCurves.QuadraticEaseIn);
+  }
+
+  private IEnumerator AnimateCrateFall(
+      GameObject crateObj,
+      targetGridPos) {
+    yield return AnimateCratePush(crateObj, targetGridPos);
+
+    yield return _moveAnimator.AnimateTransformFall(
+                        crateObj,
+                        targetGridPos,
+                        FallAnimationDuration);
+    
+    crateObj.name = $"FilledHole_{targetGridPos.x}_{targetGridPos.y}";
+  } 
 }
