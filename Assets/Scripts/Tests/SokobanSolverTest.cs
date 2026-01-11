@@ -43,7 +43,7 @@ public class SokobanSolverTests {
     SokobanSolver solver = new SokobanSolver();
 
     // ACT
-    bool isSolvable = solver.IsSolvable(state, out _);
+    bool isSolvable = solver.IsSolvable(state, out _, out _);
 
     // ASSERT
     Assert.IsTrue(isSolvable, "Solver should find a solution for a simple push.");
@@ -66,7 +66,7 @@ public class SokobanSolverTests {
     SokobanSolver solver = new SokobanSolver();
 
     // ACT
-    bool isSolvable = solver.IsSolvable(state, out _);
+    bool isSolvable = solver.IsSolvable(state, out _, out _);
 
     // ASSERT
     Assert.IsFalse(isSolvable, "Solver should return false when crate is stuck in a corner.");
@@ -89,7 +89,7 @@ public class SokobanSolverTests {
     SokobanSolver solver = new SokobanSolver();
 
     // ACT
-    solver.IsSolvable(state, out var solution);
+    solver.IsSolvable(state, out var solution, out _);
     var moves = solution.Moves;
 
     // ASSERT
@@ -121,7 +121,7 @@ public class SokobanSolverTests {
     SokobanSolver solver = new SokobanSolver();
 
     // ACT
-    solver.IsSolvable(state, out var solution);
+    solver.IsSolvable(state, out var solution, out _);
     var moves = solution.Moves;
 
     // ASSERT
@@ -183,7 +183,7 @@ public class SokobanSolverTests {
     SokobanSolver solver = new SokobanSolver();
 
     // ACT
-    solver.IsSolvable(state, out var solution);
+    solver.IsSolvable(state, out var solution, out _);
     var moves = solution.Moves;
 
     // ASSERT
@@ -246,7 +246,7 @@ public class SokobanSolverTests {
     SokobanSolver solver = new SokobanSolver();
 
     // ACT
-    solver.IsSolvable(state, out var solution);
+    solver.IsSolvable(state, out var solution, out _);
     var moves = solution.Moves;
 
     // ASSERT

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using JetBrains.Annotations;
@@ -98,12 +99,16 @@ public class LevelGeneratorWindow : EditorWindow {
         int? seedToUse = UseFixedSeed ? Seed : null;
         var result = generator.GenerateLevel(
             out var solution,
+            out _,
+            out var statesExplored,
             MaxSize,
             MaxSize,
             TargetCount,
             HoleCount,
             UseEntranceExit,
             seedToUse);
+
+        Debug.Log($"Solver explored {statesExplored} total states");
 
         if (result != null) {
           Debug.Log($"Generated level difficulty: {solution?.Difficulty}");
@@ -121,7 +126,12 @@ public class LevelGeneratorWindow : EditorWindow {
     int threadCount = Environment.ProcessorCount;
     int baseSeed = UseFixedSeed ? Seed : Random.Range(0, int.MaxValue);
 
-    var tasks = new List<Task<(SokobanState?, SokobanSolution)>>();
+    var tasks =
+        new List<Task<(
+            SokobanState? State,
+            SokobanSolution Solution,
+            int Attempts,
+            int TotalStatesExplored)>>();
 
     Debug.Log($"Starting generation on {threadCount} threads...");
 
@@ -139,6 +149,8 @@ public class LevelGeneratorWindow : EditorWindow {
 
                 var state = generator.GenerateLevel(
                     out var solution,
+                    out var attempts,
+                    out var statesExplored,
                     MaxSize,
                     MaxSize, // assuming width=height based on your code
                     TargetCount,
@@ -148,17 +160,22 @@ public class LevelGeneratorWindow : EditorWindow {
                     // ReSharper disable once AccessToDisposedClosure
                     cancellation
                 );
-                return (state, solution);
+                return (state, solution, attempts, statesExplored);
               },
               cancellation));
     }
 
     // Wait for the first task to return a valid result
-    var (result, resultSolution) = await WaitForFirstSuccess(tasks, cts);
+    var (result, resultSolution, _, _) = await WaitForFirstSuccess(tasks, cts);
 
     if (result != null) {
       Debug.Log($"Generated level difficulty: {resultSolution?.Difficulty}");
     }
+
+    var totalAttempts = tasks.Sum(t => t.Result.Attempts);
+    var totalStatesExplored = tasks.Sum(t => t.Result.TotalStatesExplored);
+    Debug.Log($"Total attempts: {totalAttempts}");
+    Debug.Log($"Solver explored {totalStatesExplored} total states");
 
     return result;
   }

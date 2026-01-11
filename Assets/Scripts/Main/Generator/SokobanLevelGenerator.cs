@@ -14,6 +14,8 @@ public class SokobanLevelGenerator {
   /// <returns>A fully constructed SokobanState, or null if generation failed.</returns>
   public SokobanState? GenerateLevel(
       out SokobanSolution solution,
+      out int attempts,
+      out int totalStatesExplored,
       int minSize = 6,
       int maxSize = 12,
       int targetCount = 5,
@@ -22,6 +24,8 @@ public class SokobanLevelGenerator {
       int? seed = null,
       CancellationToken cancellation = default) {
     solution = null;
+    attempts = 0;
+    totalStatesExplored = 0;
     const int TimeoutMs = 60_000;
     Stopwatch timer = Stopwatch.StartNew();
 
@@ -30,9 +34,8 @@ public class SokobanLevelGenerator {
       UnityEngine.Debug.Log($"Generator seeded with: {seed.Value}");
     }
 
-    for (int i = 0; i < AttemptsPerLevel; i++) {
+    for (int i = 0; i < AttemptsPerLevel; i++, attempts++) {
       if (cancellation.IsCancellationRequested) {
-        UnityEngine.Debug.Log($"Cancelled after {i} attempts");
         return null;
       }
 
@@ -68,12 +71,16 @@ public class SokobanLevelGenerator {
       // 3. Verify Solvability
       var solver = new SokobanSolver();
       var state = (SokobanState)maybeState;
+      var isSolvable = solver.IsSolvable(
+          state,
+          out solution,
+          out var statesExplored,
+          maxIterations: GeneratorSolverLimit,
+          cancellation: cancellation);
 
-      if (solver.IsSolvable(
-              state,
-              out solution,
-              maxIterations: GeneratorSolverLimit,
-              cancellation: cancellation)) {
+      totalStatesExplored += statesExplored;
+
+      if (isSolvable) {
         UnityEngine.Debug.Log(
             $"Generated solvable level in {i + 1} attempts and {timer.ElapsedMilliseconds}ms.");
 

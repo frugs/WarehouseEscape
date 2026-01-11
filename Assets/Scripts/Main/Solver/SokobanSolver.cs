@@ -29,11 +29,13 @@ public class SokobanSolver {
   public bool IsSolvable(
       SokobanState initialState,
       out SokobanSolution solution,
+      out int statesExplored,
       int maxIterations = MAX_ITERATIONS,
       long timeoutMs = MAX_MS,
       CancellationToken cancellation = default) {
     // 1. Setup
     solution = null;
+    statesExplored = 0;
 
     var listPool = new ListPool<Vector2Int>();
     var parentMap = new Dictionary<SokobanState, PathNode>();
@@ -41,7 +43,6 @@ public class SokobanSolver {
     var queue = new PriorityQueue<SolverContext, int>();
     var width = initialState.GridWidth;
     var height = initialState.GridHeight;
-    int statesExplored = 0;
 
     var walkableAreaScanner = new SolverReachabilityScanner();
 

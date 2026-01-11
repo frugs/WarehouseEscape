@@ -31,7 +31,7 @@ public static class LevelSolverMenu {
 
     // Use a generous timeout for Editor operations (e.g., 10 seconds)
     // You might need to adjust your Solver's internal safety checks if they are hardcoded
-    bool solvable = solver.IsSolvable(startState, out var solution);
+    bool solvable = solver.IsSolvable(startState, out var solution, out _);
 
     sw.Stop();
 

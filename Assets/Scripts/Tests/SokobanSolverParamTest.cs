@@ -156,7 +156,7 @@ public class SokobanParamTests {
     SokobanSolver solver = new SokobanSolver();
 
     // 2. ACT
-    var solvable = solver.IsSolvable(initialState, out var solution);
+    var solvable = solver.IsSolvable(initialState, out var solution, out _);
     if (LogSolutionMoves && solvable) {
       foreach (var move in solution.Moves) {
         UnityEngine.Debug.Log(move);
