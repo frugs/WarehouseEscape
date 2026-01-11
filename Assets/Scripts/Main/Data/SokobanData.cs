@@ -4,6 +4,5 @@ using System.Collections.Generic;
 public class SolutionData {
   public string LevelName;
   public int StepCount;
-  public long SolveTimeMs;
   public List<SokobanMove> Moves;
 }

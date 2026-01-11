@@ -5,7 +5,7 @@ public class MoveAnimator {
   public IEnumerator AnimateMoveTransform(
       GameObject obj,
       Vector2Int targetGridPos,
-      float duration, 
+      float duration,
       AnimationCurve curve = null) {
     if (obj == null) yield break;
 
@@ -20,8 +20,8 @@ public class MoveAnimator {
       elapsed += Time.deltaTime;
       float t = elapsed / duration;
       float curvedT = curve != null ? curve.Evaluate(t) : t;
-        
-      obj.position = Vector3.Lerp(startPos, endPos, curvedT);
+
+      obj.transform.position = Vector3.Lerp(startPos, endPos, curvedT);
 
       yield return null;
     }
@@ -77,19 +77,19 @@ public class MoveAnimator {
   public IEnumerator AnimateTransformFall(
       GameObject obj,
       Vector2Int targetGridPos,
-      float duration, 
+      float duration,
       AnimationCurve curve = null) {
     if (obj == null) yield break;
 
     // Sink down
-    Vector3 startPos = obj.transform.position;
+    Vector3 startPos = targetGridPos.GridToWorld(0.5f);
     Vector3 endPos = startPos + Vector3.down * 1.0f; // Sink depth
     float elapsed = 0f;
 
-    while (elapsed < fallDuration) {
+    while (elapsed < duration) {
       elapsed += Time.deltaTime;
-      float t = elapsed / fallDuration;
-      float curvedT = curve != null ? curve.Evaluate(t) : t;
+      float t = elapsed / duration;
+      float curvedT = curve?.Evaluate(t) ?? t;
       obj.transform.position = Vector3.Lerp(startPos, endPos, curvedT);
       yield return null;
     }

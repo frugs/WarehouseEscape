@@ -16,7 +16,7 @@ public class SokobanSolutionExporter {
     }
 
     SolutionData data = new SolutionData {
-      LevelName = levelName, StepCount = moves.Count, SolveTimeMs = solveTimeMs, Moves = moves
+        LevelName = levelName, StepCount = moves.Count, Moves = moves
     };
 
     // Format: StreamingAssets/Solutions/LevelName_Solution.json

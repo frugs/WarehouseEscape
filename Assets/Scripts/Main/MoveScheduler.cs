@@ -116,14 +116,8 @@ public class MoveScheduler : MonoBehaviour {
 
         anims.Add(
             fellInHole
-                ? StartCoroutine(
-                    AnimateCrateFall(
-                        crateObj,
-                        move.crateTo)
-                : StartCoroutine(
-                    AnimateCratePush(
-                        crateObj,
-                        move.crateTo);
+                ? StartCoroutine(AnimateCrateFall(crateObj, move.crateTo))
+                : StartCoroutine(AnimateCratePush(crateObj, move.crateTo)));
       }
 
       GameSession.PlayerAnimationState.CurrentState = move.type switch {
@@ -136,12 +130,13 @@ public class MoveScheduler : MonoBehaviour {
       foreach (var c in anims) yield return c;
 
       // Skip idle reset if more moves queued - next will set correct state
-      if (MoveQueue.Count == 0) {
+      // Never skip if there is a step delay
+      if (StepDelay > 0 || MoveQueue.Count == 0) {
         GameSession.PlayerAnimationState.ToIdle();
-      }
 
-      // Optional delay (useful for solution playback)
-      if (StepDelay > 0) yield return new WaitForSeconds(StepDelay);
+        // Optional delay (useful for solution playback)
+        if (StepDelay > 0) yield return new WaitForSeconds(StepDelay);
+      }
 
       // Check win after every move
       GameSession.CheckWinCondition();
@@ -151,25 +146,25 @@ public class MoveScheduler : MonoBehaviour {
   }
 
   private IEnumerator AnimateCratePush(
-      GameObject crate Obj,
-      targetGridPos) {
+      GameObject crateObj,
+      Vector2Int targetGridPos) {
     return _moveAnimator.AnimateMoveTransform(
-                        crateObj,
-                        targetGridPos,
-                        PushAnimationDuration,
-                        AnimationCurves.QuadraticEaseIn);
+        crateObj,
+        targetGridPos,
+        PushAnimationDuration,
+        AnimationCurves.EaseInQuad);
   }
 
   private IEnumerator AnimateCrateFall(
       GameObject crateObj,
-      targetGridPos) {
+      Vector2Int targetGridPos) {
     yield return AnimateCratePush(crateObj, targetGridPos);
 
     yield return _moveAnimator.AnimateTransformFall(
-                        crateObj,
-                        targetGridPos,
-                        FallAnimationDuration);
-    
+        crateObj,
+        targetGridPos,
+        FallAnimationDuration);
+
     crateObj.name = $"FilledHole_{targetGridPos.x}_{targetGridPos.y}";
-  } 
+  }
 }
