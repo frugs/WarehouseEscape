@@ -94,13 +94,17 @@ public class MoveScheduler : MonoBehaviour {
         var moveDuration = move.type == MoveType.PlayerMove
             ? MoveAnimationDuration
             : PushAnimationDuration;
+        var animationCurve = move.type == MoveType.PlayerMove
+            ? AnimationCurves.Linear
+            : AnimationCurves.EaseInQuad;
 
         anims.Add(
             StartCoroutine(
                 _moveAnimator.AnimateMoveTransform(
                     playerObj,
                     move.playerTo,
-                    moveDuration)));
+                    moveDuration,
+                    animationCurve)));
         anims.Add(
             StartCoroutine(
                 _moveAnimator.AnimateRotateTransform(
