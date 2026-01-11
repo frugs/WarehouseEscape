@@ -31,6 +31,7 @@ public class PlayerController : MonoBehaviour {
 
   private GameInput _inputActions;
   private DirectionalPlayerInputHandler _directionalHandler;
+  private WalkableAreaCache _walkableAreaCache;
   private PointerPlayerInputHandler _pointerHandler;
   private UndoManager _undoManager;
 
@@ -50,17 +51,26 @@ public class PlayerController : MonoBehaviour {
         GameSession,
         MoveScheduler);
 
+    _walkableAreaCache = new WalkableAreaCache(GameSession);
+
     _pointerHandler = new PointerPlayerInputHandler(
         _inputActions,
         GameSession,
         MoveScheduler,
         PushIndicatorManager,
+        _walkableAreaCache,
         WalkIndicatorPrefab,
         Camera.main);
 
     if (UndoBehaviour != null) {
       _undoManager = UndoBehaviour.UndoManager;
     }
+  }
+
+  [UsedImplicitly]
+  private void OnDestroy() {
+    _walkableAreaCache?.Dispose();
+    _walkableAreaCache = null;
   }
 
   [UsedImplicitly]

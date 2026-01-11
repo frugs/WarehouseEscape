@@ -25,7 +25,8 @@ public class WalkableAreaScanner {
   public List<Vector2Int> GetWalkableArea(
       SokobanState state,
       out Vector2Int canonicalPlayerPos) {
-    return new List<Vector2Int>(GetWalkableAreaNoCopy(state, out canonicalPlayerPos));
+    return new List<Vector2Int>(
+        GetWalkableAreaNoCopy(state, out canonicalPlayerPos));
   }
 
   /// <summary>

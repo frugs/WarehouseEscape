@@ -92,7 +92,9 @@ public class SokobanSolver {
     // We convert the initial raw state into a canonical state (player at top-left-most reachable pos)
     // This ensures our visited set works correctly immediately.
     var walkable =
-        walkableAreaScanner.GetWalkableArea(initialState, out var startCanonicalPos);
+        walkableAreaScanner.GetWalkableArea(
+            initialState,
+            out var startCanonicalPos);
     var canonicalStart = SokobanState.Create(
         initialState.TerrainGrid,
         startCanonicalPos,
@@ -250,7 +252,7 @@ public class SokobanSolver {
       var walkPathCoords = Pather.FindPath(simState, simState.PlayerPos, pushMove.playerFrom);
 
       // Pather returns null if already there or unreachable (should be reachable by definition of our solver)
-      if (walkPathCoords != null && walkPathCoords.Count > 0) {
+      if (walkPathCoords is { Count: > 0 }) {
         // Convert coords to atomic PlayerMoves
         var walkPos = simState.PlayerPos;
         foreach (var target in walkPathCoords) {

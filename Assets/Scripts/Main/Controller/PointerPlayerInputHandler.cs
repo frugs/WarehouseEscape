@@ -20,7 +20,7 @@ public class PointerPlayerInputHandler {
   private readonly GameSession _gameSession;
   private readonly MoveScheduler _moveScheduler;
   private readonly PushIndicatorManager _pushIndicatorManager;
-  private readonly WalkableAreaScanner _walkableAreaScanner;
+  private readonly WalkableAreaCache _walkableAreaCache;
   private readonly Camera _mainCamera;
   private readonly GameObject _walkIndicatorPrefab;
 
@@ -28,9 +28,6 @@ public class PointerPlayerInputHandler {
   private Vector2Int _currentCratePos = Vector2Int.zero;
   private GameObject _walkIndicator;
   private Vector2? _pointerLastPos;
-
-  // ===== CACHED WALKABLE AREA (BFS optimization) =====
-  private IReadOnlyList<Vector2Int> _cachedWalkableArea;
   private SokobanState? _cachedWalkableAreaForState;
 
   public PointerPlayerInputHandler(
@@ -38,6 +35,7 @@ public class PointerPlayerInputHandler {
       GameSession gameSession,
       MoveScheduler moveScheduler,
       PushIndicatorManager pushIndicatorManager,
+      WalkableAreaCache walkableAreaCache,
       GameObject walkIndicatorPrefab,
       Camera mainCamera) {
     _inputActions = inputActions;
@@ -46,7 +44,7 @@ public class PointerPlayerInputHandler {
     _pushIndicatorManager = pushIndicatorManager;
     _walkIndicatorPrefab = walkIndicatorPrefab;
     _mainCamera = mainCamera;
-    _walkableAreaScanner = new WalkableAreaScanner();
+    _walkableAreaCache = walkableAreaCache;
   }
 
   /// <summary>
@@ -115,7 +113,7 @@ public class PointerPlayerInputHandler {
     var mousePos = _inputActions.Player.MousePosition.ReadValue<Vector2>();
     Vector2Int? maybeGridPos = GetGridPosFromMousePos(mousePos);
     if (maybeGridPos.HasValue) {
-      HandleTileClick(maybeGridPos.Value);
+      HandlePosClick(maybeGridPos.Value);
     }
   }
 
@@ -133,7 +131,7 @@ public class PointerPlayerInputHandler {
     var gridPos = maybeGridPos.Value;
 
     // Check if tile is in cached walkable area (no crate movement needed)
-    if (IsGridPosReachable(gridPos)) {
+    if (_walkableAreaCache.IsReachable(gridPos)) {
       // Create or update glowing floor indicator
       if (_walkIndicator == null) {
         _walkIndicator = Object.Instantiate(_walkIndicatorPrefab);
@@ -149,78 +147,22 @@ public class PointerPlayerInputHandler {
   }
 
   /// <summary>
-  /// Checks if a grid position is reachable without moving crates.
-  /// Uses cached BFS results.
-  /// </summary>
-  private bool IsGridPosReachable(Vector2Int gridPos) {
-    var state = _gameSession.CurrentState;
-
-    // Refresh cache if crate positions have changed
-    if (_cachedWalkableArea == null || !IsCacheValid(state)) {
-      RefreshWalkableAreaCache(state);
-    }
-
-    // Check if position is in cached walkable area
-    if (_cachedWalkableArea != null) {
-      foreach (var reachablePos in _cachedWalkableArea) {
-        if (reachablePos == gridPos) {
-          return true;
-        }
-      }
-    }
-
-    return false;
-  }
-
-  /// <summary>
-  /// Validates if the cached walkable area is still valid.
-  /// Invalid if crates have moved.
-  /// </summary>
-  private bool IsCacheValid(SokobanState currentState) {
-    if (_cachedWalkableAreaForState == null) {
-      return false;
-    }
-
-    // Cache is valid if crate positions haven't changed
-    if (_cachedWalkableAreaForState?.CratePositions.Length != currentState.CratePositions.Length) {
-      return false;
-    }
-
-    for (int i = 0; i < currentState.CratePositions.Length; i++) {
-      if (_cachedWalkableAreaForState?.CratePositions[i] != currentState.CratePositions[i]) {
-        return false;
-      }
-    }
-
-    return true;
-  }
-
-  /// <summary>
-  /// Performs BFS to find all reachable tiles (excluding crate-pushing).
-  /// Results are cached until crates move.
-  /// </summary>
-  private void RefreshWalkableAreaCache(SokobanState state) {
-    _cachedWalkableAreaForState = state;
-    _cachedWalkableArea = _walkableAreaScanner.GetWalkableAreaNoCopy(state, out _);
-  }
-
-  /// <summary>
   /// Handles clicking on a tile - either a crate or a floor.
   /// </summary>
-  private void HandleTileClick(Vector2Int tile) {
+  private void HandlePosClick(Vector2Int gridPos) {
     var state = _gameSession.CurrentState;
 
     // Check if clicking on a crate
-    if (state.IsCrateAt(tile.x, tile.y)) {
-      ShowCrateIndicators(tile);
+    if (state.IsCrateAt(gridPos.x, gridPos.y)) {
+      ShowCrateIndicators(gridPos);
       return;
     }
 
     // Check if it's an accessible floor tile
-    if (IsGridPosReachable(tile)) {
-      List<Vector2Int> path = Pather.FindPath(state, state.PlayerPos, tile);
+    if (_walkableAreaCache.IsReachable(gridPos)) {
+      List<Vector2Int> path = Pather.FindPath(state, state.PlayerPos, gridPos);
 
-      if (path != null && path.Count > 0) {
+      if (path is { Count: > 0 }) {
         RemoveWalkIndicator();
         List<SokobanMove> moveList = ConvertPathToMoves(state.PlayerPos, path);
 
@@ -228,7 +170,6 @@ public class PointerPlayerInputHandler {
           _moveScheduler.Clear();
           _moveScheduler.StepDelay = 0f;
           _moveScheduler.Enqueue(moveList);
-          InvalidateWalkableAreaCache();
         }
       }
     }
@@ -313,17 +254,8 @@ public class PointerPlayerInputHandler {
       _moveScheduler.Clear();
       _moveScheduler.StepDelay = 0f;
       _moveScheduler.Enqueue(moveList);
-      InvalidateWalkableAreaCache();
       _currentState = InteractionState.Idle;
     }
-  }
-
-  /// <summary>
-  /// Invalidates the cached walkable area (call when crates move).
-  /// </summary>
-  private void InvalidateWalkableAreaCache() {
-    _cachedWalkableArea = null;
-    _cachedWalkableAreaForState = null;
   }
 
   /// <summary>

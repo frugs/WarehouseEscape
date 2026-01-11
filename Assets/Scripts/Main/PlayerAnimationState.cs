@@ -1,4 +1,5 @@
 using System;
+using JetBrains.Annotations;
 
 public class PlayerAnimationState {
   public enum State {
@@ -23,9 +24,12 @@ public class PlayerAnimationState {
 
   public void Reset() => ToIdle();
 
+  [UsedImplicitly]
   public void ToIdle() => CurrentState = State.Idle;
 
+  [UsedImplicitly]
   public void ToWalking() => CurrentState = State.Walking;
 
+  [UsedImplicitly]
   public void ToPushing() => CurrentState = State.Pushing;
 }

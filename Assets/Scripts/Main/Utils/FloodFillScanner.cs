@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using JetBrains.Annotations;
 using UnityEngine;
 
 // Define the "Graph" contract.
@@ -74,6 +75,7 @@ public class FloodFillScanner {
     }
   }
 
+  [UsedImplicitly]
   public void Scan<TGraph>(TGraph graph, Vector2Int start, Vector2Int obstacle)
       where TGraph : IGridGraph {
     Scan(graph, start, new[] { obstacle });

@@ -42,8 +42,8 @@ public readonly struct SokobanState : IEquatable<SokobanState> {
     FilledHoles = filledHoles ?? CowHashSet<Vector2Int>.Empty;
   }
 
-  public int GridWidth => TerrainGrid.GetLength(0);
-  public int GridHeight => TerrainGrid.GetLength(1);
+  public int GridWidth => TerrainGrid?.GetLength(0) ?? 0;
+  public int GridHeight => TerrainGrid?.GetLength(1) ?? 0;
 
   // ========== LOGIC HELPERS ==========
 
