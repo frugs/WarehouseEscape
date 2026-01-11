@@ -135,7 +135,10 @@ public class MoveScheduler : MonoBehaviour {
       // Wait for animations
       foreach (var c in anims) yield return c;
 
-      GameSession.PlayerAnimationState.ToIdle();
+      // Skip idle reset if more moves queued - next will set correct state
+      if (MoveQueue.Count == 0) {
+        GameSession.PlayerAnimationState.ToIdle();
+      }
 
       // Optional delay (useful for solution playback)
       if (StepDelay > 0) yield return new WaitForSeconds(StepDelay);
