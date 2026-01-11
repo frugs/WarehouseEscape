@@ -74,17 +74,14 @@ public class MoveAnimator {
     obj.transform.rotation = targetRot;
   }
 
-  public IEnumerator AnimateCrateFall(
+  public IEnumerator AnimateTransformFall(
       GameObject obj,
       Vector2Int targetGridPos,
-      float moveDuration,
-      float fallDuration) {
+      float duration, 
+      AnimationCurve curve = null) {
     if (obj == null) yield break;
 
-    // 1. Slide to the hole position
-    yield return AnimateMoveTransform(obj, targetGridPos, moveDuration);
-
-    // 2. Sink down
+    // Sink down
     Vector3 startPos = obj.transform.position;
     Vector3 endPos = startPos + Vector3.down * 1.0f; // Sink depth
     float elapsed = 0f;
@@ -92,13 +89,11 @@ public class MoveAnimator {
     while (elapsed < fallDuration) {
       elapsed += Time.deltaTime;
       float t = elapsed / fallDuration;
-      obj.transform.position = Vector3.Lerp(startPos, endPos, t);
+      float curvedT = curve != null ? curve.Evaluate(t) : t;
+      obj.transform.position = Vector3.Lerp(startPos, endPos, curvedT);
       yield return null;
     }
 
     obj.transform.position = endPos;
-
-    // Optional: Rename for debugging
-    obj.name = $"FilledHole_{targetGridPos.x}_{targetGridPos.y}";
   }
 }
