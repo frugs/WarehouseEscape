@@ -1,7 +1,7 @@
 using System;
 using UnityEngine;
 
-public class WalkableAreaCache : IDisposable {
+public class PlayerReachabilityCache : IDisposable {
   public readonly struct FloodFillScannerAdapter : IGridGraph {
     private readonly SokobanState _state;
 
@@ -20,7 +20,7 @@ public class WalkableAreaCache : IDisposable {
   private FloodFillScanner _floodFillScanner = new();
   private GameSession _gameSession;
 
-  public WalkableAreaCache(GameSession gameSession) {
+  public PlayerReachabilityCache(GameSession gameSession) {
     _gameSession = gameSession;
 
     _floodFillScanner.Scan(

@@ -51,7 +51,7 @@ public class SokobanSolver {
     var height = initialState.GridHeight;
     int statesExplored = 0;
 
-    var walkableAreaScanner = new WalkableAreaScanner();
+    var walkableAreaScanner = new SolverReachabilityScanner();
 
     var targets = new List<Vector2Int>();
     var holes = new List<Vector2Int>();

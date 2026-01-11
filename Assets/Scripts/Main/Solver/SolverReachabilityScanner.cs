@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class WalkableAreaScanner {
+public class SolverReachabilityScanner {
   public readonly struct FloodFillScannerAdapter : IGridGraph {
     private readonly SokobanState _state;
 

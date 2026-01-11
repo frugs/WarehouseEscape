@@ -31,7 +31,7 @@ public class PlayerController : MonoBehaviour {
 
   private GameInput _inputActions;
   private DirectionalPlayerInputHandler _directionalHandler;
-  private WalkableAreaCache _walkableAreaCache;
+  private PlayerReachabilityCache _walkableAreaCache;
   private PointerPlayerInputHandler _pointerHandler;
   private UndoManager _undoManager;
 
@@ -51,7 +51,7 @@ public class PlayerController : MonoBehaviour {
         GameSession,
         MoveScheduler);
 
-    _walkableAreaCache = new WalkableAreaCache(GameSession);
+    _walkableAreaCache = new PlayerReachabilityCache(GameSession);
 
     _pointerHandler = new PointerPlayerInputHandler(
         _inputActions,

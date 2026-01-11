@@ -20,7 +20,7 @@ public class PointerPlayerInputHandler {
   private readonly GameSession _gameSession;
   private readonly MoveScheduler _moveScheduler;
   private readonly PushIndicatorManager _pushIndicatorManager;
-  private readonly WalkableAreaCache _walkableAreaCache;
+  private readonly PlayerReachabilityCache _walkableAreaCache;
   private readonly Camera _mainCamera;
   private readonly GameObject _walkIndicatorPrefab;
 
@@ -35,7 +35,7 @@ public class PointerPlayerInputHandler {
       GameSession gameSession,
       MoveScheduler moveScheduler,
       PushIndicatorManager pushIndicatorManager,
-      WalkableAreaCache walkableAreaCache,
+      PlayerReachabilityCache walkableAreaCache,
       GameObject walkIndicatorPrefab,
       Camera mainCamera) {
     _inputActions = inputActions;
